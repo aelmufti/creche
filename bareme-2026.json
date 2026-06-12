@@ -1,0 +1,43 @@
+{
+  "version": "2026-04",
+  "source": "CNAF circ. 2019-005 / Pajemploi / service-public.fr",
+  "ressources": {
+    "type": "net_categoriel_N2",
+    "plancher": 814.62,
+    "plafond": 8500
+  },
+  "taux_effort_collectif": {
+    "1": 0.000619,
+    "2": 0.000516,
+    "3": 0.000413,
+    "4_7": 0.000310,
+    "8_plus": 0.000206
+  },
+  "cout_horaire_ref": { "ama": 4.85, "domicile": 10.38 },
+  "plafond_horaire": { "ama": 8.0, "domicile": 15.18, "micro_creche": 10.0 },
+  "cotisations": {
+    "prise_en_charge_ama": 1.0,
+    "prise_en_charge_domicile": 0.5,
+    "taux_charges_domicile_approx": 0.4
+  },
+  "cmg_max_emploi_direct": { "ama": 825.16, "domicile": 797.80 },
+  "credit_impot": {
+    "frais_garde": { "taux": 0.5, "plafond_par_enfant": 3500 },
+    "emploi_domicile": { "taux": 0.5, "plafond_base": 12000, "majoration_par_enfant": 1500, "plafond_max": 15000 }
+  },
+  "majorations": { "isole_plafond": 0.40, "aeeh": 0.30, "atypique": 0.10 },
+  "tranches_revenus_annuels_1enfant": { "T1_max": 22691, "T2_max": 50425 },
+  "micro_creche_structure": {
+    "plafond_horaire": 10,
+    "couverture_max": 0.85,
+    "reste_a_charge_min": 0.15,
+    "distinction_age": true,
+    "reduction_3_6ans": 0.5,
+    "forfait_max_mensuel_1enfant_moins3ans": {
+      "T1": 992.13,
+      "T2": 835,
+      "T3": 501,
+      "_note": "T2/T3 À CONFIRMER verbatim depuis le barème officiel Pajemploi avant prod."
+    }
+  }
+}
