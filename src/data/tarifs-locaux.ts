@@ -1,6 +1,6 @@
-import { defauts } from "../engine/bareme";
 import departementsJson from "./departements.json";
 import codesPostauxJson from "./codes-postaux.json";
+import tarifsJson from "./tarifs-departements.json";
 
 // Données géographiques OFFICIELLES (générées par scripts/build-geo-data.mjs
 // depuis geo.api.gouv.fr — IGN/INSEE). Le département vient du code INSEE de la
@@ -38,22 +38,22 @@ export interface TarifsLocaux {
 
 /**
  * Tarifs nationaux indicatifs (hypothèses de saisie, modifiables — PAS du barème).
- * Les coûts réglementés (crèche PSU, CMG, plafond micro-crèche) sont nationaux ;
- * les salaires AMA / garde à domicile varient localement mais nous n'avons pas
- * encore de source départementale validée → données locales sourcées à venir (§14).
+ * Salaires AMA / garde à domicile = données réelles URSSAF (cf. SOURCE_TARIFS) ;
+ * tarif micro-crèche national (pas de source départementale, plafonné à 10 €/h).
  */
-export const TARIFS_NATIONAL: TarifsLocaux = {
-  tauxHoraireAma: defauts.tauxHoraireAma,
-  coutHoraireDomicile: defauts.coutHoraireDomicile,
-  tarifMicroCreche: defauts.tarifMicroCreche,
-};
+export const TARIFS_NATIONAL: TarifsLocaux = tarifsJson.national;
+
+/** Provenance et année des tarifs locaux (à citer dans l'UI / la méthodologie). */
+export const SOURCE_TARIFS = { source: tarifsJson.source, annee: tarifsJson.annee };
 
 /**
- * Surcharges tarifaires par département. Vide tant qu'aucune donnée n'est
- * sourcée (observatoires petite enfance, agrégats Urssaf/Pajemploi). Dès qu'une
- * source fiable est branchée, ajouter ici des entrées { "75": { ... } }.
+ * Tarifs réels par département (salaire AMA + coût garde à domicile), dérivés
+ * des données open data URSSAF 2024. Générés par scripts/build-tarifs-data.mjs.
  */
-export const TARIFS_DEPARTEMENTS: Record<string, Partial<TarifsLocaux>> = {};
+export const TARIFS_DEPARTEMENTS = tarifsJson.departements as Record<
+  string,
+  Partial<TarifsLocaux>
+>;
 
 export interface ResolutionTarifs {
   /** Département officiel identifié, ou null si code postal vide/invalide. */

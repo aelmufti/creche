@@ -38,19 +38,29 @@ describe("departementDuCodePostal (base officielle INSEE)", () => {
   });
 });
 
-describe("tarifsLocaux", () => {
-  it("département reconnu → tarifs nationaux indicatifs (pas de source locale pour l'instant)", () => {
+describe("tarifsLocaux (tarifs réels URSSAF par département)", () => {
+  it("département reconnu → tarifs locaux sourcés, complétés par le national", () => {
     const r = tarifsLocaux("75004");
     expect(r.dept?.nom).toBe("Paris");
     expect(r.inconnu).toBe(false);
-    expect(r.tarifsSources).toBe(false);
-    expect(r.tarifs).toEqual(TARIFS_NATIONAL);
+    expect(r.tarifsSources).toBe(true);
+    expect(r.tarifs.tauxHoraireAma).toBeGreaterThan(0);
+    expect(r.tarifs.coutHoraireDomicile).toBeGreaterThan(0);
+    // tarif micro-crèche non couvert par dépt → vient du national.
+    expect(r.tarifs.tarifMicroCreche).toBe(TARIFS_NATIONAL.tarifMicroCreche);
+  });
+
+  it("le code postal change concrètement les tarifs d'un département à l'autre", () => {
+    const corse = tarifsLocaux("20000").tarifs.tauxHoraireAma; // Corse-du-Sud
+    const nord = tarifsLocaux("59000").tarifs.tauxHoraireAma; // Nord
+    expect(corse).not.toBe(nord);
   });
 
   it("code postal 5 chiffres introuvable → repli national + drapeau inconnu", () => {
     const r = tarifsLocaux("00000");
     expect(r.dept).toBeNull();
     expect(r.inconnu).toBe(true);
+    expect(r.tarifsSources).toBe(false);
     expect(r.tarifs).toEqual(TARIFS_NATIONAL);
   });
 

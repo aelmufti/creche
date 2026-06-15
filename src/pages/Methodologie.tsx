@@ -120,7 +120,13 @@ export function Methodologie() {
       <section>
         <h2 className="text-xl font-extrabold">5. Limites connues</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li>v1 : un seul enfant placé en garde ; le multi-placement arrive ensuite.</li>
+          <li>
+            Pré-remplissage local : salaire horaire moyen de l'assistante maternelle et de la garde
+            à domicile par département, issus des données open data{" "}
+            <strong className="text-foreground">URSSAF « Salariés des particuliers employeurs en 2024 »</strong>{" "}
+            (open.urssaf.fr). Le coût garde à domicile est converti du net au coût total employeur
+            (× 1,8 environ). Valeurs indicatives et modifiables ; le tarif micro-crèche reste national.
+          </li>
           <li>
             Aide cotisations garde à domicile : approximation (50 % d'une estimation des charges),
             à affiner.

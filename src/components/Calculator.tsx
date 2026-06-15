@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { comparer, decodeInputs, encodeInputs, type Inputs } from "../engine";
 import { defauts } from "../engine/bareme";
-import { tarifsLocaux } from "../data/tarifs-locaux";
+import { SOURCE_TARIFS, tarifsLocaux } from "../data/tarifs-locaux";
 import { Field, NumberInput, Segmented, Slider, Toggle } from "./ui";
 import { ResultsPanel } from "./ResultsPanel";
 
@@ -194,8 +194,8 @@ export function Calculator() {
             <p className="mt-1 border-l-[3px] border-l-accent bg-accent/10 px-2 py-1 text-[11px] font-bold">
               Département : {local.dept.nom} ({local.dept.code}).{" "}
               {local.tarifsSources
-                ? "Tarifs locaux pré-remplis (modifiables)."
-                : "Tarifs nationaux indicatifs (données locales sourcées à venir)."}
+                ? `Salaires assistante maternelle & garde à domicile pré-remplis (URSSAF ${SOURCE_TARIFS.annee}, modifiables).`
+                : "Tarifs nationaux indicatifs (pas de données locales)."}
             </p>
           )}
           {local.inconnu && (
