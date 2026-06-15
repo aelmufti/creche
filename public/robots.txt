@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://comparateur-garde.fr/sitemap.xml
