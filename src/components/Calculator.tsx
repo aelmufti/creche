@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { comparer, decodeInputs, encodeInputs, type Inputs } from "../engine";
 import { defauts } from "../engine/bareme";
+import { tarifsLocaux } from "../data/tarifs-locaux";
 import { Field, NumberInput, Segmented, Slider, Toggle } from "./ui";
 import { ResultsPanel } from "./ResultsPanel";
 
@@ -17,7 +18,40 @@ export function Calculator() {
     setSearchParams(q, { replace: true });
   }, [inputs, setSearchParams]);
 
-  const comparison = useMemo(() => comparer(inputs), [inputs]);
+  // Pré-remplissage local (§10/§14) : les champs avancés NON modifiés par
+  // l'utilisateur (undefined) prennent la valeur indicative du département.
+  const local = useMemo(() => tarifsLocaux(inputs.codePostal), [inputs.codePostal]);
+  const tauxAma = inputs.tauxHoraireAma ?? local.tarifs.tauxHoraireAma;
+  const coutDom = inputs.coutHoraireDomicile ?? local.tarifs.coutHoraireDomicile;
+  const tarifMicro = inputs.tarifMicroCreche ?? local.tarifs.tarifMicroCreche;
+  const sourceTarif =
+    local.tarifsSources && local.dept ? local.dept.nom : "national indicatif";
+
+  // Le moteur reçoit les valeurs résolues (locales pour les champs intacts).
+  const resolved = useMemo<Inputs>(
+    () => ({
+      ...inputs,
+      tauxHoraireAma: tauxAma,
+      coutHoraireDomicile: coutDom,
+      tarifMicroCreche: tarifMicro,
+    }),
+    [inputs, tauxAma, coutDom, tarifMicro],
+  );
+
+  const comparison = useMemo(() => comparer(resolved), [resolved]);
+
+  const resetTarifsLocaux = () =>
+    setInputs((prev) => ({
+      ...prev,
+      tauxHoraireAma: undefined,
+      coutHoraireDomicile: undefined,
+      tarifMicroCreche: undefined,
+    }));
+
+  const aDesOverrides =
+    inputs.tauxHoraireAma !== undefined ||
+    inputs.coutHoraireDomicile !== undefined ||
+    inputs.tarifMicroCreche !== undefined;
 
   const set = <K extends keyof Inputs>(key: K, value: Inputs[K]) =>
     setInputs((prev) => ({ ...prev, [key]: value }));
@@ -145,16 +179,30 @@ export function Calculator() {
           <Slider value={inputs.heuresMois} onChange={(n) => set("heuresMois", n)} min={0} max={300} step={5} ariaLabel="Heures de garde par mois" />
         </Field>
 
-        <Field label="Code postal (optionnel)" htmlFor="cp" hint="Sert au pré-remplissage des tarifs locaux (à venir).">
+        <Field label="Code postal (optionnel)" htmlFor="cp" hint="Pré-remplit les tarifs typiques de votre département (modifiables).">
           <input
             id="cp"
             type="text"
             inputMode="numeric"
+            maxLength={5}
             value={inputs.codePostal ?? ""}
-            onChange={(e) => set("codePostal", e.target.value)}
+            onChange={(e) => set("codePostal", e.target.value.replace(/\D/g, ""))}
             className="border-[3px] border-border bg-card px-3 py-2 font-bold shadow-brutal-sm outline-none"
             placeholder="75011"
           />
+          {local.dept && (
+            <p className="mt-1 border-l-[3px] border-l-accent bg-accent/10 px-2 py-1 text-[11px] font-bold">
+              Département : {local.dept.nom} ({local.dept.code}).{" "}
+              {local.tarifsSources
+                ? "Tarifs locaux pré-remplis (modifiables)."
+                : "Tarifs nationaux indicatifs (données locales sourcées à venir)."}
+            </p>
+          )}
+          {local.inconnu && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Code postal introuvable : tarifs nationaux indicatifs appliqués.
+            </p>
+          )}
         </Field>
 
         <button
@@ -168,17 +216,26 @@ export function Calculator() {
 
         {showAdvanced && (
           <div className="flex flex-col gap-5 border-t-[3px] border-border pt-5">
-            <Field label="Taux horaire assistante maternelle" htmlFor="ta" hint={`Défaut : ${defauts.tauxHoraireAma} €/h net`}>
-              <NumberInput id="ta" value={inputs.tauxHoraireAma ?? defauts.tauxHoraireAma} onChange={(n) => set("tauxHoraireAma", n)} step={0.1} suffix="€/h" />
+            {aDesOverrides && (
+              <button
+                type="button"
+                onClick={resetTarifsLocaux}
+                className="btn-brutal self-start bg-card px-3 py-1.5 text-xs"
+              >
+                ↺ Réinitialiser (tarifs {sourceTarif})
+              </button>
+            )}
+            <Field label="Taux horaire assistante maternelle" htmlFor="ta" hint={`${sourceTarif} : ${tauxAma} €/h net`}>
+              <NumberInput id="ta" value={tauxAma} onChange={(n) => set("tauxHoraireAma", n)} step={0.1} suffix="€/h" />
             </Field>
-            <Field label="Frais annexes AMA (repas, entretien)" htmlFor="fa" hint={`Mensuel. Défaut : ${defauts.fraisAnnexesAma} €`}>
+            <Field label="Frais annexes AMA (repas, entretien)" htmlFor="fa" hint="Mensuel, indicatif.">
               <NumberInput id="fa" value={inputs.fraisAnnexesAma ?? defauts.fraisAnnexesAma} onChange={(n) => set("fraisAnnexesAma", n)} step={5} suffix="€" />
             </Field>
-            <Field label="Coût horaire garde à domicile" htmlFor="cd" hint={`Total employeur. Défaut : ${defauts.coutHoraireDomicile} €/h`}>
-              <NumberInput id="cd" value={inputs.coutHoraireDomicile ?? defauts.coutHoraireDomicile} onChange={(n) => set("coutHoraireDomicile", n)} step={0.5} suffix="€/h" />
+            <Field label="Coût horaire garde à domicile" htmlFor="cd" hint={`Total employeur. ${sourceTarif} : ${coutDom} €/h`}>
+              <NumberInput id="cd" value={coutDom} onChange={(n) => set("coutHoraireDomicile", n)} step={0.5} suffix="€/h" />
             </Field>
-            <Field label="Tarif micro-crèche" htmlFor="tm" hint={`Plafonné à 10 €/h pour l'aide. Défaut : ${defauts.tarifMicroCreche} €/h`}>
-              <NumberInput id="tm" value={inputs.tarifMicroCreche ?? defauts.tarifMicroCreche} onChange={(n) => set("tarifMicroCreche", n)} step={0.5} suffix="€/h" />
+            <Field label="Tarif micro-crèche" htmlFor="tm" hint={`Plafonné à 10 €/h pour l'aide. ${sourceTarif} : ${tarifMicro} €/h`}>
+              <NumberInput id="tm" value={tarifMicro} onChange={(n) => set("tarifMicroCreche", n)} step={0.5} suffix="€/h" />
             </Field>
             <Field label="Participation employeur / CESU" htmlFor="pe" hint="Mensuel. Réduit le reste à charge avant crédit d'impôt.">
               <NumberInput id="pe" value={inputs.participationEmployeur ?? 0} onChange={(n) => set("participationEmployeur", n)} step={10} suffix="€" />
