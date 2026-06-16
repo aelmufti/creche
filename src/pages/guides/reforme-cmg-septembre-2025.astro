@@ -1,0 +1,109 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/reforme-cmg-septembre-2025";
+const title = "Réforme du CMG (sept. 2025) : ce qui change concrètement";
+const description =
+  "Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge. Avant/après, fin de la distinction d'âge et du reste à charge minimum en emploi direct : ce qui change pour les parents.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: ["https://www.pajemploi.urssaf.fr/", "https://www.legifrance.gouv.fr/"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Qu'est-ce qui change avec la réforme du CMG de septembre 2025 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Depuis le 1er septembre 2025, le CMG en emploi direct (assistante maternelle, garde à domicile) n'est plus forfaitaire mais proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence). La distinction selon l'âge de l'enfant et le reste à charge minimum sont supprimés en emploi direct.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "La réforme concerne-t-elle la micro-crèche et la crèche ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Non. La micro-crèche en tarification PAJE (CMG structure) conserve sa logique forfaitaire, la division par deux entre 3 et 6 ans et le reste à charge minimum de 15 %. La crèche collective (PSU) n'a jamais relevé du CMG.",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Réforme CMG sept. 2025", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Réforme CMG 2025
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Réforme du CMG de septembre 2025</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-red p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> Depuis le <strong>1ᵉʳ septembre 2025</strong>, le CMG en emploi
+        direct est <strong>proportionnel au reste à charge</strong> (et non plus forfaitaire). C'est
+        la transformation la plus profonde du dispositif depuis 2004 :
+        <strong>beaucoup de contenus en ligne sont périmés</strong>. Notre comparateur applique le
+        nouveau calcul.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Calculer mon CMG nouvelle formule
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Avant / après</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><strong>Avant</strong> : CMG forfaitaire par tranche de revenus + distinction d'âge + reste à charge minimum.</li>
+        <li><strong>Après</strong> : CMG = coût × (1 − revenu × taux d'effort / coût de référence), plafonné ; plus de distinction d'âge ni de reste à charge minimum <em>en emploi direct</em>.</li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Ce qui ne change pas</h2>
+      <p class="mt-2">
+        La <strong>micro-crèche structure (PAJE)</strong> garde sa logique forfaitaire, le ÷2 entre 3
+        et 6 ans et le reste à charge minimum de 15 %. La <strong>crèche collective (PSU)</strong>
+        reste hors CMG. Les <strong>crédits d'impôt</strong> sont inchangés.
+      </p>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
+        <li><a class="underline" href="/guides/reste-a-charge-nounou">Reste à charge d'une assistante maternelle</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : Urssaf/Pajemploi, art. 99 LFSS 2024 (loi n° 2023-1250). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>

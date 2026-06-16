@@ -1,0 +1,62 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const title = "Guides : aides, coûts et modes de garde d'enfant (2026)";
+const description =
+  "Tous nos guides pour comprendre et comparer les modes de garde d'enfant en 2026 : CMG, crédit d'impôt, micro-crèche, garde à domicile, garde partagée, réforme du CMG, reste à charge.";
+
+const guides = [
+  { href: "/guides/creche-ou-assistante-maternelle", t: "Crèche ou assistante maternelle ?", d: "Laquelle coûte le moins cher en 2026." },
+  { href: "/guides/cmg-2026", t: "CMG 2026", d: "Montant, calcul et conditions (réforme sept. 2025)." },
+  { href: "/guides/reforme-cmg-septembre-2025", t: "Réforme du CMG (sept. 2025)", d: "Ce qui change concrètement." },
+  { href: "/guides/micro-creche-cmg-structure", t: "Micro-crèche : CMG structure", d: "Plafonds et reste à charge." },
+  { href: "/guides/garde-a-domicile-cout-reel", t: "Garde à domicile : coût réel", d: "Le crédit d'impôt emploi à domicile (~12 000 €)." },
+  { href: "/guides/garde-partagee", t: "Garde partagée", d: "Fonctionnement, coût et aides." },
+  { href: "/guides/credit-impot-frais-de-garde", t: "Crédit d'impôt frais de garde", d: "50 %, plafond 3 500 €, restituable." },
+  { href: "/guides/reste-a-charge-nounou", t: "Reste à charge d'une nounou", d: "Décomposition et exemples chiffrés." },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    url: site + "/guides",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path="/guides" jsonLd={jsonLd}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Guides des modes de garde</h1>
+      <p class="mt-2 text-muted-foreground">
+        Comprendre les aides et comparer les coûts, sources officielles à l'appui. Pour un verdict
+        chiffré sur votre cas, utilisez le <a class="underline" href="/">comparateur</a>.
+      </p>
+    </header>
+
+    <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {
+        guides.map((g) => (
+          <li>
+            <a class="card-brutal-interactive flex h-full flex-col gap-1 p-4" href={g.href}>
+              <span class="font-extrabold">{g.t}</span>
+              <span class="text-sm text-muted-foreground">{g.d}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Layout>

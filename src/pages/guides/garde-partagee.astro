@@ -1,0 +1,109 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/garde-partagee";
+const title = "Garde partagée 2026 : fonctionnement, coût et aides";
+const description =
+  "La garde partagée, c'est une garde à domicile mutualisée entre deux familles : coût divisé, CMG calculé pour chaque famille et crédit d'impôt emploi à domicile. Souvent le meilleur ratio coût/souplesse.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: ["https://www.pajemploi.urssaf.fr/"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Comment fonctionne la garde partagée ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Deux familles emploient ensemble une même personne pour garder leurs enfants, en alternance au domicile de l'une ou de l'autre. Le coût total de l'intervenant est partagé entre les deux familles, et chaque famille perçoit son propre CMG.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "La garde partagée est-elle moins chère que la garde à domicile ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Oui : le coût de l'intervenant étant divisé entre deux familles, le reste à charge par famille est nettement inférieur à une garde à domicile classique, tout en conservant le crédit d'impôt emploi à domicile (~12 000 €).",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Garde partagée", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Garde partagée
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Garde partagée : fonctionnement, coût et aides</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-orange p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> La garde partagée est une garde à domicile mutualisée entre
+        <strong>deux familles</strong> : le coût de l'intervenant est <strong>divisé</strong>, chaque
+        famille perçoit son <strong>propre CMG</strong>, et le <strong>crédit d'impôt emploi à
+        domicile</strong> (~12 000 €) s'applique. Souvent le meilleur ratio coût/souplesse.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Estimer ma part en garde partagée
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Comment ça marche</h2>
+      <p class="mt-2">
+        Une seule personne garde les enfants de deux familles, en alternance au domicile de chacune.
+        Le contrat et les cotisations passent par Pajemploi. Le coût total horaire de l'intervenant
+        est partagé : chaque famille n'en supporte qu'une fraction, mais conserve l'accès aux aides.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Avantages et limites</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><strong>+</strong> Coût divisé entre deux familles, souplesse d'horaires, garde au domicile.</li>
+        <li><strong>+</strong> Crédit d'impôt emploi à domicile (plafond élevé).</li>
+        <li><strong>−</strong> Nécessite de trouver une famille compatible et de s'organiser ensemble.</li>
+      </ul>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/garde-a-domicile-cout-reel">Coût réel d'une garde à domicile</a></li>
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : Pajemploi (2026). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>

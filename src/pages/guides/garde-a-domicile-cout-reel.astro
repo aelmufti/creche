@@ -1,0 +1,112 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/garde-a-domicile-cout-reel";
+const title = "Garde à domicile : coût réel après CMG et crédit d'impôt (2026)";
+const description =
+  "Combien coûte vraiment une garde d'enfant à domicile en 2026 ? Coût total employeur, CMG, 50 % des cotisations et surtout le crédit d'impôt emploi à domicile (~12 000 €) qui la rend compétitive pour les hauts revenus.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: ["https://www.pajemploi.urssaf.fr/", "https://www.impots.gouv.fr/"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Quel crédit d'impôt pour une garde à domicile ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "La garde à domicile relève du crédit d'impôt « emploi à domicile » : 50 % des dépenses dans la limite de ~12 000 € par an (majoré de 1 500 € par enfant, plafond 15 000 €). C'est bien plus élevé que le crédit frais de garde (3 500 €/enfant) des autres modes, ce qui rend la garde à domicile compétitive pour les hauts revenus.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "La garde à domicile coûte-t-elle plus cher pour deux enfants ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Non, pas proportionnellement : un seul intervenant garde tous vos enfants au domicile, le coût n'est donc pas multiplié par le nombre d'enfants. C'est ce qui rend ce mode particulièrement intéressant à partir de deux enfants.",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Garde à domicile", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Garde à domicile
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Garde à domicile : le coût réel en 2026</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-pink p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> La garde à domicile a un coût brut élevé, mais deux atouts la
+        rendent compétitive : le <strong>crédit d'impôt emploi à domicile (~12 000 €/an)</strong>,
+        bien supérieur au crédit frais de garde des autres modes, et le fait qu'<strong>un seul
+        intervenant garde tous vos enfants</strong> (coût non multiplié). Idéale pour les hauts
+        revenus et/ou plusieurs enfants.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Calculer le coût net pour ma famille
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Le piège à éviter : deux crédits d'impôt différents</h2>
+      <p class="mt-2">
+        Beaucoup de comparateurs appliquent par erreur le crédit d'impôt « frais de garde » (plafond
+        3 500 €/enfant) à la garde à domicile. C'est faux : la garde à domicile relève du crédit
+        d'impôt <strong>emploi à domicile</strong> (~12 000 €, majoré par enfant, plafond 15 000 €).
+        Ce plafond bien plus haut change radicalement le verdict pour les revenus élevés.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Les aides cumulées</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><strong>CMG</strong> garde à domicile (taux d'effort doublé, coût de référence 10,38 €/h).</li>
+        <li><strong>50 % des cotisations</strong> sociales prises en charge.</li>
+        <li><strong>Crédit d'impôt emploi à domicile</strong> de 50 %, plafond ~12 000 €/an.</li>
+      </ul>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/garde-partagee">La garde partagée (entre deux familles)</a></li>
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
+        <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Les deux crédits d'impôt</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : Pajemploi, impots.gouv.fr (2026). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>

@@ -1,0 +1,121 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/credit-impot-frais-de-garde";
+const title = "Crédit d'impôt frais de garde 2026 : montant, plafond, restituable";
+const description =
+  "Le crédit d'impôt pour frais de garde en 2026 : 50 % des dépenses, plafond 3 500 € par enfant, restituable même si vous n'êtes pas imposable. À ne pas confondre avec le crédit d'impôt emploi à domicile.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: ["https://www.impots.gouv.fr/", "https://www.service-public.fr/"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Quel est le montant du crédit d'impôt frais de garde en 2026 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "50 % des dépenses de garde restant à votre charge (après CMG et participation employeur), dans la limite de 3 500 € par enfant et par an, soit un crédit maximum de 1 750 € par enfant. Il concerne la crèche, la micro-crèche et l'assistante maternelle (garde hors domicile).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Le crédit d'impôt est-il versé si je ne paie pas d'impôt ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Oui. C'est un crédit d'impôt restituable : si son montant dépasse votre impôt (ou si vous n'êtes pas imposable), la différence vous est remboursée par l'administration fiscale.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Quelle différence avec le crédit d'impôt emploi à domicile ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "La garde hors domicile (crèche, micro-crèche, assistante maternelle) relève du crédit « frais de garde » (plafond 3 500 €/enfant). La garde à domicile relève du crédit « emploi à domicile », au plafond bien plus élevé (~12 000 €). Ce sont deux dispositifs distincts.",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Crédit d'impôt frais de garde", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Crédit d'impôt
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Crédit d'impôt frais de garde 2026</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-green p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> Le crédit d'impôt pour frais de garde rembourse
+        <strong>50 % des dépenses</strong> restant à votre charge, dans la limite de
+        <strong>3 500 € par enfant</strong> (soit 1 750 € max). Il est
+        <strong>restituable</strong> : vous le touchez même sans être imposable. Il s'applique à la
+        crèche, la micro-crèche et l'assistante maternelle.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Voir mon coût net après crédit d'impôt
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Ce qu'il faut retenir</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><strong>Taux</strong> : 50 % des dépenses restant à charge.</li>
+        <li><strong>Plafond</strong> : 3 500 €/enfant/an → crédit max 1 750 €/enfant.</li>
+        <li><strong>Restituable</strong> : remboursé même aux foyers non imposables.</li>
+        <li><strong>Base</strong> : la part payée par l'employeur (CESU préfinancé) n'ouvre pas droit au crédit.</li>
+        <li><strong>Timing</strong> : avance de 60 % en janvier, solde l'été suivant.</li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Ne pas confondre les deux crédits</h2>
+      <p class="mt-2">
+        Garde <strong>hors domicile</strong> (crèche, micro-crèche, assistante maternelle) → crédit
+        <strong>frais de garde</strong> (3 500 €/enfant). Garde <strong>à domicile</strong> → crédit
+        <strong>emploi à domicile</strong> (~12 000 €). C'est cette différence de plafond qui fait
+        souvent basculer le verdict pour les hauts revenus.
+      </p>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/garde-a-domicile-cout-reel">Garde à domicile : le crédit emploi à domicile</a></li>
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : impots.gouv.fr, service-public.fr (2026). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>

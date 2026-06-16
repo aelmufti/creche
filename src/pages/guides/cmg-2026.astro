@@ -1,0 +1,137 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/cmg-2026";
+const title = "CMG 2026 : montant, calcul et conditions (réforme sept. 2025)";
+const description =
+  "Le Complément de libre choix du mode de garde (CMG) en 2026 : qui y a droit, comment il est calculé depuis la réforme du 1er septembre 2025, montants et plafonds pour assistante maternelle, garde à domicile et micro-crèche.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: [
+      "https://www.pajemploi.urssaf.fr/",
+      "https://www.service-public.fr/particuliers/vosdroits/F345",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Qui a droit au CMG en 2026 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Les parents qui exercent une activité professionnelle et font garder un enfant de moins de 6 ans par une assistante maternelle agréée, une garde à domicile ou une micro-crèche en tarification PAJE. Le CMG n'existe pas pour la crèche collective (PSU), où l'aide est intégrée au tarif.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Comment est calculé le CMG depuis septembre 2025 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence), plafonné. Il prend aussi en charge les cotisations sociales (100 % pour l'assistante maternelle, 50 % pour la garde à domicile).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Le CMG est-il cumulable avec le crédit d'impôt ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Oui. Le reste à charge après CMG ouvre droit à un crédit d'impôt de 50 %, restituable même pour les foyers non imposables (plafond 3 500 € par enfant pour les frais de garde hors domicile).",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "CMG 2026", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › CMG 2026
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">CMG 2026 : montant, calcul et conditions</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> Le CMG (Complément de libre choix du mode de garde) aide à payer une
+        assistante maternelle, une garde à domicile ou une micro-crèche pour un enfant de moins de 6
+        ans. Depuis le <strong>1ᵉʳ septembre 2025</strong>, en emploi direct, il est
+        <strong>proportionnel au reste à charge</strong> et non plus forfaitaire. Il se cumule avec le
+        crédit d'impôt de 50 %.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Estimer mon CMG et mon reste à charge
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">La formule (emploi direct, depuis sept. 2025)</h2>
+      <pre class="card-brutal mt-2 overflow-x-auto p-3 text-xs">CMG = coût_mensuel × (1 − revenu × taux_effort / coût_référence)</pre>
+      <p class="mt-2">
+        Le résultat est plafonné. Le coût de référence est de 4,85 €/h pour l'assistante maternelle et
+        de 10,38 €/h pour la garde à domicile (avec un taux d'effort doublé). Plus vos revenus sont
+        élevés, plus le CMG diminue.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Montants selon le mode de garde</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><strong>Assistante maternelle</strong> : CMG sur le salaire + 100 % des cotisations prises en charge.</li>
+        <li><strong>Garde à domicile</strong> : CMG (taux d'effort doublé) + 50 % des cotisations.</li>
+        <li><strong>Micro-crèche (PAJE)</strong> : « CMG structure », logique différente — voir le <a class="underline" href="/guides/micro-creche-cmg-structure">guide micro-crèche</a>.</li>
+        <li><strong>Crèche collective (PSU)</strong> : pas de CMG, l'aide est intégrée au tarif.</li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      <h3 class="mt-3 font-bold">Qui a droit au CMG en 2026 ?</h3>
+      <p class="mt-1">
+        Les parents en activité qui font garder un enfant de moins de 6 ans par une assistante
+        maternelle agréée, une garde à domicile ou une micro-crèche en tarification PAJE.
+      </p>
+      <h3 class="mt-3 font-bold">Le CMG est-il cumulable avec le crédit d'impôt ?</h3>
+      <p class="mt-1">
+        Oui : le reste à charge après CMG ouvre droit à 50 % de <a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt</a>, restituable.
+      </p>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/reforme-cmg-septembre-2025">La réforme du CMG de septembre 2025</a></li>
+        <li><a class="underline" href="/guides/reste-a-charge-nounou">Reste à charge d'une assistante maternelle</a></li>
+        <li><a class="underline" href="/guides/garde-a-domicile-cout-reel">Coût réel d'une garde à domicile</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : Urssaf/Pajemploi, service-public.fr (2026). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>

@@ -1,0 +1,114 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/micro-creche-cmg-structure";
+const title = "Micro-crèche 2026 : CMG structure, plafonds et reste à charge";
+const description =
+  "La micro-crèche en tarification PAJE ouvre droit au « CMG structure » : 85 % du coût éligible (plafonné à 10 €/h), dans la limite d'un forfait par tranche de revenus, avec un reste à charge minimum de 15 %. Explications 2026.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: ["https://www.pajemploi.urssaf.fr/", "https://www.service-public.fr/"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Quelle aide pour une micro-crèche en 2026 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "En micro-crèche en tarification PAJE, le CMG « structure » couvre 85 % du coût éligible (plafonné à 10 €/h), dans la limite d'un forfait mensuel qui dépend de votre tranche de revenus, avec un reste à charge minimum de 15 %.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "La réforme du CMG de septembre 2025 s'applique-t-elle à la micro-crèche ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Non. La réforme du 1er septembre 2025 concerne l'emploi direct (assistante maternelle, garde à domicile). Pour la micro-crèche structure, la logique forfaitaire est maintenue, ainsi que la division par deux de l'aide entre 3 et 6 ans et le reste à charge minimum de 15 %.",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Micro-crèche", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Micro-crèche
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Micro-crèche 2026 : CMG structure et reste à charge</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-green p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> Une micro-crèche en tarification PAJE ouvre droit au
+        <strong>CMG « structure »</strong> : il couvre <strong>85 % du coût éligible</strong>
+        (plafonné à 10 €/h), dans la limite d'un <strong>forfait selon votre tranche de revenus</strong>,
+        avec un <strong>reste à charge minimum de 15 %</strong>. La logique est différente de l'emploi
+        direct, et la réforme de septembre 2025 ne s'y applique pas.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Comparer micro-crèche et autres modes
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Comment se calcule l'aide</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>Coût éligible = heures × tarif horaire, <strong>plafonné à 10 €/h</strong>.</li>
+        <li>Aide = <strong>85 %</strong> du coût éligible, dans la limite du <strong>forfait de votre tranche</strong> de revenus.</li>
+        <li><strong>Reste à charge minimum 15 %</strong> : vous payez toujours au moins 15 % du coût éligible.</li>
+        <li>Aide <strong>divisée par deux</strong> pour un enfant de 3 à 6 ans.</li>
+        <li>Condition : au moins 16 h de garde par mois.</li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Micro-crèche ou crèche collective ?</h2>
+      <p class="mt-2">
+        La <strong>crèche collective (PSU)</strong> applique un tarif au taux d'effort, souvent plus
+        avantageux pour les revenus modestes. La <strong>micro-crèche (PAJE)</strong> peut être plus
+        chère mais souvent plus disponible et avec des horaires plus souples. Comparez le coût net
+        réel des deux pour votre situation.
+      </p>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
+        <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Crédit d'impôt frais de garde</a></li>
+        <li><a class="underline" href="/guides/creche-ou-assistante-maternelle">Crèche ou assistante maternelle</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : Pajemploi, service-public.fr (2026). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>

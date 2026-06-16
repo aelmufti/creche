@@ -16,8 +16,9 @@ const canonical = new URL(canonicalPath, Astro.site).href;
 
 const nav = [
   { href: "/", label: "Comparateur" },
+  { href: "/guides", label: "Guides" },
+  { href: "/cout-garde-enfant", label: "Par département" },
   { href: "/methodologie", label: "Méthodologie" },
-  { href: "/a-propos", label: "À propos" },
 ];
 const current = Astro.url.pathname;
 const isActive = (href: string) =>
@@ -97,6 +98,7 @@ const isActive = (href: string) =>
             </a>
           </p>
           <nav aria-label="Liens de bas de page" class="flex flex-wrap gap-4">
+            <a href="/guides" class="underline">Guides</a>
             <a href="/cout-garde-enfant" class="underline">Coût par département</a>
             <a href="/methodologie" class="underline">Méthodologie</a>
             <a href="/a-propos" class="underline">À propos</a>

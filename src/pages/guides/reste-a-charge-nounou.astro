@@ -1,0 +1,116 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/reste-a-charge-nounou";
+const title = "Reste à charge d'une assistante maternelle en 2026 (exemples chiffrés)";
+const description =
+  "Combien reste-t-il vraiment à payer pour une assistante maternelle (nounou) après le CMG et le crédit d'impôt ? Décomposition du coût, exemples chiffrés et calcul personnalisé pour 2026.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: ["https://www.pajemploi.urssaf.fr/"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Comment calculer le reste à charge d'une assistante maternelle ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "On part du coût brut (salaire horaire net × heures + indemnités d'entretien et de repas), on retire le CMG (qui couvre une partie du salaire et 100 % des cotisations), puis le crédit d'impôt de 50 %. Le résultat est le coût net réel.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "La nounou coûte-t-elle plus cher que la crèche ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Pas toujours. Pour les revenus modestes, la crèche est souvent moins chère ; pour d'autres profils, l'assistante maternelle avec CMG et crédit d'impôt peut être compétitive. Le seul moyen de trancher est de calculer son cas.",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Reste à charge nounou", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Reste à charge nounou
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Reste à charge d'une assistante maternelle en 2026</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-orange p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> Le reste à charge réel d'une assistante maternelle (« nounou ») se
+        calcule en quatre temps : <strong>coût brut</strong> → moins le <strong>CMG</strong> → moins
+        le <strong>crédit d'impôt (50 %)</strong> → <strong>coût net réel</strong>. Selon vos revenus
+        et vos heures, il peut être très inférieur au coût brut affiché.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Calculer mon reste à charge
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">La décomposition du coût</h2>
+      <ol class="mt-2 list-decimal space-y-1 pl-5">
+        <li><strong>Coût brut</strong> = salaire horaire net × heures + indemnités (entretien, repas).</li>
+        <li><strong>− CMG</strong> : couvre une partie du salaire et 100 % des cotisations sociales.</li>
+        <li><strong>= Trésorerie mensuelle</strong> : ce qui part du compte chaque mois.</li>
+        <li><strong>− Crédit d'impôt (50 %)</strong>, plafond 3 500 €/enfant, encaissé l'année suivante.</li>
+        <li><strong>= Coût net réel</strong>.</li>
+      </ol>
+      <p class="mt-2 text-muted-foreground">
+        Les indemnités d'entretien et de repas ne sont pas couvertes par le CMG : elles pèsent dans le
+        reste à charge.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Le coût dépend aussi de votre département</h2>
+      <p class="mt-2">
+        Le salaire horaire moyen d'une assistante maternelle varie selon les territoires. Consultez le
+        <a class="underline" href="/cout-garde-enfant">coût par département</a> ou lancez directement
+        le comparateur.
+      </p>
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
+        <li><a class="underline" href="/guides/creche-ou-assistante-maternelle">Crèche ou assistante maternelle</a></li>
+        <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Crédit d'impôt frais de garde</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : Pajemploi (2026). Estimation indicative, pas un avis officiel.
+    </p>
+  </article>
+</Layout>
