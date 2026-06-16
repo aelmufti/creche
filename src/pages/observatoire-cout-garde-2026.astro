@@ -1,0 +1,157 @@
+---
+import Layout from "../layouts/Layout.astro";
+import departementsJson from "../data/departements.json";
+import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../data/tarifs-locaux";
+import { fmtEuro2 } from "../lib/format";
+import { slugify } from "../lib/slug";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/observatoire-cout-garde-2026";
+const csvUrl = site + "/data/cout-garde-par-departement-2026.csv";
+const departements = departementsJson as Record<string, string>;
+
+const rows = Object.keys(TARIFS_DEPARTEMENTS)
+  .filter((code) => departements[code])
+  .map((code) => {
+    const t = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[code] };
+    return { code, nom: departements[code], ama: t.tauxHoraireAma, dom: t.coutHoraireDomicile };
+  })
+  .sort((a, b) => b.ama - a.ama);
+
+const plusChers = rows.slice(0, 5);
+const moinsChers = [...rows].slice(-5).reverse();
+
+const title = "Observatoire du coût de la garde d'enfant par département (2026)";
+const description =
+  "Combien gagne une assistante maternelle ou une garde à domicile selon les départements ? Classement 2026 à partir des données URSSAF, données ouvertes téléchargeables.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: "Coût de la garde d'enfant par département en France (2026)",
+    description:
+      "Salaire horaire net moyen des assistantes maternelles et coût horaire de la garde à domicile, par département, dérivés des données open data URSSAF 2024.",
+    url: site + path,
+    inLanguage: "fr-FR",
+    temporalCoverage: "2024",
+    spatialCoverage: "France",
+    creator: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    isBasedOn: SOURCE_TARIFS.source,
+    license: "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    distribution: [
+      {
+        "@type": "DataDownload",
+        encodingFormat: "text/csv",
+        contentUrl: csvUrl,
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Observatoire 2026", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">
+        Observatoire du coût de la garde d'enfant 2026
+      </h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> À l'échelle nationale, une assistante maternelle est rémunérée
+        <strong>{fmtEuro2(TARIFS_NATIONAL.tauxHoraireAma)}/h net</strong> en moyenne, et une garde à
+        domicile coûte environ <strong>{fmtEuro2(TARIFS_NATIONAL.coutHoraireDomicile)}/h</strong>
+        (coût total employeur). Les écarts entre départements vont de
+        <strong>{fmtEuro2(moinsChers[0].ama)}</strong> à
+        <strong>{fmtEuro2(plusChers[0].ama)}/h</strong> pour l'assistante maternelle. Données
+        {SOURCE_TARIFS.source}.
+      </p>
+      <a
+        href="/data/cout-garde-par-departement-2026.csv"
+        class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground"
+        download
+      >
+        ↓ Télécharger les données (CSV)
+      </a>
+    </div>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Les 5 départements où l'assistante maternelle est la plus chère</h2>
+      <table class="card-brutal mt-3 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">Département</th>
+            <th class="p-2 text-right">AMA (€/h net)</th>
+            <th class="p-2 text-right">Garde domicile (€/h)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            plusChers.map((r) => (
+              <tr class="border-t border-border/30">
+                <td class="p-2 font-bold">
+                  <a class="underline" href={`/cout-garde-enfant/${slugify(r.nom)}`}>{r.nom}</a>
+                </td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro2(r.ama)}</td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro2(r.dom)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Les 5 départements les moins chers</h2>
+      <table class="card-brutal mt-3 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">Département</th>
+            <th class="p-2 text-right">AMA (€/h net)</th>
+            <th class="p-2 text-right">Garde domicile (€/h)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            moinsChers.map((r) => (
+              <tr class="border-t border-border/30">
+                <td class="p-2 font-bold">
+                  <a class="underline" href={`/cout-garde-enfant/${slugify(r.nom)}`}>{r.nom}</a>
+                </td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro2(r.ama)}</td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro2(r.dom)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Méthode & licence</h2>
+      <p class="mt-2">
+        Salaire horaire net = masse salariale nette / heures déclarées, par département et par
+        catégorie d'emploi, d'après {SOURCE_TARIFS.source}. Le coût de la garde à domicile est
+        converti du net au coût total employeur (× 1,8 environ). Données réutilisables sous licence
+        ouverte (Etalab). Détails sur la <a class="underline" href="/methodologie">méthodologie</a>.
+      </p>
+      <p class="mt-2">
+        Le coût de référence (crèche PSU, CMG, plafonds) est national : seuls les salaires AMA et
+        garde à domicile varient localement. Pour un verdict chiffré sur votre cas, utilisez le
+        <a class="underline" href="/">comparateur</a> ou consultez le
+        <a class="underline" href="/cout-garde-enfant">coût par département</a>.
+      </p>
+    </section>
+  </article>
+</Layout>

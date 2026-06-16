@@ -55,8 +55,8 @@ const amaVsNat =
 
 const slug = slugify(nom);
 const path = `/cout-garde-enfant/${slug}`;
-const title = `Crèche ou nounou en ${nom} : coût réel 2026`;
-const description = `En ${nom}, une assistante maternelle est rémunérée ${fmtEuro2(tarifs.tauxHoraireAma)}/h net en moyenne (URSSAF 2024). Comparez crèche, nounou, micro-crèche et garde à domicile et trouvez le moins cher pour votre famille.`;
+const title = `Crèche ou nounou — ${nom} : coût réel 2026`;
+const description = `${nom} : une assistante maternelle y est rémunérée ${fmtEuro2(tarifs.tauxHoraireAma)}/h net en moyenne (URSSAF 2024). Comparez crèche, nounou, micro-crèche et garde à domicile et trouvez le moins cher pour votre famille.`;
 
 const jsonLd = [
   {
@@ -114,13 +114,13 @@ const jsonLd = [
     </nav>
 
     <header>
-      <h1 class="text-3xl font-extrabold sm:text-4xl">Crèche ou nounou en {nom} : coût réel 2026</h1>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Crèche ou nounou — {nom} : coût réel 2026</h1>
     </header>
 
     <!-- Réponse directe (answer-first, citable) -->
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
       <p>
-        En <strong>{nom}</strong>, une assistante maternelle est rémunérée en moyenne
+        <strong>{nom}</strong> — une assistante maternelle y est rémunérée en moyenne
         <strong>{fmtEuro2(tarifs.tauxHoraireAma)}/h net</strong> ({amaVsNat}), et une garde à domicile
         revient à environ <strong>{fmtEuro2(tarifs.coutHoraireDomicile)}/h</strong> de coût total
         employeur — données <strong>URSSAF 2024</strong>.
@@ -135,7 +135,7 @@ const jsonLd = [
     </div>
 
     <section>
-      <h2 class="text-xl font-extrabold">Comparatif des 5 modes en {nom} (exemple)</h2>
+      <h2 class="text-xl font-extrabold">Comparatif des 5 modes — {nom} (exemple)</h2>
       <p class="mt-1 text-xs text-muted-foreground">
         Hypothèse : couple, {EX.revenu} €/mois, 1 enfant, {EX.heures} h/mois. Coût net réel = après
         crédit d'impôt 50 %.

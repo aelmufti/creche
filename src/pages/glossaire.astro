@@ -1,0 +1,72 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/glossaire";
+const title = "Glossaire des aides et modes de garde d'enfant (2026)";
+const description =
+  "Définitions claires : CMG, PSU, PAJE, assistante maternelle, micro-crèche, crédit d'impôt, taux d'effort, CESU, reste à charge, coût net réel. Le vocabulaire de la garde d'enfant expliqué simplement.";
+
+const termes: { terme: string; def: string }[] = [
+  { terme: "CMG", def: "Complément de libre choix du mode de garde : aide de la CAF qui prend en charge une partie du salaire et des cotisations pour une assistante maternelle, une garde à domicile ou une micro-crèche (enfant de moins de 6 ans). Depuis sept. 2025, il est proportionnel au reste à charge en emploi direct." },
+  { terme: "PSU", def: "Prestation de service unique : financement des crèches collectives conventionnées par la CAF. Le tarif horaire facturé aux parents est calculé selon leurs ressources et le nombre d'enfants à charge (taux d'effort) — il n'y a pas de CMG." },
+  { terme: "PAJE", def: "Prestation d'accueil du jeune enfant : ensemble d'aides aux familles, dont le CMG. La micro-crèche « en PAJE » ouvre droit au CMG structure, contrairement aux crèches PSU." },
+  { terme: "Assistante maternelle (AMA)", def: "Professionnelle agréée qui garde des enfants à son domicile. En emploi direct, les parents sont employeurs (contrat, Pajemploi) et perçoivent le CMG ainsi que la prise en charge à 100 % des cotisations." },
+  { terme: "Micro-crèche", def: "Petite structure d'accueil (12 places max). En tarification PAJE, elle ouvre droit au CMG structure (85 % du coût éligible plafonné à 10 €/h, dans la limite d'un forfait, reste à charge minimum 15 %)." },
+  { terme: "Garde à domicile", def: "Garde de l'enfant au domicile des parents. Relève du crédit d'impôt emploi à domicile (plafond ~12 000 €), bien plus élevé que le crédit frais de garde des autres modes." },
+  { terme: "Garde partagée", def: "Garde à domicile mutualisée entre deux familles : le coût de l'intervenant est divisé, et chaque famille perçoit son propre CMG." },
+  { terme: "Crédit d'impôt frais de garde", def: "Réduction restituable de 50 % des dépenses de garde hors domicile (crèche, micro-crèche, assistante maternelle), plafonnée à 3 500 € par enfant. Versé même aux foyers non imposables." },
+  { terme: "Crédit d'impôt emploi à domicile", def: "Réduction restituable de 50 % des dépenses de garde à domicile, plafonnée à ~12 000 €/an (majorée par enfant, max 15 000 €)." },
+  { terme: "Taux d'effort", def: "Pourcentage des ressources appliqué pour calculer le tarif d'une crèche PSU (et le CMG en emploi direct). Il diminue avec le nombre d'enfants à charge. Barème national CNAF." },
+  { terme: "CESU préfinancé", def: "Chèque emploi service universel financé en partie par l'employeur. Il réduit le reste à charge, mais la part payée par l'employeur n'ouvre pas droit au crédit d'impôt." },
+  { terme: "Reste à charge", def: "Ce qui reste à payer après déduction des aides (CMG, participation employeur), avant crédit d'impôt." },
+  { terme: "Trésorerie mensuelle", def: "Ce qui part réellement du compte chaque mois, avant crédit d'impôt." },
+  { terme: "Coût net réel", def: "Coût final après crédit d'impôt (50 %), encaissé l'année suivante. C'est le critère de comparaison entre modes de garde." },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTermSet",
+    name: "Glossaire de la garde d'enfant",
+    url: site + path,
+    inLanguage: "fr-FR",
+    hasDefinedTerm: termes.map((t) => ({
+      "@type": "DefinedTerm",
+      name: t.terme,
+      description: t.def,
+    })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Glossaire", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Glossaire de la garde d'enfant</h1>
+      <p class="mt-2 text-muted-foreground">
+        Le vocabulaire des aides et modes de garde, expliqué simplement. Pour calculer votre cas,
+        utilisez le <a class="underline" href="/">comparateur</a>.
+      </p>
+    </header>
+
+    <dl class="flex flex-col gap-3">
+      {
+        termes.map((t) => (
+          <div class="card-brutal p-4">
+            <dt class="font-extrabold">{t.terme}</dt>
+            <dd class="mt-1 text-sm leading-relaxed">{t.def}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </article>
+</Layout>

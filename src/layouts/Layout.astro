@@ -42,7 +42,9 @@ const isActive = (href: string) =>
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:site_name" content="creche-ou-nounou.fr" />
+    <meta property="og:image" content={new URL("/og-default.png", Astro.site).href} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={new URL("/og-default.png", Astro.site).href} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -53,6 +55,16 @@ const isActive = (href: string) =>
       jsonLd.map((obj) => (
         <script type="application/ld+json" set:html={JSON.stringify(obj)} />
       ))
+    }
+    {
+      /* Analytics privacy-first (cookieless), activé seulement si configuré. */
+      import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN && (
+        <script
+          defer
+          data-domain={import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN}
+          src="https://plausible.io/js/script.js"
+        />
+      )
     }
   </head>
   <body>
@@ -100,6 +112,8 @@ const isActive = (href: string) =>
           <nav aria-label="Liens de bas de page" class="flex flex-wrap gap-4">
             <a href="/guides" class="underline">Guides</a>
             <a href="/cout-garde-enfant" class="underline">Coût par département</a>
+            <a href="/observatoire-cout-garde-2026" class="underline">Observatoire</a>
+            <a href="/glossaire" class="underline">Glossaire</a>
             <a href="/methodologie" class="underline">Méthodologie</a>
             <a href="/a-propos" class="underline">À propos</a>
             <a href="/mentions-legales" class="underline">Mentions légales</a>
