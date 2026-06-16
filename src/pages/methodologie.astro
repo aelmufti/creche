@@ -1,0 +1,161 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { bareme } from "../engine/bareme";
+import { SOURCE_TARIFS } from "../data/tarifs-locaux";
+import { fmtEuro2 } from "../lib/format";
+
+const site = "https://creche-ou-nounou.fr";
+const title = "Méthodologie & sources — comment on calcule le coût de la garde (2026)";
+const description =
+  "Formules, barème 2026 daté et sources officielles (CNAF, URSSAF/Pajemploi, service-public.fr) derrière le comparateur crèche ou nounou. CMG, crédit d'impôt, taux d'effort.";
+
+const b = bareme;
+const te = b.taux_effort_collectif;
+const lignesTaux: [string, number][] = [
+  ["1", te["1"]],
+  ["2", te["2"]],
+  ["3", te["3"]],
+  ["4 à 7", te["4_7"]],
+  ["8 et +", te["8_plus"]],
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: "Méthodologie & sources du comparateur crèche ou nounou",
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-15",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: [
+      "https://www.service-public.fr/particuliers/vosdroits/F345",
+      "https://www.pajemploi.urssaf.fr/",
+      "https://www.caf.fr/",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Méthodologie", item: site + "/methodologie" },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path="/methodologie" jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Méthodologie & sources</h1>
+      <p class="mt-2 text-muted-foreground">
+        Tous les calculs reposent sur des données officielles, datées et sourcées. Barème en
+        vigueur : <strong class="text-foreground">{b.version}</strong> (1ᵉʳ avril 2026). Source
+        agrégée : {b.source}. <strong class="text-foreground">Mis à jour le 16 juin 2026.</strong>
+      </p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-red p-4 text-sm">
+      <strong class="uppercase tracking-brutal">Avertissement.</strong> Cet outil fournit une
+      <em>estimation indicative</em>, ce n'est pas un avis officiel ni un engagement de la CAF, de
+      l'Urssaf ou des impôts. Vérifiez toujours votre situation sur
+      <a class="underline" href="https://www.caf.fr">caf.fr</a> et
+      <a class="underline" href="https://www.pajemploi.urssaf.fr">pajemploi.urssaf.fr</a>.
+    </div>
+
+    <section>
+      <h2 class="text-xl font-extrabold">1. Le CMG en emploi direct (réforme sept. 2025)</h2>
+      <p class="mt-2 text-sm">
+        Depuis le 1ᵉʳ septembre 2025, le Complément de libre choix du mode de garde est proportionnel
+        au reste à charge :
+      </p>
+      <pre class="card-brutal mt-2 overflow-x-auto p-3 text-xs">CMG = coût_mensuel × (1 − revenu × taux_effort / coût_référence)</pre>
+      <p class="mt-2 text-sm">
+        Coût horaire de référence : {fmtEuro2(b.cout_horaire_ref.ama)} (assistante maternelle),
+        {fmtEuro2(b.cout_horaire_ref.domicile)} (garde à domicile, taux d'effort doublé). Résultat
+        plafonné à {fmtEuro2(b.cmg_max_emploi_direct.ama)}/mois (AMA) et
+        {fmtEuro2(b.cmg_max_emploi_direct.domicile)}/mois (domicile). La distinction d'âge et le reste
+        à charge minimum de 15 % sont <strong>supprimés</strong> en emploi direct.
+      </p>
+      <p class="mt-1 text-xs text-muted-foreground">
+        Source : Urssaf/Pajemploi ; art. 99 LFSS 2024 (loi n° 2023-1250), en vigueur 1ᵉʳ sept. 2025.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">2. Le tarif crèche (PSU)</h2>
+      <p class="mt-2 text-sm">
+        Pas de CMG : le tarif horaire est la participation familiale au taux d'effort CNAF, appliqué
+        aux ressources (plancher {fmtEuro2(b.ressources.plancher)}, plafond
+        {fmtEuro2(b.ressources.plafond)}). Taux d'effort selon le nombre d'enfants à charge :
+      </p>
+      <table class="card-brutal mt-2 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">Enfants à charge</th>
+            <th class="p-2">Taux d'effort (collectif)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            lignesTaux.map(([k, v]) => (
+              <tr class="border-t border-border/30">
+                <td class="p-2">{k}</td>
+                <td class="p-2 tabular-nums">{(v * 100).toFixed(4)} %</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <p class="mt-1 text-xs text-muted-foreground">
+        Source : CNAF, circulaire 2019-005 du 5 juin 2019 ; barème EAJE applicable au 1ᵉʳ janv. 2026.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">3. Les deux crédits d'impôt (50 %)</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+        <li>
+          <strong>Frais de garde</strong> (crèche, micro-crèche, AMA) : 50 % dans la limite de
+          {fmtEuro2(b.credit_impot.frais_garde.plafond_par_enfant)}/enfant.
+        </li>
+        <li>
+          <strong>Emploi à domicile</strong> (garde à domicile et partagée) : 50 % dans la limite de
+          ~{fmtEuro2(b.credit_impot.emploi_domicile.plafond_base)} (+{fmtEuro2(
+            b.credit_impot.emploi_domicile.majoration_par_enfant,
+          )}/enfant, max {fmtEuro2(b.credit_impot.emploi_domicile.plafond_max)}).
+        </li>
+      </ul>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Le crédit d'impôt est <strong>restituable</strong> : il s'applique même aux foyers non
+        imposables. La part payée par l'employeur n'ouvre pas droit au crédit.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">4. Tarifs locaux par département</h2>
+      <p class="mt-2 text-sm">
+        Le salaire horaire moyen de l'assistante maternelle et de la garde à domicile, par
+        département, provient des données open data
+        <strong> {SOURCE_TARIFS.source}</strong>. Le coût garde à domicile est converti du net au
+        coût total employeur (× 1,8 environ). Valeurs indicatives et modifiables ; le tarif
+        micro-crèche reste national (plafonné à 10 €/h pour l'aide).
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">5. Limites connues</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        <li>Aide cotisations garde à domicile : approximation (50 % d'une estimation des charges).</li>
+        <li>
+          Majoration parent isolé : porte sur les plafonds/tranches, mécanique exacte en cours de
+          vérification avant application aux montants.
+        </li>
+        <li>Forfaits micro-crèche T2/T3 : à reconfirmer verbatim depuis le barème Pajemploi.</li>
+      </ul>
+    </section>
+  </article>
+</Layout>

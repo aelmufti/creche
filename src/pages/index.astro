@@ -1,0 +1,106 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Calculator } from "../components/Calculator";
+
+const site = "https://creche-ou-nounou.fr";
+const title = "Crèche ou nounou ? Comparateur de coût 2026 (verdict chiffré)";
+const description =
+  "Crèche, micro-crèche, assistante maternelle, garde à domicile ou partagée : trouvez le mode de garde le moins cher pour votre famille. Verdict chiffré au barème 2026 (CMG, crédit d'impôt, reste à charge). Gratuit, sans inscription.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Comparateur crèche ou nounou",
+    url: site + "/",
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Web",
+    inLanguage: "fr-FR",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+    description,
+    creator: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "creche-ou-nounou.fr",
+    url: site,
+    founder: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Crèche ou nounou : qu'est-ce qui coûte le moins cher ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Cela dépend de vos revenus, du nombre d'enfants à charge, des heures de garde et des tarifs locaux. La crèche collective applique un tarif au taux d'effort CNAF, souvent avantageux pour les revenus modestes ; l'assistante maternelle ouvre droit au CMG ; la garde à domicile bénéficie d'un crédit d'impôt plus élevé. Le comparateur calcule le coût net réel de chaque mode pour votre situation.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Le calcul tient-il compte de la réforme du CMG de septembre 2025 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Oui. Depuis le 1ᵉʳ septembre 2025, le Complément de libre choix du mode de garde (CMG) en emploi direct est proportionnel au reste à charge. Le comparateur applique ce nouveau mode de calcul.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Faut-il créer un compte pour obtenir le résultat ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Non. Le résultat est instantané et gratuit, sans inscription. Tout est calculé dans votre navigateur ; votre scénario est sauvegardé dans l'adresse de la page.",
+        },
+      },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path="/" jsonLd={jsonLd}>
+  <div class="flex flex-col gap-8">
+    <section class="hero-grid-bg -mx-5 border-b-[3px] border-border px-5 pb-8 pt-2">
+      <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.05] sm:text-5xl">
+        Crèche ou nounou ? <span class="marker">Le moins cher</span> pour votre famille.
+      </h1>
+      <p class="mt-4 max-w-2xl text-base text-muted-foreground">
+        Comparez crèche, micro-crèche, assistante maternelle, garde à domicile et garde partagée.
+        Verdict chiffré personnalisé au barème 2026 (CMG, crédit d'impôt, reste à charge).
+        Instantané, gratuit, <strong class="text-foreground">sans inscription</strong>.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-brutal">
+        {
+          ["Réforme CMG sept. 2025", "Trésorerie vs coût net réel", "Tarifs locaux URSSAF"].map(
+            (t) => (
+              <span class="border-[3px] border-border bg-card px-2 py-1 shadow-brutal-sm">{t}</span>
+            ),
+          )
+        }
+      </div>
+    </section>
+
+    <Calculator client:load />
+
+    <section class="card-brutal p-5 text-sm leading-relaxed">
+      <h2 class="text-lg font-extrabold uppercase tracking-brutal">Comment lire le verdict</h2>
+      <p class="mt-3">On distingue deux chiffres que personne d'autre ne sépare clairement :</p>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>
+          <strong>Trésorerie mensuelle</strong> : ce qui part réellement de votre compte chaque mois
+          (avant crédit d'impôt).
+        </li>
+        <li>
+          <strong>Coût net réel</strong> : après crédit d'impôt (50 %), encaissé l'année suivante
+          (avance de 60 % en janvier, solde en été).
+        </li>
+      </ul>
+      <p class="mt-3 text-muted-foreground">
+        Le classement se fait sur le coût net réel. Les sliders revenu et heures font basculer le
+        verdict en direct — testez vos scénarios.
+      </p>
+    </section>
+  </div>
+</Layout>

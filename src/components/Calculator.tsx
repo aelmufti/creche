@@ -1,22 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { comparer, decodeInputs, encodeInputs, type Inputs } from "../engine";
+import { comparer, decodeInputs, encodeInputs, inputsParDefaut, type Inputs } from "../engine";
 import { defauts } from "../engine/bareme";
 import { SOURCE_TARIFS, tarifsLocaux } from "../data/tarifs-locaux";
 import { Field, NumberInput, Segmented, Slider, Toggle } from "./ui";
 import { ResultsPanel } from "./ResultsPanel";
 
 export function Calculator() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [inputs, setInputs] = useState<Inputs>(() => decodeInputs(searchParams.toString()));
+  // SSR : on part des valeurs par défaut (rendu déterministe, pas de window).
+  const [inputs, setInputs] = useState<Inputs>(inputsParDefaut);
+  const [hydrated, setHydrated] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Synchronise l'état du formulaire dans l'URL (save sans compte, §11).
+  // Au montage client : hydrate l'état depuis l'URL (scénario partagé, §11).
   useEffect(() => {
+    setInputs(decodeInputs(window.location.search));
+    setHydrated(true);
+  }, []);
+
+  // Synchronise l'état dans l'URL — seulement après hydratation, pour ne pas
+  // écraser les paramètres partagés au premier rendu.
+  useEffect(() => {
+    if (!hydrated) return;
     const q = encodeInputs(inputs);
-    setSearchParams(q, { replace: true });
-  }, [inputs, setSearchParams]);
+    const url = q ? `${window.location.pathname}?${q}` : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  }, [inputs, hydrated]);
 
   // Pré-remplissage local (§10/§14) : les champs avancés NON modifiés par
   // l'utilisateur (undefined) prennent la valeur indicative du département.

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Néo-brutalisme : carré bleu primaire + bordure noire épaisse -->
+  <rect x="0" y="0" width="32" height="32" fill="#1754CC"/>
+  <rect x="1.5" y="1.5" width="29" height="29" fill="none" stroke="#0D0D0D" stroke-width="3"/>
+  <!-- Biberon blanc, contours noirs -->
+  <g fill="#FFFFFF" stroke="#0D0D0D" stroke-width="1.6" shape-rendering="geometricPrecision">
+    <!-- téterelle -->
+    <rect x="13.5" y="5" width="5" height="4"/>
+    <!-- collerette -->
+    <rect x="11.5" y="9" width="9" height="3.5"/>
+    <!-- corps -->
+    <rect x="10.5" y="12.5" width="11" height="14.5"/>
+  </g>
+  <!-- graduations -->
+  <g stroke="#0D0D0D" stroke-width="1.6" stroke-linecap="butt">
+    <line x1="12.5" y1="17" x2="16" y2="17"/>
+    <line x1="12.5" y1="20.5" x2="16" y2="20.5"/>
+  </g>
+</svg>

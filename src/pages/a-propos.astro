@@ -1,0 +1,104 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const title = "À propos — qui est derrière creche-ou-nounou.fr";
+const description =
+  "Comparateur indépendant des modes de garde d'enfant, créé par Ali El Mufti. Méthode transparente, sources officielles datées, zéro inscription. Pourquoi vous pouvez faire confiance aux calculs.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: title,
+    url: site + "/a-propos",
+    description,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Ali El Mufti",
+    url: "https://aelm.dev",
+    sameAs: ["https://aelm.dev", "https://freelance-ou-cdi.fr"],
+    knowsAbout: [
+      "Complément de libre choix du mode de garde",
+      "modes de garde d'enfant",
+      "crédit d'impôt frais de garde",
+      "barème CNAF",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "À propos", item: site + "/a-propos" },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path="/a-propos" jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">À propos</h1>
+      <p class="mt-2 text-muted-foreground">
+        Un comparateur indépendant, gratuit et sans inscription, pour répondre à une question
+        angoissante : <strong class="text-foreground">crèche ou nounou, qu'est-ce qui coûte le moins
+        cher pour ma famille ?</strong>
+      </p>
+    </header>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">L'auteur</h2>
+      <p class="mt-2">
+        Ce site est conçu et maintenu par <a class="underline font-bold" href="https://aelm.dev"
+          >Ali El Mufti</a
+        >, également à l'origine de <a class="underline" href="https://freelance-ou-cdi.fr"
+          >freelance-ou-cdi.fr</a
+        >. La même obsession dans les deux cas : prendre un choix réglementé complexe et en sortir un
+        <strong>verdict chiffré clair et vérifiable</strong>, plutôt qu'un tableau à interpréter.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">Pourquoi faire confiance aux calculs</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>
+          <strong>Sources officielles datées</strong> : CNAF, URSSAF/Pajemploi, service-public.fr —
+          détaillées dans la <a class="underline" href="/methodologie">méthodologie</a>.
+        </li>
+        <li>
+          <strong>Calculs vérifiés</strong> contre des cas de référence officiels (CMG, tarif crèche
+          PSU, forfaits) — c'est notre critère de correction.
+        </li>
+        <li>
+          <strong>Tarifs locaux réels</strong> issus des données open data URSSAF par département.
+        </li>
+        <li>
+          <strong>À jour de la réforme du CMG</strong> de septembre 2025, que beaucoup de contenus
+          n'ont pas encore intégrée.
+        </li>
+      </ul>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">Indépendance & confiance</h2>
+      <p class="mt-2">
+        <strong>Zéro inscription</strong>, jamais. Aucune donnée n'est envoyée à un serveur : tout
+        est calculé dans votre navigateur, et votre scénario est sauvegardé dans l'adresse de la
+        page. Les résultats restent une <strong>estimation indicative</strong> — pour une décision,
+        vérifiez votre situation sur caf.fr et pajemploi.urssaf.fr.
+      </p>
+    </section>
+
+    <div>
+      <a
+        href="/"
+        class="btn-brutal inline-block bg-brutal-yellow px-5 py-3 text-foreground"
+      >
+        → Lancer le comparateur
+      </a>
+    </div>
+  </article>
+</Layout>

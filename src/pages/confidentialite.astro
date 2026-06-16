@@ -1,0 +1,34 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = "Confidentialité — aucune collecte de données | creche-ou-nounou.fr";
+const description =
+  "Politique de confidentialité : aucune inscription, aucune donnée envoyée à un serveur. Tout est calculé dans votre navigateur. Sauvegarde par URL.";
+---
+
+<Layout title={title} description={description} path="/confidentialite">
+  <article class="mx-auto flex max-w-3xl flex-col gap-4">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Confidentialité</h1>
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">Aucune collecte</h2>
+      <p class="mt-1">
+        Cet outil fonctionne entièrement dans votre navigateur. Aucune inscription, aucun compte,
+        aucune donnée envoyée à un serveur. Les chiffres que vous saisissez restent sur votre
+        appareil.
+      </p>
+    </section>
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">Sauvegarde par URL</h2>
+      <p class="mt-1">
+        Votre scénario est encodé dans l'adresse de la page (les paramètres après le « ? »). Copier
+        ce lien suffit à sauvegarder ou partager votre simulation — sans aucun compte.
+      </p>
+    </section>
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">Cookies & mesure d'audience</h2>
+      <p class="mt-1">
+        Aucun cookie publicitaire. Toute mesure d'audience éventuelle sera respectueuse de la vie
+        privée (sans cookie, données anonymisées).
+      </p>
+    </section>
+  </article>
+</Layout>

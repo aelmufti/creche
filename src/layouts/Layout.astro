@@ -1,0 +1,114 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Chemin de la page pour le canonical (défaut : URL courante). */
+  path?: string;
+  /** Objets JSON-LD à injecter dans le <head>. */
+  jsonLd?: Record<string, unknown>[];
+}
+
+const { title, description, path, jsonLd = [] } = Astro.props;
+const canonicalPath = path ?? Astro.url.pathname;
+const canonical = new URL(canonicalPath, Astro.site).href;
+
+const nav = [
+  { href: "/", label: "Comparateur" },
+  { href: "/methodologie", label: "Méthodologie" },
+  { href: "/a-propos", label: "À propos" },
+];
+const current = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === "/" ? current === "/" : current.startsWith(href);
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <meta name="theme-color" content="#EDE8E0" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="creche-ou-nounou.fr" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    {
+      jsonLd.map((obj) => (
+        <script type="application/ld+json" set:html={JSON.stringify(obj)} />
+      ))
+    }
+  </head>
+  <body>
+    <div class="flex min-h-screen flex-col">
+      <header class="border-b-[3px] border-border bg-background">
+        <div class="container flex flex-wrap items-center justify-between gap-3 py-3">
+          <a href="/" class="text-lg font-extrabold uppercase tracking-brutal">
+            <span class="marker">Crèche ou nounou</span> ?
+          </a>
+          <nav aria-label="Navigation principale" class="flex flex-wrap gap-2">
+            {
+              nav.map((n) => (
+                <a
+                  href={n.href}
+                  aria-current={isActive(n.href) ? "page" : undefined}
+                  class:list={[
+                    "border-[3px] border-border px-3 py-1.5 text-xs font-bold uppercase tracking-brutal",
+                    isActive(n.href) ? "bg-foreground text-background" : "bg-card hover:bg-muted",
+                  ]}
+                >
+                  {n.label}
+                </a>
+              ))
+            }
+          </nav>
+        </div>
+      </header>
+
+      <main class="container flex-1 py-8"><slot /></main>
+
+      <footer class="border-t-[3px] border-border bg-foreground text-background">
+        <div
+          class="container flex flex-col gap-3 py-6 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p>
+            Fait par{" "}
+            <a
+              href="https://aelm.dev"
+              class="marker font-bold"
+              style="background:#D4A800;color:#0D0D0D"
+            >
+              Ali El Mufti
+            </a>
+          </p>
+          <nav aria-label="Liens de bas de page" class="flex flex-wrap gap-4">
+            <a href="/methodologie" class="underline">Méthodologie</a>
+            <a href="/a-propos" class="underline">À propos</a>
+            <a href="/mentions-legales" class="underline">Mentions légales</a>
+            <a href="/confidentialite" class="underline">Confidentialité</a>
+            <a href="https://freelance-ou-cdi.fr" class="underline">freelance-ou-cdi.fr</a>
+          </nav>
+        </div>
+        <div class="container pb-6 text-xs opacity-70">
+          Estimation indicative, ce n'est pas un avis officiel. Vérifiez sur caf.fr /
+          pajemploi.urssaf.fr. Barème au 1ᵉʳ avril 2026.
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
