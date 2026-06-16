@@ -13,3 +13,6 @@ tmp
 
 # Astro
 .astro
+
+# OG images générées au build (prebuild)
+public/og

@@ -6,6 +6,7 @@
   "description": "Comparateur des modes de garde d'enfant avec verdict chiffré — sibling de freelance-ou-cdi.fr",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/build-og-pages.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",

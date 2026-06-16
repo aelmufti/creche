@@ -102,5 +102,27 @@ const jsonLd = [
         verdict en direct — testez vos scénarios.
       </p>
     </section>
+
+    <section>
+      <h2 class="text-lg font-extrabold uppercase tracking-brutal">Pour aller plus loin</h2>
+      <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {
+          [
+            ["/guides/creche-ou-assistante-maternelle", "Crèche ou assistante maternelle ?"],
+            ["/guides/cmg-2026", "CMG 2026 : montant et calcul"],
+            ["/guides/reforme-cmg-septembre-2025", "Réforme du CMG (sept. 2025)"],
+            ["/guides/credit-impot-frais-de-garde", "Crédit d'impôt frais de garde"],
+            ["/cout-garde-enfant", "Coût de la garde par département"],
+            ["/observatoire-cout-garde-2026", "Observatoire du coût 2026 (données)"],
+          ].map(([href, label]) => (
+            <li>
+              <a class="card-brutal-interactive block px-3 py-2 text-sm font-bold" href={href}>
+                {label} →
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
   </div>
 </Layout>
