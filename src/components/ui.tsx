@@ -12,12 +12,12 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2.5">
       <label htmlFor={htmlFor} className="text-xs font-bold uppercase tracking-brutal">
         {label}
       </label>
       {children}
-      {hint && <p className="text-[11px] text-muted-foreground leading-tight">{hint}</p>}
+      {hint && <p className="-mt-0.5 text-[11px] text-muted-foreground leading-tight">{hint}</p>}
     </div>
   );
 }
