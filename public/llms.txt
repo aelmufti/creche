@@ -1,0 +1,18 @@
+# creche-ou-nounou.fr
+
+> Comparateur indépendant et gratuit du coût des modes de garde d'enfant en France (barème 2026).
+> Compare crèche, micro-crèche, assistante maternelle, garde à domicile et garde partagée, et rend un
+> verdict chiffré personnalisé (CMG, crédit d'impôt, reste à charge). Sans inscription. Chiffres datés et
+> sourcés (CNAF, URSSAF/Pajemploi, service-public.fr).
+
+## Ressources clés
+
+- [Comparateur (accueil)](https://creche-ou-nounou.fr/): calcule le mode de garde le moins cher pour une famille
+- [Méthodologie & sources](https://creche-ou-nounou.fr/methodologie): formules, barème daté, sources officielles
+- [À propos](https://creche-ou-nounou.fr/a-propos): auteur, expertise, indépendance
+
+## Principes
+
+- Estimation indicative, pas un avis officiel — à vérifier sur caf.fr et pajemploi.urssaf.fr.
+- Aucune inscription, aucune donnée envoyée à un serveur : tout est calculé dans le navigateur.
+- Tarifs locaux par département issus des données open data URSSAF (Salariés des particuliers employeurs 2024).
