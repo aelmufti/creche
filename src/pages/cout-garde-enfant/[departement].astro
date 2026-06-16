@@ -1,0 +1,200 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { comparer, type Inputs } from "../../engine";
+import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../../data/tarifs-locaux";
+import departementsJson from "../../data/departements.json";
+import codesPostauxJson from "../../data/codes-postaux.json";
+import { fmtEuro, fmtEuro2 } from "../../lib/format";
+import { slugify } from "../../lib/slug";
+
+const site = "https://creche-ou-nounou.fr";
+
+export function getStaticPaths() {
+  const departements = departementsJson as Record<string, string>;
+  const codesPostaux = codesPostauxJson as Record<string, string>;
+  // Un code postal représentatif par département (pour le lien vers le calculateur).
+  const cpByDept: Record<string, string> = {};
+  for (const [cp, dep] of Object.entries(codesPostaux)) {
+    if (!(dep in cpByDept)) cpByDept[dep] = cp;
+  }
+  return Object.keys(TARIFS_DEPARTEMENTS)
+    .filter((code) => departements[code])
+    .map((code) => {
+      const nom = departements[code];
+      return {
+        params: { departement: slugify(nom) },
+        props: { code, nom, cp: cpByDept[code] ?? "" },
+      };
+    });
+}
+
+const { code, nom, cp } = Astro.props;
+const tarifs = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[code] };
+
+// Scénario d'exemple (clairement annoncé, personnalisable via le calculateur).
+const EX = { revenu: 3000, heures: 160 };
+const exemple: Inputs = {
+  revenuMensuelNet: EX.revenu,
+  situation: "couple",
+  nbEnfants: 1,
+  agesGardes: [1],
+  heuresMois: EX.heures,
+  tauxHoraireAma: tarifs.tauxHoraireAma,
+  coutHoraireDomicile: tarifs.coutHoraireDomicile,
+  tarifMicroCreche: tarifs.tarifMicroCreche,
+};
+const { classement, gagnant, ecartAuSuivant } = comparer(exemple);
+
+const amaEcartNational = tarifs.tauxHoraireAma - TARIFS_NATIONAL.tauxHoraireAma;
+const amaVsNat =
+  amaEcartNational > 0.001
+    ? `supérieur de ${fmtEuro2(amaEcartNational)} à la moyenne nationale`
+    : amaEcartNational < -0.001
+      ? `inférieur de ${fmtEuro2(-amaEcartNational)} à la moyenne nationale`
+      : "proche de la moyenne nationale";
+
+const slug = slugify(nom);
+const path = `/cout-garde-enfant/${slug}`;
+const title = `Crèche ou nounou en ${nom} : coût réel 2026`;
+const description = `En ${nom}, une assistante maternelle est rémunérée ${fmtEuro2(tarifs.tauxHoraireAma)}/h net en moyenne (URSSAF 2024). Comparez crèche, nounou, micro-crèche et garde à domicile et trouvez le moins cher pour votre famille.`;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    about: { "@type": "AdministrativeArea", name: nom },
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    isPartOf: { "@type": "Dataset", name: SOURCE_TARIFS.source },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `Combien coûte une assistante maternelle en ${nom} ?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `En ${nom}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (données URSSAF 2024), avant CMG et crédit d'impôt. Le reste à charge réel dépend de vos revenus et du nombre d'heures.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Crèche ou nounou en ${nom} : lequel est le moins cher ?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher en ${nom} est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois en coût net réel. Le résultat varie selon votre situation : utilisez le comparateur pour votre cas.`,
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Coût par département", item: site + "/cout-garde-enfant" },
+      { "@type": "ListItem", position: 3, name: nom, item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> ›
+      <a class="underline" href="/cout-garde-enfant">Coût par département</a> › {nom}
+    </nav>
+
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Crèche ou nounou en {nom} : coût réel 2026</h1>
+    </header>
+
+    <!-- Réponse directe (answer-first, citable) -->
+    <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <p>
+        En <strong>{nom}</strong>, une assistante maternelle est rémunérée en moyenne
+        <strong>{fmtEuro2(tarifs.tauxHoraireAma)}/h net</strong> ({amaVsNat}), et une garde à domicile
+        revient à environ <strong>{fmtEuro2(tarifs.coutHoraireDomicile)}/h</strong> de coût total
+        employeur — données <strong>URSSAF 2024</strong>.
+      </p>
+      <p class="mt-2">
+        Pour un foyer à {EX.revenu} €/mois, 1 enfant gardé {EX.heures} h/mois, le mode le moins cher
+        est <strong>{gagnant.label}</strong> à
+        <span class="marker">{fmtEuro(gagnant.netReel)}/mois</span> en coût net réel{
+          ecartAuSuivant > 0.5 ? `, soit ${fmtEuro(ecartAuSuivant)}/mois de moins que l'option suivante` : ""
+        }.
+      </p>
+    </div>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Comparatif des 5 modes en {nom} (exemple)</h2>
+      <p class="mt-1 text-xs text-muted-foreground">
+        Hypothèse : couple, {EX.revenu} €/mois, 1 enfant, {EX.heures} h/mois. Coût net réel = après
+        crédit d'impôt 50 %.
+      </p>
+      <table class="card-brutal mt-3 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">#</th>
+            <th class="p-2">Mode de garde</th>
+            <th class="p-2 text-right">Coût net réel / mois</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            classement.map((r, i) => (
+              <tr class="border-t border-border/30">
+                <td class="p-2 tabular-nums">{i + 1}</td>
+                <td class="p-2 font-bold">{r.label}</td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro(r.netReel)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <div class="card-brutal bg-brutal-yellow p-4">
+      <p class="text-sm font-bold">
+        Ces chiffres sont un exemple. Votre revenu, vos heures et le nombre d'enfants changent le
+        verdict.
+      </p>
+      <a
+        href={cp ? `/?cp=${cp}` : "/"}
+        class="btn-brutal mt-3 inline-block bg-background px-5 py-3 text-foreground"
+      >
+        → Calculer mon cas en {nom}
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      <h3 class="mt-3 font-bold">Combien coûte une assistante maternelle en {nom} ?</h3>
+      <p class="mt-1">
+        Le salaire horaire net moyen d'une assistante maternelle en {nom} est de
+        {fmtEuro2(tarifs.tauxHoraireAma)}/h (URSSAF 2024), avant CMG et crédit d'impôt. Le reste à
+        charge réel dépend de vos revenus et du nombre d'heures de garde.
+      </p>
+      <h3 class="mt-3 font-bold">Crèche ou nounou en {nom} : lequel choisir ?</h3>
+      <p class="mt-1">
+        Au-delà du coût, la crèche n'est pas garantie (places limitées) et l'assistante maternelle
+        offre plus de souplesse d'horaires. Côté budget, comparez le
+        <a class="underline" href={cp ? `/?cp=${cp}` : "/"}>coût net réel pour votre situation</a>.
+      </p>
+    </section>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : {SOURCE_TARIFS.source} ; barème CNAF 2026. Méthode détaillée sur la
+      <a class="underline" href="/methodologie">page méthodologie</a>. Estimation indicative, pas un
+      avis officiel.
+    </p>
+  </article>
+</Layout>

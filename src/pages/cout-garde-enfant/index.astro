@@ -1,0 +1,72 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { TARIFS_DEPARTEMENTS, SOURCE_TARIFS } from "../../data/tarifs-locaux";
+import departementsJson from "../../data/departements.json";
+import { slugify } from "../../lib/slug";
+
+const site = "https://creche-ou-nounou.fr";
+const departements = departementsJson as Record<string, string>;
+
+const liste = Object.keys(TARIFS_DEPARTEMENTS)
+  .filter((code) => departements[code])
+  .map((code) => ({ code, nom: departements[code], slug: slugify(departements[code]) }))
+  .sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+
+const title = "Coût de la garde d'enfant par département (2026)";
+const description =
+  "Crèche, assistante maternelle, garde à domicile : le coût réel de la garde d'enfant par département, à partir des données URSSAF 2026. Trouvez le mode le moins cher près de chez vous.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    url: site + "/cout-garde-enfant",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Coût par département", item: site + "/cout-garde-enfant" },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path="/cout-garde-enfant" jsonLd={jsonLd}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Coût de la garde d'enfant par département</h1>
+      <p class="mt-2 text-muted-foreground">
+        Le coût d'une assistante maternelle et d'une garde à domicile varie selon les territoires.
+        Choisissez votre département pour comparer crèche, nounou, micro-crèche et garde à domicile
+        avec les tarifs locaux ({SOURCE_TARIFS.source}).
+      </p>
+    </header>
+
+    <nav aria-label="Liste des départements">
+      <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {
+          liste.map((d) => (
+            <li>
+              <a
+                class="card-brutal-interactive flex items-center justify-between px-3 py-2 text-sm font-bold"
+                href={`/cout-garde-enfant/${d.slug}`}
+              >
+                <span>Crèche ou nounou en {d.nom}</span>
+                <span class="text-xs text-muted-foreground">{d.code}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      {liste.length} départements couverts. Données indicatives et modifiables ; méthode sur la
+      <a class="underline" href="/methodologie">page méthodologie</a>.
+    </p>
+  </div>
+</Layout>
