@@ -46,6 +46,35 @@ function svgDept(nom, ama, dom) {
 </svg>`;
 }
 
+// Découpe un titre en lignes (~20 caractères) pour le rendu SVG.
+function wrap(text, max = 20) {
+  const lines = [];
+  let cur = "";
+  for (const word of text.split(" ")) {
+    if ((cur + " " + word).trim().length > max) {
+      if (cur) lines.push(cur);
+      cur = word;
+    } else cur = (cur + " " + word).trim();
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0, 3);
+}
+
+function svgContent(titre) {
+  const lignes = wrap(titre);
+  const tspans = lignes
+    .map((l, i) => `<text x="64" y="${230 + i * 92}" font-family="JetBrains Mono, monospace" font-size="72" font-weight="800" fill="#0D0D0D">${esc(l)}</text>`)
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#EDE8E0"/>
+  <rect x="24" y="24" width="1152" height="582" fill="none" stroke="#0D0D0D" stroke-width="10"/>
+  <rect x="64" y="80" width="520" height="60" fill="#1754CC"/>
+  <text x="84" y="122" font-family="JetBrains Mono, monospace" font-size="28" font-weight="700" fill="#FFFFFF">CRÈCHE OU NOUNOU ? · GUIDE 2026</text>
+  ${tspans}
+  <text x="64" y="560" font-family="JetBrains Mono, monospace" font-size="26" font-weight="500" fill="#0D0D0D">creche-ou-nounou.fr · gratuit, sans inscription</text>
+</svg>`;
+}
+
 let n = 0;
 for (const code of Object.keys(deps)) {
   const nom = departements[code];
@@ -57,4 +86,24 @@ for (const code of Object.keys(deps)) {
   writeFileSync(join(OUT, `dept-${slugify(nom)}.png`), png);
   n++;
 }
-console.log(`OK — ${n} images OG par département générées dans public/og/.`);
+
+// Pages de contenu (guides, observatoire, glossaire).
+const contenu = {
+  "creche-ou-assistante-maternelle": "Crèche ou assistante maternelle ?",
+  "cmg-2026": "CMG 2026 : montant et calcul",
+  "reforme-cmg-septembre-2025": "Réforme du CMG septembre 2025",
+  "micro-creche-cmg-structure": "Micro-crèche : CMG structure",
+  "garde-a-domicile-cout-reel": "Garde à domicile : coût réel",
+  "garde-partagee": "Garde partagée : coût et aides",
+  "credit-impot-frais-de-garde": "Crédit d'impôt frais de garde",
+  "reste-a-charge-nounou": "Reste à charge d'une nounou",
+  "observatoire": "Observatoire du coût de la garde 2026",
+  "glossaire": "Glossaire de la garde d'enfant",
+};
+let m = 0;
+for (const [key, titre] of Object.entries(contenu)) {
+  const png = await sharp(Buffer.from(svgContent(titre))).png().toBuffer();
+  writeFileSync(join(OUT, `page-${key}.png`), png);
+  m++;
+}
+console.log(`OK — ${n} OG départements + ${m} OG pages de contenu générées dans public/og/.`);
