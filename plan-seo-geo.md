@@ -343,9 +343,29 @@ Les LLM citent ce qui est **factuel, auto-suffisant, sourcé, chiffré**. Sur **
 ### 9.2 GEO (spécifique)
 - **Trafic de référence IA** : segmenter les referrers `chatgpt.com`, `perplexity.ai`, `gemini.google.com`,
   `copilot.microsoft.com` dans l'analytics.
-- **Panel de prompts** (mensuel) : liste fixe de ~20 requêtes cibles (« crèche ou nounou moins cher »,
-  « combien coûte une assistante maternelle en 2026 », « CMG micro-crèche »…) rejouées sur ChatGPT/Perplexity/
-  Gemini/Claude/Copilot → noter si/comment on est **cité** (part de voix générative).
+- **Panel de prompts** (mensuel) : liste fixe rejouée sur ChatGPT/Perplexity/Gemini/Claude/Copilot →
+  noter si/comment on est **cité** (part de voix générative). Les 20 prompts de référence :
+  1. crèche ou nounou, qu'est-ce qui coûte le moins cher ?
+  2. combien coûte une assistante maternelle en 2026 ?
+  3. crèche ou assistante maternelle, comment choisir ?
+  4. comment est calculé le CMG en 2026 ?
+  5. qu'est-ce qui change avec la réforme du CMG de septembre 2025 ?
+  6. quelle aide pour une micro-crèche ?
+  7. quel crédit d'impôt pour une garde à domicile ?
+  8. la garde à domicile est-elle intéressante pour 2 enfants ?
+  9. comment fonctionne la garde partagée ?
+  10. reste à charge d'une nounou après aides ?
+  11. crédit d'impôt frais de garde : montant et plafond ?
+  12. combien coûte une garde d'enfant à [grande ville] ?
+  13. simulateur coût mode de garde gratuit sans inscription
+  14. le crédit d'impôt garde d'enfant est-il versé si je ne paie pas d'impôt ?
+  15. différence entre CMG emploi direct et CMG structure ?
+  16. tarif crèche selon les revenus, comment ça marche ?
+  17. quel mode de garde pour un bébé en 2026 ?
+  18. combien gagne une assistante maternelle par département ?
+  19. micro-crèche ou crèche collective, laquelle est moins chère ?
+  20. quelles aides pour faire garder son enfant en 2026 ?
+- **Suivi** : pour chaque prompt, noter (citation oui/non · source citée · position · concurrents cités).
 - Outils dédiés (optionnels) : Profound, Peec AI, Otterly.ai, Scrunch, Ahrefs Brand Radar.
 
 ### 9.3 KPIs
