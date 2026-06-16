@@ -1,0 +1,181 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/creche-ou-assistante-maternelle";
+const title = "Crèche ou assistante maternelle : laquelle coûte le moins cher en 2026 ?";
+const description =
+  "Crèche collective ou assistante maternelle : coût réel, CMG, crédit d'impôt, disponibilité et souplesse comparés au barème 2026. Le bon choix dépend de vos revenus et de vos heures — explications chiffrées.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-16",
+    dateModified: "2026-06-16",
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+    citation: [
+      "https://www.service-public.fr/particuliers/vosdroits/F345",
+      "https://www.caf.fr/",
+      "https://www.pajemploi.urssaf.fr/",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "La crèche est-elle moins chère qu'une assistante maternelle ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Souvent oui pour les revenus modestes à moyens, car le tarif de la crèche collective (PSU) est proportionnel aux revenus via le taux d'effort CNAF, et peut descendre sous 1 €/h. Pour les revenus plus élevés ou un grand nombre d'heures, l'assistante maternelle (avec CMG + crédit d'impôt) peut devenir compétitive. Le seul moyen de trancher est de calculer son cas.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Quelle aide pour une assistante maternelle en 2026 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Le CMG (Complément de libre choix du mode de garde) prend en charge une partie du salaire et la totalité des cotisations sociales. Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge. S'ajoute un crédit d'impôt de 50 % des frais de garde, dans la limite de 3 500 € par enfant.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Y a-t-il une aide pour la crèche ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "En crèche collective conventionnée (PSU), il n'y a pas de CMG : l'aide est déjà intégrée dans le tarif horaire, calculé selon vos revenus et le nombre d'enfants à charge (taux d'effort CNAF). Le reste à charge ouvre droit au crédit d'impôt frais de garde (50 %, plafond 3 500 €/enfant).",
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Crèche ou assistante maternelle", item: site + path },
+    ],
+  },
+];
+
+const criteres = [
+  ["Coût pour revenus modestes", "Souvent le moins cher (tarif au taux d'effort)", "Plus élevé malgré le CMG"],
+  ["Coût pour revenus élevés", "Tarif plafonné (~5 €/h max)", "Compétitive avec CMG + crédit d'impôt"],
+  ["Disponibilité", "Places limitées, non garantie", "Plus de disponibilité selon le secteur"],
+  ["Souplesse d'horaires", "Horaires fixes de la structure", "Souple (négociée avec l'AMA)"],
+  ["Démarches", "Aucune (la crèche gère)", "Vous êtes employeur (contrat, Pajemploi)"],
+  ["Crédit d'impôt", "50 %, plafond 3 500 €/enfant", "50 %, plafond 3 500 €/enfant"],
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › Crèche ou assistante maternelle
+    </nav>
+
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">
+        Crèche ou assistante maternelle : laquelle coûte le moins cher en 2026 ?
+      </h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> Pour la plupart des revenus modestes à moyens, la
+        <strong>crèche collective</strong> est moins chère : son tarif est proportionnel aux revenus
+        (taux d'effort CNAF) et peut descendre sous 1 €/h. Pour des
+        <strong>revenus élevés</strong> ou beaucoup d'heures, l'<strong>assistante maternelle</strong>
+        — grâce au CMG et au crédit d'impôt — peut repasser devant. Aucune réponse n'est universelle :
+        le verdict dépend de vos chiffres.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Comparer pour ma situation
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Deux logiques de prix opposées</h2>
+      <p class="mt-2">
+        La <strong>crèche collective</strong> conventionnée applique la
+        <em>Prestation de service unique</em> (PSU) : vous ne touchez pas le CMG, mais le tarif horaire
+        est directement calculé selon vos ressources et votre nombre d'enfants à charge. Résultat : un
+        tarif très bas pour les revenus modestes, plafonné autour de 5 €/h pour les hauts revenus.
+      </p>
+      <p class="mt-2">
+        L'<strong>assistante maternelle agréée</strong> en emploi direct fonctionne à l'inverse : vous
+        payez un salaire horaire, puis le <strong>CMG</strong> rembourse une partie du coût et la
+        totalité des cotisations sociales. Depuis le 1ᵉʳ septembre 2025, ce CMG est
+        <strong>proportionnel au reste à charge</strong>. S'ajoute le crédit d'impôt de 50 %.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Comparatif crèche vs assistante maternelle</h2>
+      <table class="card-brutal mt-3 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">Critère</th>
+            <th class="p-2">Crèche collective</th>
+            <th class="p-2">Assistante maternelle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            criteres.map(([c, creche, ama]) => (
+              <tr class="border-t border-border/30 align-top">
+                <td class="p-2 font-bold">{c}</td>
+                <td class="p-2">{creche}</td>
+                <td class="p-2">{ama}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Comment savoir laquelle est la moins chère pour vous</h2>
+      <p class="mt-2">
+        Trois variables font basculer le verdict : vos <strong>revenus</strong> (ils baissent le tarif
+        crèche mais réduisent le CMG), le <strong>nombre d'heures</strong> de garde, et les
+        <strong>tarifs locaux</strong> de l'assistante maternelle (qui varient selon le département).
+        Le comparateur calcule le <strong>coût net réel</strong> des deux options — après CMG et crédit
+        d'impôt — pour votre cas précis.
+      </p>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/">Lancer le comparateur</a> (résultat instantané, sans inscription).</li>
+        <li><a class="underline" href="/cout-garde-enfant">Voir le coût par département</a>.</li>
+        <li><a class="underline" href="/methodologie">Méthode et sources</a> des calculs.</li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      <h3 class="mt-3 font-bold">La crèche est-elle moins chère qu'une assistante maternelle ?</h3>
+      <p class="mt-1">
+        Souvent oui pour les revenus modestes à moyens (tarif PSU proportionnel aux revenus). Pour les
+        hauts revenus ou beaucoup d'heures, l'assistante maternelle avec CMG + crédit d'impôt peut
+        devenir plus avantageuse. À vérifier au cas par cas.
+      </p>
+      <h3 class="mt-3 font-bold">Quelle aide pour une assistante maternelle en 2026 ?</h3>
+      <p class="mt-1">
+        Le CMG prend en charge une partie du salaire et 100 % des cotisations, auquel s'ajoute le
+        crédit d'impôt frais de garde (50 %, plafond 3 500 €/enfant). Le CMG emploi direct est
+        proportionnel au reste à charge depuis septembre 2025.
+      </p>
+    </section>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : service-public.fr, CAF, URSSAF/Pajemploi (2026). Estimation indicative, pas un avis
+      officiel — vérifiez sur caf.fr.
+    </p>
+  </article>
+</Layout>
