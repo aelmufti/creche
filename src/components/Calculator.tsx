@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { comparer, decodeInputs, encodeInputs, inputsParDefaut, type Inputs } from "../engine";
 import { defauts } from "../engine/bareme";
-import { SOURCE_TARIFS, tarifsLocaux } from "../data/tarifs-locaux";
+import {
+  RESOLUTION_NATIONALE,
+  SOURCE_TARIFS,
+  tarifsLocaux,
+  type ResolutionTarifs,
+} from "../data/tarifs-locaux";
 import { Field, NumberInput, Segmented, Slider, Toggle } from "./ui";
 import { ResultsPanel } from "./ResultsPanel";
 
@@ -29,7 +34,18 @@ export function Calculator() {
 
   // Pré-remplissage local (§10/§14) : les champs avancés NON modifiés par
   // l'utilisateur (undefined) prennent la valeur indicative du département.
-  const local = useMemo(() => tarifsLocaux(inputs.codePostal), [inputs.codePostal]);
+  // La base postale est chargée à la demande (perf) → résolution asynchrone,
+  // avec repli national en attendant (dégradation gracieuse).
+  const [local, setLocal] = useState<ResolutionTarifs>(RESOLUTION_NATIONALE);
+  useEffect(() => {
+    let cancelled = false;
+    tarifsLocaux(inputs.codePostal).then((r) => {
+      if (!cancelled) setLocal(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [inputs.codePostal]);
   const tauxAma = inputs.tauxHoraireAma ?? local.tarifs.tauxHoraireAma;
   const coutDom = inputs.coutHoraireDomicile ?? local.tarifs.coutHoraireDomicile;
   const tarifMicro = inputs.tarifMicroCreche ?? local.tarifs.tarifMicroCreche;
