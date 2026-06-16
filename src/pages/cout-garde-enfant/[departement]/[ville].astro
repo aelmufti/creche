@@ -1,0 +1,171 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { comparer, type Inputs } from "../../../engine";
+import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../../../data/tarifs-locaux";
+import departementsJson from "../../../data/departements.json";
+import { VILLES, villeLoc } from "../../../data/villes";
+import { fmtEuro, fmtEuro2 } from "../../../lib/format";
+import { slugify } from "../../../lib/slug";
+
+const site = "https://creche-ou-nounou.fr";
+
+export function getStaticPaths() {
+  const departements = departementsJson as Record<string, string>;
+  return VILLES.filter((v) => departements[v.dept] && TARIFS_DEPARTEMENTS[v.dept]).map((v) => ({
+    params: { departement: slugify(departements[v.dept]), ville: slugify(v.nom) },
+    props: { ville: v, deptNom: departements[v.dept] },
+  }));
+}
+
+const { ville, deptNom } = Astro.props;
+const tarifs = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[ville.dept] };
+const deptSlug = slugify(deptNom);
+const path = `/cout-garde-enfant/${deptSlug}/${slugify(ville.nom)}`;
+const loc = villeLoc(ville.nom);
+
+const EX = { revenu: 3000, heures: 160 };
+const exemple: Inputs = {
+  revenuMensuelNet: EX.revenu,
+  situation: "couple",
+  nbEnfants: 1,
+  agesGardes: [1],
+  heuresMois: EX.heures,
+  tauxHoraireAma: tarifs.tauxHoraireAma,
+  coutHoraireDomicile: tarifs.coutHoraireDomicile,
+  tarifMicroCreche: tarifs.tarifMicroCreche,
+};
+const { classement, gagnant, ecartAuSuivant } = comparer(exemple);
+
+const title = `Crèche ou nounou — ${ville.nom} : prix et comparatif 2026`;
+const description = `Garde d'enfant ${loc} : une assistante maternelle est rémunérée ${fmtEuro2(tarifs.tauxHoraireAma)}/h net en moyenne (URSSAF 2024, ${deptNom}). Comparez crèche, nounou, micro-crèche et garde à domicile pour votre famille.`;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "fr-FR",
+    datePublished: "2026-06-17",
+    dateModified: "2026-06-17",
+    about: { "@type": "City", name: ville.nom },
+    author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `Combien coûte une nounou ${loc} ?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `${loc.charAt(0).toUpperCase() + loc.slice(1)}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (moyenne départementale ${deptNom}, URSSAF 2024), avant CMG et crédit d'impôt.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Crèche ou nounou ${loc} : lequel choisir ?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois (coût net réel). Dans les grandes villes, pensez aussi à la disponibilité : les places en crèche y sont très demandées.`,
+        },
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Coût par département", item: site + "/cout-garde-enfant" },
+      { "@type": "ListItem", position: 3, name: deptNom, item: `${site}/cout-garde-enfant/${deptSlug}` },
+      { "@type": "ListItem", position: 4, name: ville.nom, item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> ›
+      <a class="underline" href="/cout-garde-enfant">Coût par département</a> ›
+      <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>{deptNom}</a> › {ville.nom}
+    </nav>
+
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Crèche ou nounou — {ville.nom} : prix 2026</h1>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <p>
+        Garde d'enfant <strong>{loc}</strong> ({deptNom}) — une assistante maternelle est rémunérée en
+        moyenne <strong>{fmtEuro2(tarifs.tauxHoraireAma)}/h net</strong> et une garde à domicile environ
+        <strong>{fmtEuro2(tarifs.coutHoraireDomicile)}/h</strong> (coût total employeur).
+        <span class="text-muted-foreground">Moyennes départementales URSSAF 2024.</span>
+      </p>
+      <p class="mt-2">
+        Pour un foyer à {EX.revenu} €/mois, 1 enfant gardé {EX.heures} h/mois, le mode le moins cher est
+        <strong>{gagnant.label}</strong> à <span class="marker">{fmtEuro(gagnant.netReel)}/mois</span>
+        {ecartAuSuivant > 0.5 ? ` (soit ${fmtEuro(ecartAuSuivant)}/mois de moins que le suivant)` : ""}.
+      </p>
+    </div>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Comparatif des 5 modes — {ville.nom} (exemple)</h2>
+      <p class="mt-1 text-xs text-muted-foreground">
+        Hypothèse : couple, {EX.revenu} €/mois, 1 enfant, {EX.heures} h/mois. Coût net réel = après crédit
+        d'impôt 50 %.
+      </p>
+      <table class="card-brutal mt-3 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">#</th>
+            <th class="p-2">Mode de garde</th>
+            <th class="p-2 text-right">Coût net réel / mois</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            classement.map((r, i) => (
+              <tr class="border-t border-border/30">
+                <td class="p-2 tabular-nums">{i + 1}</td>
+                <td class="p-2 font-bold">{r.label}</td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro(r.netReel)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Disponibilité dans une grande ville</h2>
+      <p class="mt-2">
+        {ville.nom} étant une grande agglomération, les <strong>places en crèche y sont très
+        demandées</strong> (listes d'attente fréquentes). L'<strong>assistante maternelle</strong> et la
+        <strong>garde à domicile</strong> offrent souvent plus de disponibilité et de souplesse
+        d'horaires — d'où l'intérêt de comparer le coût net réel <em>et</em> la disponibilité.
+      </p>
+    </section>
+
+    <div class="card-brutal bg-brutal-yellow p-4">
+      <p class="text-sm font-bold">Le verdict dépend de votre revenu et de vos heures.</p>
+      <a
+        href={`/?cp=${ville.cp}`}
+        class="btn-brutal mt-3 inline-block bg-background px-5 py-3 text-foreground"
+      >
+        → Calculer mon cas {loc}
+      </a>
+    </div>
+
+    <p class="text-xs text-muted-foreground">
+      Données tarifaires de granularité départementale ({deptNom}) : voir le détail sur la page
+      <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>coût de la garde en {deptNom}</a>.
+      Source : {SOURCE_TARIFS.source} ; barème CNAF 2026. Méthode :
+      <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative.
+    </p>
+  </article>
+</Layout>
