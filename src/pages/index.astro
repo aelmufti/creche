@@ -25,7 +25,13 @@ const jsonLd = [
     "@type": "Organization",
     name: "creche-ou-nounou.fr",
     url: site,
-    founder: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    sameAs: ["https://aelm.dev", "https://freelance-ou-cdi.fr"],
+    founder: {
+      "@type": "Person",
+      name: "Ali El Mufti",
+      url: "https://aelm.dev",
+      sameAs: ["https://aelm.dev", "https://freelance-ou-cdi.fr"],
+    },
   },
   {
     "@context": "https://schema.org",

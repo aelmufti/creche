@@ -11,9 +11,23 @@ interface Props {
   jsonLd?: Record<string, unknown>[];
   /** Chemin de l'image Open Graph (défaut : image de marque). */
   ogImage?: string;
+  /** Type Open Graph : "article" pour les guides et pages locales. */
+  ogType?: "website" | "article";
+  /** Dates ISO (AAAA-MM-JJ) pour article:published_time / modified_time. */
+  datePublished?: string;
+  dateModified?: string;
 }
 
-const { title, description, path, jsonLd = [], ogImage = "/og-default.png" } = Astro.props;
+const {
+  title,
+  description,
+  path,
+  jsonLd = [],
+  ogImage = "/og-default.png",
+  ogType = "website",
+  datePublished,
+  dateModified,
+} = Astro.props;
 const canonicalPath = path ?? Astro.url.pathname;
 const canonical = new URL(canonicalPath, Astro.site).href;
 const ogImageUrl = new URL(ogImage, Astro.site).href;
@@ -40,7 +54,7 @@ const isActive = (href: string) =>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta name="theme-color" content="#EDE8E0" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
@@ -49,6 +63,12 @@ const isActive = (href: string) =>
     <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImageUrl} />
+    {ogType === "article" && datePublished && (
+      <meta property="article:published_time" content={datePublished} />
+    )}
+    {ogType === "article" && dateModified && (
+      <meta property="article:modified_time" content={dateModified} />
+    )}
     <link
       rel="preload"
       href="/fonts/jetbrains-mono-latin.woff2"
