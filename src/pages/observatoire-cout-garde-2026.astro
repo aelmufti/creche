@@ -2,8 +2,9 @@
 import Layout from "../layouts/Layout.astro";
 import departementsJson from "../data/departements.json";
 import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../data/tarifs-locaux";
-import { fmtEuro2 } from "../lib/format";
+import { fmtEuro2, fmtDateFr } from "../lib/format";
 import { slugify } from "../lib/slug";
+import { DATES } from "../data/content-dates.mjs";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/observatoire-cout-garde-2026";
@@ -37,6 +38,8 @@ const jsonLd = [
     temporalCoverage: "2024",
     spatialCoverage: "France",
     creator: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    datePublished: DATES.observatoire.published,
+    dateModified: DATES.observatoire.modified,
     isBasedOn: SOURCE_TARIFS.source,
     license: "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
     distribution: [
@@ -58,13 +61,24 @@ const jsonLd = [
 ];
 ---
 
-<Layout title={title} description={description} path={path} jsonLd={jsonLd} ogImage={"/og/page-observatoire.png"}>
+<Layout
+  title={title}
+  description={description}
+  path={path}
+  jsonLd={jsonLd}
+  ogType="article"
+  datePublished={DATES.observatoire.published}
+  dateModified={DATES.observatoire.modified}
+  ogImage={"/og/page-observatoire.png"}
+>
   <article class="mx-auto flex max-w-3xl flex-col gap-6">
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">
         Observatoire du coût de la garde d'enfant 2026
       </h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Mis à jour le {fmtDateFr(DATES.observatoire.modified)}.
+      </p>
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">

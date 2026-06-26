@@ -2,7 +2,8 @@
 import Layout from "../layouts/Layout.astro";
 import { bareme } from "../engine/bareme";
 import { SOURCE_TARIFS } from "../data/tarifs-locaux";
-import { fmtEuro2 } from "../lib/format";
+import { fmtEuro2, fmtDateFr } from "../lib/format";
+import { DATES } from "../data/content-dates.mjs";
 
 const site = "https://creche-ou-nounou.fr";
 const title = "Méthodologie & sources — comment on calcule le coût de la garde (2026)";
@@ -26,8 +27,8 @@ const jsonLd = [
     headline: "Méthodologie & sources du comparateur crèche ou nounou",
     description,
     inLanguage: "fr-FR",
-    datePublished: "2026-06-15",
-    dateModified: "2026-06-16",
+    datePublished: DATES.methodologie.published,
+    dateModified: DATES.methodologie.modified,
     author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
     publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
     citation: [
@@ -47,14 +48,23 @@ const jsonLd = [
 ];
 ---
 
-<Layout title={title} description={description} path="/methodologie" jsonLd={jsonLd}>
+<Layout
+  title={title}
+  description={description}
+  path="/methodologie"
+  jsonLd={jsonLd}
+  ogType="article"
+  datePublished={DATES.methodologie.published}
+  dateModified={DATES.methodologie.modified}
+>
   <article class="mx-auto flex max-w-3xl flex-col gap-6">
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Méthodologie & sources</h1>
       <p class="mt-2 text-muted-foreground">
         Tous les calculs reposent sur des données officielles, datées et sourcées. Barème en
         vigueur : <strong class="text-foreground">{b.version}</strong> (1ᵉʳ avril 2026). Source
-        agrégée : {b.source}. <strong class="text-foreground">Mis à jour le 16 juin 2026.</strong>
+        agrégée : {b.source}.
+        <strong class="text-foreground">Mis à jour le {fmtDateFr(DATES.methodologie.modified)}.</strong>
       </p>
     </header>
 

@@ -4,7 +4,8 @@ import { comparer, type Inputs } from "../../../engine";
 import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../../../data/tarifs-locaux";
 import departementsJson from "../../../data/departements.json";
 import { VILLES, villeLoc } from "../../../data/villes";
-import { fmtEuro, fmtEuro2 } from "../../../lib/format";
+import { fmtEuro, fmtEuro2, fmtDateFr } from "../../../lib/format";
+import { DATES } from "../../../data/content-dates.mjs";
 import { slugify } from "../../../lib/slug";
 
 const site = "https://creche-ou-nounou.fr";
@@ -46,8 +47,8 @@ const jsonLd = [
     headline: title,
     description,
     inLanguage: "fr-FR",
-    datePublished: "2026-06-17",
-    dateModified: "2026-06-17",
+    datePublished: DATES.villes.published,
+    dateModified: DATES.villes.modified,
     about: { "@type": "City", name: ville.nom },
     author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
     publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
@@ -87,7 +88,16 @@ const jsonLd = [
 ];
 ---
 
-<Layout title={title} description={description} path={path} jsonLd={jsonLd}>
+<Layout
+  title={title}
+  description={description}
+  path={path}
+  jsonLd={jsonLd}
+  ogType="article"
+  datePublished={DATES.villes.published}
+  dateModified={DATES.villes.modified}
+  ogImage={`/og/dept-${deptSlug}.png`}
+>
   <article class="mx-auto flex max-w-3xl flex-col gap-6">
     <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
       <a class="underline" href="/">Accueil</a> ›
@@ -97,6 +107,9 @@ const jsonLd = [
 
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Crèche ou nounou — {ville.nom} : prix 2026</h1>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Mis à jour le {fmtDateFr(DATES.villes.modified)}.
+      </p>
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">

@@ -1,5 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { DATES } from "../../data/content-dates.mjs";
+import { fmtDateFr } from "../../lib/format";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/creche-ou-assistante-maternelle";
@@ -14,8 +16,8 @@ const jsonLd = [
     headline: title,
     description,
     inLanguage: "fr-FR",
-    datePublished: "2026-06-16",
-    dateModified: "2026-06-16",
+    datePublished: DATES.guides.published,
+    dateModified: DATES.guides.modified,
     author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
     publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
     citation: [
@@ -74,7 +76,7 @@ const criteres = [
 ];
 ---
 
-<Layout title={title} description={description} path={path} jsonLd={jsonLd} ogImage={"/og/page-creche-ou-assistante-maternelle.png"}>
+<Layout title={title} description={description} path={path} jsonLd={jsonLd} ogType="article" datePublished={DATES.guides.published} dateModified={DATES.guides.modified} ogImage={"/og/page-creche-ou-assistante-maternelle.png"}>
   <article class="mx-auto flex max-w-3xl flex-col gap-6">
     <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
       <a class="underline" href="/">Accueil</a> › Crèche ou assistante maternelle
@@ -84,7 +86,7 @@ const criteres = [
       <h1 class="text-3xl font-extrabold sm:text-4xl">
         Crèche ou assistante maternelle : laquelle coûte le moins cher en 2026 ?
       </h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le 16 juin 2026.</p>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
