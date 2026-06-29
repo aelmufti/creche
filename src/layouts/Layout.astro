@@ -28,7 +28,10 @@ const {
   datePublished,
   dateModified,
 } = Astro.props;
-const canonicalPath = path ?? Astro.url.pathname;
+// Politique d'URL : pas de trailing slash (sauf racine) — cohérent avec le
+// sitemap et le trailingSlash:false de Vercel.
+const rawPath = path ?? Astro.url.pathname;
+const canonicalPath = rawPath !== "/" && rawPath.endsWith("/") ? rawPath.slice(0, -1) : rawPath;
 const canonical = new URL(canonicalPath, Astro.site).href;
 const ogImageUrl = new URL(ogImage, Astro.site).href;
 
