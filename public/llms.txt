@@ -9,7 +9,25 @@
 
 - [Comparateur (accueil)](https://creche-ou-nounou.fr/): calcule le mode de garde le moins cher pour une famille
 - [Méthodologie & sources](https://creche-ou-nounou.fr/methodologie): formules, barème daté, sources officielles
+- [Observatoire du coût de la garde 2026](https://creche-ou-nounou.fr/observatoire-cout-garde-2026): salaires et coûts par département (données URSSAF 2024)
+- [Données ouvertes (CSV)](https://creche-ou-nounou.fr/data/cout-garde-par-departement-2026.csv): coût de la garde par département, licence ouverte
+- [Glossaire](https://creche-ou-nounou.fr/glossaire): définitions (CMG, PSU, PAJE, taux d'effort, micro-crèche…)
 - [À propos](https://creche-ou-nounou.fr/a-propos): auteur, expertise, indépendance
+
+## Guides
+
+- [Crèche ou assistante maternelle](https://creche-ou-nounou.fr/guides/creche-ou-assistante-maternelle): laquelle coûte le moins cher en 2026
+- [CMG 2026](https://creche-ou-nounou.fr/guides/cmg-2026): montant, calcul, conditions (réforme sept. 2025)
+- [Réforme du CMG (sept. 2025)](https://creche-ou-nounou.fr/guides/reforme-cmg-septembre-2025): ce qui change concrètement
+- [Micro-crèche : CMG structure](https://creche-ou-nounou.fr/guides/micro-creche-cmg-structure): plafonds et reste à charge
+- [Crédit d'impôt frais de garde](https://creche-ou-nounou.fr/guides/credit-impot-frais-de-garde): montant, plafond, restituable
+- [Reste à charge d'une nounou](https://creche-ou-nounou.fr/guides/reste-a-charge-nounou): exemples chiffrés 2026
+- [Garde à domicile : coût réel](https://creche-ou-nounou.fr/guides/garde-a-domicile-cout-reel): après CMG et crédit d'impôt
+- [Garde partagée](https://creche-ou-nounou.fr/guides/garde-partagee): fonctionnement et budget
+
+## Données locales
+
+- [Coût de la garde par département](https://creche-ou-nounou.fr/cout-garde-enfant): ~100 pages département avec chiffres URSSAF locaux et comparatif des 5 modes, plus les grandes villes
 
 ## Principes
 
