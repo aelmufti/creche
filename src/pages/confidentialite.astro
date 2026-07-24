@@ -9,11 +9,11 @@ const description =
   <article class="mx-auto flex max-w-3xl flex-col gap-4">
     <h1 class="text-3xl font-extrabold sm:text-4xl">Confidentialité</h1>
     <section class="card-brutal p-4 text-sm leading-relaxed">
-      <h2 class="font-extrabold uppercase tracking-brutal">Aucune collecte</h2>
+      <h2 class="font-extrabold uppercase tracking-brutal">Vos chiffres ne partent pas</h2>
       <p class="mt-1">
-        Cet outil fonctionne entièrement dans votre navigateur. Aucune inscription, aucun compte,
-        aucune donnée envoyée à un serveur. Les chiffres que vous saisissez restent sur votre
-        appareil.
+        Le calcul tourne entièrement dans votre navigateur. Aucune inscription, aucun compte. Ce que
+        vous saisissez — <strong>revenus, heures de garde, nombre et âge des enfants, code
+        postal</strong> — n'est envoyé à aucun serveur, ni au nôtre, ni à un tiers.
       </p>
     </section>
     <section class="card-brutal p-4 text-sm leading-relaxed">
@@ -26,8 +26,15 @@ const description =
     <section class="card-brutal p-4 text-sm leading-relaxed">
       <h2 class="font-extrabold uppercase tracking-brutal">Cookies & mesure d'audience</h2>
       <p class="mt-1">
-        Aucun cookie publicitaire. Toute mesure d'audience éventuelle sera respectueuse de la vie
-        privée (sans cookie, données anonymisées).
+        Le site utilise <strong>Vercel Web Analytics</strong>, sans cookie et sans identifiant
+        publicitaire. Ce qui est transmis : l'<strong>adresse de la page consultée</strong> et des
+        informations techniques agrégées (provenance, pays, type d'appareil).
+      </p>
+      <p class="mt-2">
+        Point important : votre scénario est encodé dans les paramètres de l'adresse (après le
+        « ? »), et <strong>ces paramètres sont retirés avant tout envoi</strong>. La mesure
+        d'audience voit donc « <code>/</code> », jamais « <code>/?r=4200&amp;cp=75011</code> ». Aucun
+        profil n'est constitué, aucune donnée n'est revendue.
       </p>
     </section>
   </article>

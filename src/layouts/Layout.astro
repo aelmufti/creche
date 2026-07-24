@@ -84,16 +84,22 @@ const isActive = (href: string) =>
         <script type="application/ld+json" set:html={JSON.stringify(obj)} />
       ))
     }
-    {
-      /* Analytics privacy-first (cookieless), activé seulement si configuré. */
-      import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN && (
-        <script
-          defer
-          data-domain={import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN}
-          src="https://plausible.io/js/script.js"
-        />
-      )
-    }
+    <script is:inline>
+      // Garde-fou de confidentialité. Le scénario de l'utilisateur (revenu, code
+      // postal, situation familiale) vit dans la query string, écrite par le
+      // calculateur via replaceState. L'intégration Astro de Vercel Analytics
+      // n'envoie déjà que le pathname (disableAutoTrack + path calculé au build),
+      // mais ce beforeSend verrouille la garantie donnée sur /confidentialite au
+      // lieu de la faire dépendre d'un détail d'implémentation d'une dépendance.
+      window.webAnalyticsBeforeSend = function (event) {
+        try {
+          var u = new URL(event.url, window.location.origin);
+          return Object.assign({}, event, { url: u.origin + u.pathname });
+        } catch (e) {
+          return event;
+        }
+      };
+    </script>
   </head>
   <body>
     <div class="flex min-h-screen flex-col">
