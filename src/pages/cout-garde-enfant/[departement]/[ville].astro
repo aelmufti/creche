@@ -4,10 +4,21 @@ import { comparer, type Inputs } from "../../../engine";
 import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../../../data/tarifs-locaux";
 import departementsJson from "../../../data/departements.json";
 import { VILLES, villeLoc } from "../../../data/villes";
-import { fmtEuro, fmtEuro2, fmtDateFr } from "../../../lib/format";
+import { fmtEuro, fmtEuro2, fmtDateFr, fmtRang } from "../../../lib/format";
 import { DATES } from "../../../data/content-dates.mjs";
 import { slugify } from "../../../lib/slug";
 import { deptLoc } from "../../../data/departements-loc";
+import { basculesLocales, rangAma, NB_DEPARTEMENTS } from "../../../lib/departements-stats";
+import {
+  rangVille,
+  voisinesClassement,
+  villesMemeDept,
+  reperes,
+  NB_VILLES,
+  VILLE_MIN,
+  VILLE_MAX,
+  CLASSEMENT_VILLES,
+} from "../../../lib/villes-stats";
 
 const site = "https://creche-ou-nounou.fr";
 
@@ -39,8 +50,20 @@ const exemple: Inputs = {
 };
 const { classement, gagnant, ecartAuSuivant } = comparer(exemple);
 
+// --- Positionnement de la ville : sans lui, les 38 pages ville ne diffèrent
+// que par le nom (§3.2 du plan SEO — unicité des pages programmatiques).
+const rang = rangVille(ville.nom);
+const { avant, apres } = voisinesClassement(ville.nom);
+const { plusChere, moinsChere, exAequo } = reperes(ville.nom);
+const memeDept = villesMemeDept(ville.nom);
+const moi = CLASSEMENT_VILLES.find((v) => v.nom === ville.nom)!;
+const extrait = [...avant, moi, ...apres];
+const rangDept = rangAma(ville.dept);
+const bascules = basculesLocales(tarifs, { heures: EX.heures });
+const premiereBascule = bascules[0];
+
 const title = `Crèche ou nounou — ${ville.nom} : prix et comparatif 2026`;
-const description = `Garde d'enfant ${loc} : une assistante maternelle est rémunérée ${fmtEuro2(tarifs.tauxHoraireAma)}/h net en moyenne (URSSAF 2024, ${deptNom}). Comparez crèche, nounou, micro-crèche et garde à domicile pour votre famille.`;
+const description = `Garde d'enfant ${loc} : assistante maternelle à ${fmtEuro2(tarifs.tauxHoraireAma)}/h net (URSSAF 2024, ${deptNom}), ${fmtRang(rang)} ville la plus chère sur ${NB_VILLES}. Comparez les 5 modes de garde.`;
 
 const jsonLd = [
   {
@@ -64,7 +87,7 @@ const jsonLd = [
         name: `Combien coûte une nounou ${loc} ?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `${loc.charAt(0).toUpperCase() + loc.slice(1)}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (moyenne départementale ${deptNom}, URSSAF 2024), avant CMG et crédit d'impôt.`,
+          text: `${loc.charAt(0).toUpperCase() + loc.slice(1)}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (moyenne départementale ${deptNom}, URSSAF 2024), avant CMG et crédit d'impôt. Pour ${EX.heures} h/mois et un foyer à ${EX.revenu} €/mois, cela représente ${fmtEuro(moi.coutAma)}/mois de coût net réel, après CMG et crédit d'impôt de 50 %.`,
         },
       },
       {
@@ -75,6 +98,26 @@ const jsonLd = [
           text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois (coût net réel). Dans les grandes villes, pensez aussi à la disponibilité : les places en crèche y sont très demandées.`,
         },
       },
+      {
+        "@type": "Question",
+        name: `La garde d'enfant est-elle chère ${loc} par rapport aux autres grandes villes ?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `${ville.nom} est la ${fmtRang(rang)} ville la plus chère sur les ${NB_VILLES} grandes villes couvertes pour le coût d'une assistante maternelle : ${fmtEuro(moi.coutAma)}/mois de coût net réel (${EX.heures} h/mois, foyer à ${EX.revenu} €/mois), contre ${fmtEuro(VILLE_MAX.coutAma)}/mois à ${VILLE_MAX.nom} (la plus chère) et ${fmtEuro(VILLE_MIN.coutAma)}/mois à ${VILLE_MIN.nom} (la moins chère). Les tarifs sont de granularité départementale (URSSAF 2024, ${deptNom}, ${fmtRang(rangDept)} sur ${NB_DEPARTEMENTS}).`,
+        },
+      },
+      ...(premiereBascule
+        ? [
+            {
+              "@type": "Question",
+              name: `À partir de quel revenu la crèche devient-elle plus intéressante ${loc} ?`,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: `Avec les tarifs ${deptLocTxt} (couple, 1 enfant, ${EX.heures} h/mois), le mode le moins cher change à partir de ${fmtEuro(premiereBascule.revenu)}/mois de revenu net du foyer : « ${premiereBascule.apres} » passe alors devant « ${premiereBascule.avant} ». En dessous de ce seuil, « ${premiereBascule.avant} » reste l'option la moins chère.`,
+              },
+            },
+          ]
+        : []),
     ],
   },
   {
@@ -125,6 +168,9 @@ const jsonLd = [
         Pour un foyer à {EX.revenu} €/mois, 1 enfant gardé {EX.heures} h/mois, le mode le moins cher est
         <strong>{gagnant.label}</strong> à <span class="marker">{fmtEuro(gagnant.netReel)}/mois</span>
         {ecartAuSuivant > 0.5 ? ` (soit ${fmtEuro(ecartAuSuivant)}/mois de moins que le suivant)` : ""}.
+        Sur ce scénario, {ville.nom} est la <strong>{fmtRang(rang)} ville la plus chère</strong> des {
+          NB_VILLES
+        } grandes villes comparées.
       </p>
     </div>
 
@@ -156,6 +202,90 @@ const jsonLd = [
       </table>
     </section>
 
+    <section>
+      <h2 class="text-xl font-extrabold">{ville.nom} face aux autres grandes villes</h2>
+      <p class="mt-1 text-sm leading-relaxed">
+        Coût net réel mensuel d'une <strong>assistante maternelle</strong> ({EX.heures} h/mois, foyer à {
+          EX.revenu
+        } €/mois), classé de la ville la plus chère à la moins chère. {ville.nom} s'y place
+        <strong>{fmtRang(rang)} sur {NB_VILLES}</strong>
+        {
+          plusChere && moinsChere
+            ? ` — moins chère que ${plusChere.nom}, plus chère que ${moinsChere.nom}.`
+            : plusChere
+              ? ` — c'est le coût le plus bas des villes comparées, derrière ${plusChere.nom}.`
+              : " — c'est le coût le plus élevé des villes comparées."
+        }
+        {
+          exAequo.length > 0 &&
+            ` À budget identique : ${exAequo.map((v) => v.nom).join(", ")} — même tarif horaire moyen d'assistante maternelle.`
+        }
+      </p>
+      <table class="card-brutal mt-3 w-full text-sm">
+        <thead>
+          <tr class="border-b-[3px] border-border text-left">
+            <th class="p-2">Rang</th>
+            <th class="p-2">Ville</th>
+            <th class="p-2 text-right">Assistante maternelle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            extrait.map((v) => (
+              <tr
+                class={`border-t border-border/30 ${v.nom === ville.nom ? "bg-brutal-yellow font-bold" : ""}`}
+              >
+                <td class="p-2 tabular-nums">{fmtRang(rangVille(v.nom))}</td>
+                <td class="p-2">
+                  {v.nom === ville.nom ? (
+                    v.nom
+                  ) : (
+                    <a class="underline" href={`/cout-garde-enfant/${v.deptSlug}/${v.slug}`}>
+                      {v.nom}
+                    </a>
+                  )}
+                </td>
+                <td class="p-2 text-right tabular-nums">{fmtEuro(v.coutAma)}/mois</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Échelle : de {fmtEuro(VILLE_MAX.coutAma)}/mois {villeLoc(VILLE_MAX.nom)} (le coût le plus
+        élevé) à {fmtEuro(VILLE_MIN.coutAma)}/mois {villeLoc(VILLE_MIN.nom)}. Les tarifs sont de
+        granularité départementale ; le département correspondant ({deptNom}) se classe {
+          fmtRang(rangDept)
+        } sur {NB_DEPARTEMENTS}.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">À partir de quel revenu le verdict change {loc}</h2>
+      {
+        premiereBascule ? (
+          <p class="mt-2">
+            Le CMG étant dégressif avec les revenus, le mode le moins cher change au fil du revenu du
+            foyer. Avec les tarifs {deptLocTxt} (couple, 1 enfant, {EX.heures} h/mois), la première
+            bascule intervient à <strong>{fmtEuro(premiereBascule.revenu)}/mois</strong> de revenu net
+            du foyer : « {premiereBascule.apres} » passe alors devant « {premiereBascule.avant} ». En
+            dessous de ce seuil, « {premiereBascule.avant} » reste l'option la moins
+            chère{bascules.length > 1
+              ? ` — et le classement bascule encore ${bascules.length - 1} fois au-delà.`
+              : "."}{" "}
+            <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>Voir tous les seuils {deptLocTxt}</a>.
+          </p>
+        ) : (
+          <p class="mt-2">
+            Avec les tarifs {deptLocTxt} et l'hypothèse retenue (couple, 1 enfant, {EX.heures} h/mois),
+            « {gagnant.label} » reste le mode le moins cher sur toute la plage de revenus testée, de
+            1 200 à 8 000 €/mois. Vos heures de garde et votre nombre d'enfants peuvent en revanche
+            changer ce verdict.
+          </p>
+        )
+      }
+    </section>
+
     <section class="card-brutal p-4 text-sm leading-relaxed">
       <h2 class="text-xl font-extrabold">Disponibilité dans une grande ville</h2>
       <p class="mt-2">
@@ -177,7 +307,12 @@ const jsonLd = [
     </div>
 
     <p class="text-xs text-muted-foreground">
-      Données tarifaires de granularité départementale ({deptNom}) : voir le détail sur la page
+      Données tarifaires de granularité départementale ({deptNom}
+      {
+        memeDept.length > 0
+          ? ` — base tarifaire partagée avec ${memeDept.map((v) => v.nom).join(", ")}`
+          : ""
+      }) : voir le détail sur la page
       <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>coût de la garde {deptLocTxt}</a>.
       Source : {SOURCE_TARIFS.source} ; barème CNAF 2026. Méthode :
       <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative.

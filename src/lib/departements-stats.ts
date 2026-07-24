@@ -39,11 +39,28 @@ export const CLASSEMENT_AMA: DeptStat[] = Object.keys(TARIFS_DEPARTEMENTS)
 
 export const NB_DEPARTEMENTS = CLASSEMENT_AMA.length;
 
-const RANG_PAR_CODE = new Map(CLASSEMENT_AMA.map((d, i) => [d.code, i + 1]));
+// Rang « à la sportive » : les départements au même tarif partagent le même rang.
+// 59 des 100 départements sont à égalité avec au moins un autre (les taux URSSAF
+// sont arrondis au centime) — les départager par ordre de tri produirait un
+// classement arbitraire présenté comme un fait sur des pages indexées.
+const RANG_PAR_CODE = new Map(
+  CLASSEMENT_AMA.map((d) => [
+    d.code,
+    1 + CLASSEMENT_AMA.filter((o) => o.tauxHoraireAma > d.tauxHoraireAma).length,
+  ]),
+);
 
 /** Rang national (1 = le plus cher) sur le salaire horaire des assistantes maternelles. */
 export function rangAma(code: string): number {
   return RANG_PAR_CODE.get(code) ?? 0;
+}
+
+/** Nombre d'AUTRES départements au même tarif horaire (0 = rang non partagé). */
+export function exAequoAma(code: string): number {
+  const ref = CLASSEMENT_AMA.find((d) => d.code === code);
+  if (!ref) return 0;
+  return CLASSEMENT_AMA.filter((d) => d.code !== code && d.tauxHoraireAma === ref.tauxHoraireAma)
+    .length;
 }
 
 /** Quartile de cherté : 1 = le plus cher, 4 = le moins cher. */

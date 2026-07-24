@@ -6,6 +6,7 @@ import {
   DEPT_MIN,
   DEPT_MAX,
   rangAma,
+  exAequoAma,
   quartile,
   departementsComparables,
   basculesLocales,
@@ -42,11 +43,32 @@ describe("rangAma", () => {
     expect(rangAma(DEPT_MIN.code)).toBe(NB_DEPARTEMENTS);
   });
 
-  it("tous les rangs sont dans [1, NB_DEPARTEMENTS] et distincts", () => {
+  it("tous les rangs sont dans [1, NB_DEPARTEMENTS]", () => {
     const rangs = CLASSEMENT_AMA.map((d) => rangAma(d.code));
-    expect(new Set(rangs).size).toBe(NB_DEPARTEMENTS);
     expect(Math.min(...rangs)).toBe(1);
-    expect(Math.max(...rangs)).toBe(NB_DEPARTEMENTS);
+    expect(Math.max(...rangs)).toBeLessThanOrEqual(NB_DEPARTEMENTS);
+  });
+
+  it("rang ex aequo : même tarif ⇒ même rang, tarif supérieur ⇒ rang meilleur", () => {
+    for (const a of CLASSEMENT_AMA) {
+      for (const b of CLASSEMENT_AMA) {
+        if (a.tauxHoraireAma === b.tauxHoraireAma) {
+          expect(rangAma(a.code)).toBe(rangAma(b.code));
+        } else if (a.tauxHoraireAma > b.tauxHoraireAma) {
+          expect(rangAma(a.code)).toBeLessThan(rangAma(b.code));
+        }
+      }
+    }
+  });
+
+  it("exAequoAma compte les autres départements au même tarif", () => {
+    for (const d of CLASSEMENT_AMA.slice(0, 20)) {
+      const attendu = CLASSEMENT_AMA.filter(
+        (o) => o.code !== d.code && o.tauxHoraireAma === d.tauxHoraireAma,
+      ).length;
+      expect(exAequoAma(d.code)).toBe(attendu);
+    }
+    expect(exAequoAma("00")).toBe(0);
   });
 
   it("département sans donnée locale → 0 (pas de rang inventé)", () => {
