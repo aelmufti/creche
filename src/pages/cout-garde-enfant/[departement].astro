@@ -4,10 +4,20 @@ import { comparer, type Inputs } from "../../engine";
 import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../../data/tarifs-locaux";
 import departementsJson from "../../data/departements.json";
 import codesPostauxJson from "../../data/codes-postaux.json";
-import { fmtEuro, fmtEuro2, fmtDateFr } from "../../lib/format";
+import { fmtEuro, fmtEuro2, fmtDateFr, fmtRang } from "../../lib/format";
 import { DATES } from "../../data/content-dates.mjs";
 import { slugify } from "../../lib/slug";
 import { VILLES } from "../../data/villes";
+import {
+  rangAma,
+  quartile,
+  departementsComparables,
+  basculesLocales,
+  NB_DEPARTEMENTS,
+  MOYENNE_AMA,
+  DEPT_MAX,
+  DEPT_MIN,
+} from "../../lib/departements-stats";
 
 const site = "https://creche-ou-nounou.fr";
 
@@ -55,11 +65,34 @@ const amaVsNat =
       ? `inférieur de ${fmtEuro2(-amaEcartNational)} à la moyenne nationale`
       : "proche de la moyenne nationale";
 
+// --- Positionnement national (calculé) : donne à chaque page une analyse qui
+// lui est propre, au lieu d'un gabarit où seuls le nom et deux nombres changent.
+const rang = rangAma(code);
+const q = quartile(code);
+const comparables = departementsComparables(code);
+const bascules = basculesLocales(tarifs);
+
+const positionTxt =
+  q === 1
+    ? "dans le quart des départements les plus chers"
+    : q === 2
+      ? "au-dessus de la médiane nationale"
+      : q === 3
+        ? "en dessous de la médiane nationale"
+        : "dans le quart des départements les moins chers";
+
+const analyse =
+  q === 1
+    ? `${nom} figure ${positionTxt} de France pour la rémunération des assistantes maternelles (${fmtRang(rang)} sur ${NB_DEPARTEMENTS}). Conséquence directe : l'écart de budget entre une assistante maternelle et une place en crèche y est plus resserré qu'ailleurs. Le tarif d'une crèche dépendant de vos revenus et non du marché local, elle devient compétitive à un niveau de revenu plus bas que dans les départements bon marché.`
+    : q === 4
+      ? `${nom} figure ${positionTxt} de France pour la rémunération des assistantes maternelles (${fmtRang(rang)} sur ${NB_DEPARTEMENTS}). L'assistante maternelle y conserve donc l'avantage budgétaire sur une plage de revenus plus large qu'ailleurs : il faut des revenus nettement plus élevés pour que la crèche, dont le tarif est indexé sur les ressources, reprenne la tête.`
+      : `${nom} se situe ${positionTxt} pour la rémunération des assistantes maternelles (${fmtRang(rang)} sur ${NB_DEPARTEMENTS}, contre ${fmtEuro2(MOYENNE_AMA)}/h en moyenne). Le département n'a donc rien d'un cas extrême : le choix s'y joue surtout sur vos revenus et votre nombre d'heures de garde, plus que sur le niveau des tarifs locaux.`;
+
 const slug = slugify(nom);
 const path = `/cout-garde-enfant/${slug}`;
 const villesDuDept = VILLES.filter((v) => v.dept === code);
 const title = `Crèche ou nounou — ${nom} : coût réel 2026`;
-const description = `${nom} : une assistante maternelle y est rémunérée ${fmtEuro2(tarifs.tauxHoraireAma)}/h net en moyenne (URSSAF 2024). Comparez crèche, nounou, micro-crèche et garde à domicile et trouvez le moins cher pour votre famille.`;
+const description = `${nom} : assistante maternelle à ${fmtEuro2(tarifs.tauxHoraireAma)}/h net (${fmtRang(rang)}/${NB_DEPARTEMENTS}, URSSAF 2024). Comparez crèche, nounou et garde à domicile.`;
 
 const jsonLd = [
   {
@@ -95,6 +128,26 @@ const jsonLd = [
           text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher en ${nom} est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois en coût net réel. Le résultat varie selon votre situation : utilisez le comparateur pour votre cas.`,
         },
       },
+      {
+        "@type": "Question",
+        name: `${nom} est-il un département cher pour la garde d'enfant ?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `${nom} se classe ${fmtRang(rang)} sur ${NB_DEPARTEMENTS} départements pour le salaire horaire des assistantes maternelles, à ${fmtEuro2(tarifs.tauxHoraireAma)}/h net contre ${fmtEuro2(MOYENNE_AMA)}/h en moyenne nationale (URSSAF 2024) — soit ${positionTxt}. L'échelle nationale va de ${fmtEuro2(DEPT_MIN.tauxHoraireAma)}/h (${DEPT_MIN.nom}) à ${fmtEuro2(DEPT_MAX.tauxHoraireAma)}/h (${DEPT_MAX.nom}).`,
+        },
+      },
+      ...(bascules.length > 0
+        ? [
+            {
+              "@type": "Question",
+              name: `À partir de quel revenu la crèche devient-elle plus intéressante en ${nom} ?`,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: `Avec les tarifs de ${nom} (couple, 1 enfant, ${EX.heures} h/mois), le mode le moins cher change à partir de ${fmtEuro(bascules[0].revenu)}/mois de revenu net du foyer : « ${bascules[0].apres} » passe alors devant « ${bascules[0].avant} ». En dessous de ce seuil, « ${bascules[0].avant} » reste l'option la moins chère. Ce seuil est propre au département car il dépend des tarifs locaux et de la dégressivité du CMG.`,
+              },
+            },
+          ]
+        : []),
     ],
   },
   {
@@ -136,9 +189,10 @@ const jsonLd = [
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
       <p>
         <strong>{nom}</strong> — une assistante maternelle y est rémunérée en moyenne
-        <strong>{fmtEuro2(tarifs.tauxHoraireAma)}/h net</strong> ({amaVsNat}), et une garde à domicile
-        revient à environ <strong>{fmtEuro2(tarifs.coutHoraireDomicile)}/h</strong> de coût total
-        employeur — données <strong>URSSAF 2024</strong>.
+        <strong>{fmtEuro2(tarifs.tauxHoraireAma)}/h net</strong> ({amaVsNat}), ce qui place le
+        département <strong>{fmtRang(rang)} sur {NB_DEPARTEMENTS}</strong>. Une garde à domicile y revient à
+        environ <strong>{fmtEuro2(tarifs.coutHoraireDomicile)}/h</strong> de coût total employeur —
+        données <strong>URSSAF 2024</strong>.
       </p>
       <p class="mt-2">
         Pour un foyer à {EX.revenu} €/mois, 1 enfant gardé {EX.heures} h/mois, le mode le moins cher
@@ -177,6 +231,55 @@ const jsonLd = [
       </table>
     </section>
 
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Ce que ces tarifs veulent dire pour {nom}</h2>
+      <p class="mt-2">{analyse}</p>
+      <p class="mt-2">
+        Pour situer l'échelle : le salaire horaire net d'une assistante maternelle va de {
+          fmtEuro2(DEPT_MIN.tauxHoraireAma)
+        }/h ({DEPT_MIN.nom}) à {fmtEuro2(DEPT_MAX.tauxHoraireAma)}/h ({DEPT_MAX.nom}), pour une
+        moyenne nationale de {fmtEuro2(MOYENNE_AMA)}/h. En {nom}, une garde à domicile revient à
+        environ {fmtEuro2(tarifs.coutHoraireDomicile)}/h de coût total employeur, avant crédit
+        d'impôt de 50 %.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">À partir de quel revenu le verdict change en {nom}</h2>
+      {
+        bascules.length > 0 ? (
+          <>
+            <p class="mt-2">
+              Le CMG étant dégressif avec les revenus, le mode le moins cher change au fil du revenu
+              du foyer. Avec les tarifs de {nom} (couple, 1 enfant, {EX.heures} h/mois), les seuils
+              de bascule sont les suivants :
+            </p>
+            <ul class="mt-3 flex flex-col gap-2">
+              {bascules.map((b) => (
+                <li class="card-brutal p-3">
+                  <strong>À partir de {fmtEuro(b.revenu)}/mois</strong> de revenu net du foyer, «{" "}
+                  {b.apres} » passe devant « {b.avant} ».
+                </li>
+              ))}
+            </ul>
+            <p class="mt-3">
+              En dessous de {fmtEuro(bascules[0].revenu)}/mois, c'est donc «{" "}
+              {bascules[0].avant} » qui reste le mode le moins cher en {nom}. Ces seuils sont
+              propres au département : ils dépendent des tarifs locaux, et diffèrent de ceux d'un
+              département plus cher ou meilleur marché.
+            </p>
+          </>
+        ) : (
+          <p class="mt-2">
+            Avec les tarifs de {nom} et l'hypothèse retenue (couple, 1 enfant, {EX.heures} h/mois),
+            le mode le moins cher reste « {gagnant.label} » sur toute la plage de revenus testée, de
+            1 200 à 8 000 €/mois. Le nombre d'heures de garde et le nombre d'enfants peuvent en
+            revanche modifier ce verdict : utilisez le comparateur pour votre cas.
+          </p>
+        )
+      }
+    </section>
+
     <div class="card-brutal bg-brutal-yellow p-4">
       <p class="text-sm font-bold">
         Ces chiffres sont un exemple. Votre revenu, vos heures et le nombre d'enfants changent le
@@ -210,6 +313,29 @@ const jsonLd = [
       )
     }
 
+    <section>
+      <h2 class="text-xl font-extrabold">Départements aux tarifs comparables</h2>
+      <p class="mt-1 text-sm leading-relaxed">
+        Ces départements affichent un salaire horaire d'assistante maternelle proche de celui de {
+          nom
+        } — utile si vous hésitez entre plusieurs bassins de vie.
+      </p>
+      <ul class="mt-3 flex flex-wrap gap-2">
+        {
+          comparables.map((d) => (
+            <li>
+              <a
+                class="card-brutal-interactive block px-3 py-1.5 text-sm font-bold"
+                href={`/cout-garde-enfant/${d.slug}`}
+              >
+                {d.nom} — {fmtEuro2(d.tauxHoraireAma)}/h →
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
     <section class="text-sm leading-relaxed">
       <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
       <h3 class="mt-3 font-bold">Combien coûte une assistante maternelle en {nom} ?</h3>
@@ -223,6 +349,12 @@ const jsonLd = [
         Au-delà du coût, la crèche n'est pas garantie (places limitées) et l'assistante maternelle
         offre plus de souplesse d'horaires. Côté budget, comparez le
         <a class="underline" href={cp ? `/?cp=${cp}` : "/"}>coût net réel pour votre situation</a>.
+      </p>
+      <h3 class="mt-3 font-bold">{nom} est-il un département cher pour la garde d'enfant ?</h3>
+      <p class="mt-1">
+        {nom} se classe {fmtRang(rang)} sur {NB_DEPARTEMENTS} pour le salaire horaire des assistantes
+        maternelles, à {fmtEuro2(tarifs.tauxHoraireAma)}/h net contre {fmtEuro2(MOYENNE_AMA)}/h en
+        moyenne nationale (URSSAF 2024) — soit {positionTxt}.
       </p>
     </section>
 

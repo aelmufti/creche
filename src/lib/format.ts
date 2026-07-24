@@ -22,3 +22,5 @@ export const fmtEuro = (n: number) => euro.format(Math.round(n));
 export const fmtEuro2 = (n: number) => euro2.format(n);
 export const fmtHeure = (n: number) => `${euro2.format(n)}/h`;
 export const fmtDateFr = (iso: string) => dateFr.format(new Date(iso));
+/** Ordinal français : 1 → « 1ᵉʳ », 12 → « 12ᵉ ». */
+export const fmtRang = (n: number) => (n === 1 ? "1ᵉʳ" : `${n}ᵉ`);
