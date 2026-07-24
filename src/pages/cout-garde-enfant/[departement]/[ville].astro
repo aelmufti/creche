@@ -7,6 +7,7 @@ import { VILLES, villeLoc } from "../../../data/villes";
 import { fmtEuro, fmtEuro2, fmtDateFr } from "../../../lib/format";
 import { DATES } from "../../../data/content-dates.mjs";
 import { slugify } from "../../../lib/slug";
+import { deptLoc } from "../../../data/departements-loc";
 
 const site = "https://creche-ou-nounou.fr";
 
@@ -23,6 +24,7 @@ const tarifs = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[ville.dept] };
 const deptSlug = slugify(deptNom);
 const path = `/cout-garde-enfant/${deptSlug}/${slugify(ville.nom)}`;
 const loc = villeLoc(ville.nom);
+const deptLocTxt = deptLoc(ville.dept, deptNom);
 
 const EX = { revenu: 3000, heures: 160 };
 const exemple: Inputs = {
@@ -176,7 +178,7 @@ const jsonLd = [
 
     <p class="text-xs text-muted-foreground">
       Données tarifaires de granularité départementale ({deptNom}) : voir le détail sur la page
-      <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>coût de la garde en {deptNom}</a>.
+      <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>coût de la garde {deptLocTxt}</a>.
       Source : {SOURCE_TARIFS.source} ; barème CNAF 2026. Méthode :
       <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative.
     </p>

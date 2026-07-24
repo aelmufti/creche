@@ -8,6 +8,7 @@ import { fmtEuro, fmtEuro2, fmtDateFr, fmtRang } from "../../lib/format";
 import { DATES } from "../../data/content-dates.mjs";
 import { slugify } from "../../lib/slug";
 import { VILLES } from "../../data/villes";
+import { deptLoc, deptLocCap } from "../../data/departements-loc";
 import {
   rangAma,
   quartile,
@@ -41,6 +42,9 @@ export function getStaticPaths() {
 }
 
 const { code, nom, cp } = Astro.props;
+// Locatif correct (« dans le Nord », « à Paris ») plutôt qu'un « en » systématique.
+const loc = deptLoc(code, nom);
+const locCap = deptLocCap(code, nom);
 const tarifs = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[code] };
 
 // Scénario d'exemple (clairement annoncé, personnalisable via le calculateur).
@@ -114,18 +118,18 @@ const jsonLd = [
     mainEntity: [
       {
         "@type": "Question",
-        name: `Combien coûte une assistante maternelle en ${nom} ?`,
+        name: `Combien coûte une assistante maternelle ${loc} ?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `En ${nom}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (données URSSAF 2024), avant CMG et crédit d'impôt. Le reste à charge réel dépend de vos revenus et du nombre d'heures.`,
+          text: `${locCap}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (données URSSAF 2024), avant CMG et crédit d'impôt. Le reste à charge réel dépend de vos revenus et du nombre d'heures.`,
         },
       },
       {
         "@type": "Question",
-        name: `Crèche ou nounou en ${nom} : lequel est le moins cher ?`,
+        name: `Crèche ou nounou ${loc} : lequel est le moins cher ?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher en ${nom} est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois en coût net réel. Le résultat varie selon votre situation : utilisez le comparateur pour votre cas.`,
+          text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher ${loc} est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois en coût net réel. Le résultat varie selon votre situation : utilisez le comparateur pour votre cas.`,
         },
       },
       {
@@ -140,7 +144,7 @@ const jsonLd = [
         ? [
             {
               "@type": "Question",
-              name: `À partir de quel revenu la crèche devient-elle plus intéressante en ${nom} ?`,
+              name: `À partir de quel revenu la crèche devient-elle plus intéressante ${loc} ?`,
               acceptedAnswer: {
                 "@type": "Answer",
                 text: `Avec les tarifs de ${nom} (couple, 1 enfant, ${EX.heures} h/mois), le mode le moins cher change à partir de ${fmtEuro(bascules[0].revenu)}/mois de revenu net du foyer : « ${bascules[0].apres} » passe alors devant « ${bascules[0].avant} ». En dessous de ce seuil, « ${bascules[0].avant} » reste l'option la moins chère. Ce seuil est propre au département car il dépend des tarifs locaux et de la dégressivité du CMG.`,
@@ -238,14 +242,14 @@ const jsonLd = [
         Pour situer l'échelle : le salaire horaire net d'une assistante maternelle va de {
           fmtEuro2(DEPT_MIN.tauxHoraireAma)
         }/h ({DEPT_MIN.nom}) à {fmtEuro2(DEPT_MAX.tauxHoraireAma)}/h ({DEPT_MAX.nom}), pour une
-        moyenne nationale de {fmtEuro2(MOYENNE_AMA)}/h. En {nom}, une garde à domicile revient à
+        moyenne nationale de {fmtEuro2(MOYENNE_AMA)}/h. {locCap}, une garde à domicile revient à
         environ {fmtEuro2(tarifs.coutHoraireDomicile)}/h de coût total employeur, avant crédit
         d'impôt de 50 %.
       </p>
     </section>
 
     <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">À partir de quel revenu le verdict change en {nom}</h2>
+      <h2 class="text-xl font-extrabold">À partir de quel revenu le verdict change {loc}</h2>
       {
         bascules.length > 0 ? (
           <>
@@ -264,7 +268,7 @@ const jsonLd = [
             </ul>
             <p class="mt-3">
               En dessous de {fmtEuro(bascules[0].revenu)}/mois, c'est donc «{" "}
-              {bascules[0].avant} » qui reste le mode le moins cher en {nom}. Ces seuils sont
+              {bascules[0].avant} » qui reste le mode le moins cher {loc}. Ces seuils sont
               propres au département : ils dépendent des tarifs locaux, et diffèrent de ceux d'un
               département plus cher ou meilleur marché.
             </p>
@@ -289,7 +293,7 @@ const jsonLd = [
         href={cp ? `/?cp=${cp}` : "/"}
         class="btn-brutal mt-3 inline-block bg-background px-5 py-3 text-foreground"
       >
-        → Calculer mon cas en {nom}
+        → Calculer mon cas {loc}
       </a>
     </div>
 
@@ -338,13 +342,13 @@ const jsonLd = [
 
     <section class="text-sm leading-relaxed">
       <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
-      <h3 class="mt-3 font-bold">Combien coûte une assistante maternelle en {nom} ?</h3>
+      <h3 class="mt-3 font-bold">Combien coûte une assistante maternelle {loc} ?</h3>
       <p class="mt-1">
-        Le salaire horaire net moyen d'une assistante maternelle en {nom} est de
+        Le salaire horaire net moyen d'une assistante maternelle {loc} est de
         {fmtEuro2(tarifs.tauxHoraireAma)}/h (URSSAF 2024), avant CMG et crédit d'impôt. Le reste à
         charge réel dépend de vos revenus et du nombre d'heures de garde.
       </p>
-      <h3 class="mt-3 font-bold">Crèche ou nounou en {nom} : lequel choisir ?</h3>
+      <h3 class="mt-3 font-bold">Crèche ou nounou {loc} : lequel choisir ?</h3>
       <p class="mt-1">
         Au-delà du coût, la crèche n'est pas garantie (places limitées) et l'assistante maternelle
         offre plus de souplesse d'horaires. Côté budget, comparez le
