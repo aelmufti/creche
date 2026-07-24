@@ -4,6 +4,7 @@ import { bareme } from "../engine/bareme";
 import { SOURCE_TARIFS } from "../data/tarifs-locaux";
 import { fmtEuro2, fmtDateFr } from "../lib/format";
 import { DATES } from "../data/content-dates.mjs";
+import { CHANGELOG, TYPE_LABEL } from "../data/changelog";
 
 const site = "https://creche-ou-nounou.fr";
 const title = "Méthodologie & sources du calcul (2026)";
@@ -165,6 +166,52 @@ const jsonLd = [
           vérification avant application aux montants.
         </li>
         <li>Forfaits micro-crèche T2/T3 : à reconfirmer verbatim depuis le barème Pajemploi.</li>
+      </ul>
+    </section>
+
+    <section id="corrections">
+      <h2 class="text-xl font-extrabold">6. Politique de correction</h2>
+      <div class="mt-2 text-sm leading-relaxed">
+        <p>
+          Une erreur de calcul ou de donnée est corrigée <strong>dès qu'elle est constatée</strong>,
+          sans attendre une mise à jour groupée, et la correction est consignée dans le journal
+          ci-dessous avec sa date. Le barème est versionné ({b.version}) : un changement de barème
+          crée une nouvelle version plutôt qu'une modification silencieuse des chiffres.
+        </p>
+        <p class="mt-2">
+          Les <strong>limites connues</strong> ci-dessus sont publiées avant même d'être résolues :
+          mieux vaut une incertitude déclarée qu'un chiffre présenté comme certain. Pour signaler une
+          erreur, écrivez à l'auteur via <a class="underline" href="/a-propos">la page à propos</a>.
+        </p>
+        <p class="mt-2 text-muted-foreground">
+          Ce site n'est <strong>pas relu par un tiers expert</strong> : les calculs sont vérifiés
+          contre les cas de référence officiels et les sources sont publiques, mais aucune validation
+          externe n'est revendiquée.
+        </p>
+      </div>
+    </section>
+
+    <section id="journal">
+      <h2 class="text-xl font-extrabold">7. Journal des mises à jour</h2>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Chaque changement visible pour vous — chiffres, méthode, périmètre, correction.
+      </p>
+      <ul class="mt-3 flex flex-col gap-2">
+        {
+          CHANGELOG.map((e) => (
+            <li class="card-brutal p-3 text-sm leading-relaxed">
+              <p class="flex flex-wrap items-baseline gap-2">
+                <time class="font-bold tabular-nums" datetime={e.date}>
+                  {fmtDateFr(e.date)}
+                </time>
+                <span class="border-[2px] border-border px-1.5 py-0.5 text-xs font-bold uppercase tracking-brutal">
+                  {TYPE_LABEL[e.type]}
+                </span>
+              </p>
+              <p class="mt-1">{e.texte}</p>
+            </li>
+          ))
+        }
       </ul>
     </section>
   </article>

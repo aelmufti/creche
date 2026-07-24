@@ -3,14 +3,16 @@
 // Format ISO (AAAA-MM-JJ). Alimente le JSON-LD des pages ET le <lastmod> du sitemap.
 
 export const DATES = {
-  home: { published: "2026-06-15", modified: "2026-06-16" },
-  guides: { published: "2026-06-16", modified: "2026-06-16" },
-  departements: { published: "2026-06-16", modified: "2026-06-16" },
-  villes: { published: "2026-06-17", modified: "2026-06-17" },
-  methodologie: { published: "2026-06-15", modified: "2026-06-16" },
-  observatoire: { published: "2026-06-16", modified: "2026-06-16" },
+  home: { published: "2026-06-15", modified: "2026-07-24" },
+  guides: { published: "2026-06-16", modified: "2026-07-24" },
+  departements: { published: "2026-06-16", modified: "2026-07-24" },
+  villes: { published: "2026-06-17", modified: "2026-07-24" },
+  methodologie: { published: "2026-06-15", modified: "2026-07-24" },
+  observatoire: { published: "2026-06-16", modified: "2026-07-24" },
+  // Le glossaire n'a pas changé : un lastmod « aujourd'hui » sur une page
+  // inchangée est ignoré par Google, voire coûteux en confiance (§3.3).
   glossaire: { published: "2026-06-16", modified: "2026-06-16" },
-  site: { published: "2026-06-15", modified: "2026-06-16" },
+  site: { published: "2026-06-15", modified: "2026-07-24" },
 };
 
 /** Date de dernière modification (lastmod sitemap) pour une URL du site. */
