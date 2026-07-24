@@ -62,7 +62,10 @@ const rangDept = rangAma(ville.dept);
 const bascules = basculesLocales(tarifs, { heures: EX.heures });
 const premiereBascule = bascules[0];
 
-const title = `Crèche ou nounou — ${ville.nom} : prix et comparatif 2026`;
+// Title < 60 caractères (§4.1) : « et comparatif » saute pour les noms longs
+// (Boulogne-Billancourt, Clermont-Ferrand) plutôt que d'être tronqué en SERP.
+const titleLong = `Crèche ou nounou ${loc} : prix et comparatif 2026`;
+const title = titleLong.length <= 60 ? titleLong : `Crèche ou nounou ${loc} : prix 2026`;
 const description = `Garde d'enfant ${loc} : assistante maternelle à ${fmtEuro2(tarifs.tauxHoraireAma)}/h net (URSSAF 2024, ${deptNom}), ${fmtRang(rang)} ville la plus chère sur ${NB_VILLES}. Comparez les 5 modes de garde.`;
 
 const jsonLd = [
