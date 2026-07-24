@@ -44,6 +44,57 @@ const jsonLd = [
       },
     ],
   },
+  // HowTo : les étapes correspondent une à une à la liste ordonnée visible plus
+  // bas (§4.2). Google ne rend plus de rich result HowTo depuis 2023 ; l'intérêt
+  // ici est l'extraction par les moteurs génératifs (§6.3), d'où des étapes
+  // rédigées pour être citables telles quelles.
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "Comment calculer le reste à charge d'une assistante maternelle",
+    description:
+      "Passer du coût brut d'une assistante maternelle au coût net réel, après CMG et crédit d'impôt.",
+    inLanguage: "fr-FR",
+    totalTime: "PT2M",
+    url: site + path + "#decomposition",
+    step: [
+      {
+        "@type": "HowToStep",
+        position: 1,
+        name: "Calculer le coût brut",
+        text: "Coût brut = salaire horaire net × nombre d'heures + indemnités d'entretien et de repas.",
+        url: site + path + "#decomposition",
+      },
+      {
+        "@type": "HowToStep",
+        position: 2,
+        name: "Retirer le CMG",
+        text: "Le complément de libre choix du mode de garde couvre une partie du salaire et 100 % des cotisations sociales. Son montant dépend des revenus du foyer.",
+        url: site + path + "#decomposition",
+      },
+      {
+        "@type": "HowToStep",
+        position: 3,
+        name: "Obtenir la trésorerie mensuelle",
+        text: "Coût brut moins CMG = ce qui part réellement du compte chaque mois.",
+        url: site + path + "#decomposition",
+      },
+      {
+        "@type": "HowToStep",
+        position: 4,
+        name: "Retirer le crédit d'impôt de 50 %",
+        text: "Le crédit d'impôt vaut 50 % des sommes engagées, dans la limite de 3 500 € par enfant, et il est encaissé l'année suivante.",
+        url: site + path + "#decomposition",
+      },
+      {
+        "@type": "HowToStep",
+        position: 5,
+        name: "Lire le coût net réel",
+        text: "Le résultat est le coût net réel mensuel : c'est le seul chiffre comparable entre modes de garde.",
+        url: site + path + "#decomposition",
+      },
+    ],
+  },
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -78,7 +129,7 @@ const jsonLd = [
       </a>
     </div>
 
-    <section class="text-sm leading-relaxed">
+    <section class="text-sm leading-relaxed" id="decomposition">
       <h2 class="text-xl font-extrabold">La décomposition du coût</h2>
       <ol class="mt-2 list-decimal space-y-1 pl-5">
         <li><strong>Coût brut</strong> = salaire horaire net × heures + indemnités (entretien, repas).</li>
