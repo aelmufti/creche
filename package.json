@@ -2,6 +2,7 @@
   "name": "comparateur-mode-de-garde",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "description": "Comparateur des modes de garde d'enfant avec verdict chiffré — sibling de freelance-ou-cdi.fr",
   "scripts": {

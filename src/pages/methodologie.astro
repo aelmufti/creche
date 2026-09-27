@@ -85,14 +85,43 @@ const jsonLd = [
       </p>
       <pre class="card-brutal mt-2 overflow-x-auto p-3 text-xs">CMG = coût_mensuel × (1 − revenu × taux_effort / coût_référence)</pre>
       <p class="mt-2 text-sm">
-        Coût horaire de référence : {fmtEuro2(b.cout_horaire_ref.ama)} (assistante maternelle),
-        {fmtEuro2(b.cout_horaire_ref.domicile)} (garde à domicile, taux d'effort doublé). Résultat
-        plafonné à {fmtEuro2(b.cmg_max_emploi_direct.ama)}/mois (AMA) et
-        {fmtEuro2(b.cmg_max_emploi_direct.domicile)}/mois (domicile). La distinction d'âge et le reste
-        à charge minimum de 15 % sont <strong>supprimés</strong> en emploi direct.
+        Coût horaire de référence au 1ᵉʳ avril 2026 : {fmtEuro2(b.cout_horaire_ref.ama)}
+        (assistante maternelle) et {fmtEuro2(b.cout_horaire_ref.domicile)} (garde à domicile, taux
+        d'effort doublé). Le coût retenu est écrêté au plafond horaire de
+        {" "}{fmtEuro2(b.plafond_horaire.ama)} (assistante maternelle) et
+        {" "}{fmtEuro2(b.plafond_horaire.domicile)} (garde à domicile) ; au-delà, l'écart reste à
+        votre charge. Il n'y a <strong>plus de montant maximum mensuel</strong>.
+      </p>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+        <li>
+          Assistante maternelle : le coût mensuel inclut le salaire net et les indemnités
+          d'entretien et de repas ; 100 % des cotisations sont en plus prises en charge.
+        </li>
+        <li>
+          Garde à domicile : CMG calculé sur le salaire net ; 50 % des cotisations pris en charge,
+          dans la limite de {fmtEuro2(b.cotisations.plafond_prise_en_charge_domicile.moins3ans)}/mois
+          (enfant de moins de 3 ans) ou
+          {" "}{fmtEuro2(b.cotisations.plafond_prise_en_charge_domicile.de3a6ans)}/mois (3 à 6 ans).
+        </li>
+        <li>
+          Enfant bénéficiaire de l'AEEH : taux d'effort de la tranche inférieure du barème.
+        </li>
+        <li>
+          Supprimés en emploi direct : distinction d'âge, reste à charge minimum de 15 %,
+          majorations parent isolé et horaires spécifiques.
+        </li>
+      </ul>
+      <p class="mt-2 text-sm">
+        Conséquence directe : avec une assistante maternelle payée exactement au coût de référence,
+        le reste à charge avant crédit d'impôt est <strong>identique au tarif d'une crèche
+        collective</strong> (c'est l'objectif de la réforme). Il est plus bas si l'assistante
+        maternelle coûte moins de {fmtEuro2(b.cout_horaire_ref.ama)} de l'heure, plus haut sinon.
       </p>
       <p class="mt-1 text-xs text-muted-foreground">
-        Source : Urssaf/Pajemploi ; art. 99 LFSS 2024 (loi n° 2023-1250), en vigueur 1ᵉʳ sept. 2025.
+        Sources : caf.fr, « Réforme du CMG : la foire aux questions » ; Urssaf, « Réévaluation du coût
+        médian et du plafond horaire du CMG » (1ᵉʳ avril 2026) ; art. 99 LFSS 2024 (loi
+        n° 2023-1250), en vigueur le 1ᵉʳ sept. 2025. Contrôle : l'exemple chiffré publié par la CAF
+        (2 000 €, 160 h, 4,91 €/h → 587,52 €) est un test automatique du moteur.
       </p>
     </section>
 
@@ -153,19 +182,33 @@ const jsonLd = [
         département, provient des données open data
         <strong> {SOURCE_TARIFS.source}</strong>. Le coût garde à domicile est converti du net au
         coût total employeur (× 1,8 environ). Valeurs indicatives et modifiables ; le tarif
-        micro-crèche reste national (plafonné à 10 €/h pour l'aide).
+        micro-crèche reste national (10 €/h par défaut ; au-delà de 10 €/h, le CMG structure
+        n'est plus versé).
       </p>
     </section>
 
     <section>
       <h2 class="text-xl font-extrabold">5. Limites connues</h2>
       <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-        <li>Aide cotisations garde à domicile : approximation (50 % d'une estimation des charges).</li>
         <li>
-          Majoration parent isolé : porte sur les plafonds/tranches, mécanique exacte en cours de
-          vérification avant application aux montants.
+          Garde à domicile : le salaire net et les cotisations sont déduits du coût total saisi par
+          un facteur moyen (coût total ≈ net × {String(b.cotisations.facteur_cout_total_domicile).replace(".", ",")}).
+          Votre déclaration Pajemploi donne les montants exacts.
         </li>
-        <li>Forfaits micro-crèche T2/T3 : à reconfirmer verbatim depuis le barème Pajemploi.</li>
+        <li>
+          Micro-crèche : les seuils de revenus appliqués sont ceux d'un foyer avec 1 enfant. Avec
+          plusieurs enfants à charge, les seuils officiels sont plus hauts : l'estimation peut
+          placer le foyer une tranche trop haut (aide sous-estimée, jamais surestimée).
+        </li>
+        <li>
+          Crédit d'impôt assistante maternelle : les frais de repas ne sont pas déductibles et
+          l'indemnité d'entretien ne l'est que dans une limite forfaitaire ; le moteur applique le
+          crédit sur l'ensemble des frais annexes saisis, ce qui peut le surestimer de quelques euros.
+        </li>
+        <li>
+          Garde à domicile : la majoration du plafond de crédit d'impôt la première année d'emploi
+          n'est pas modélisée.
+        </li>
       </ul>
     </section>
 
@@ -184,9 +227,9 @@ const jsonLd = [
           erreur, écrivez à l'auteur via <a class="underline" href="/a-propos">la page à propos</a>.
         </p>
         <p class="mt-2 text-muted-foreground">
-          Ce site n'est <strong>pas relu par un tiers expert</strong> : les calculs sont vérifiés
-          contre les cas de référence officiels et les sources sont publiques, mais aucune validation
-          externe n'est revendiquée.
+          Ce site n'est <strong>pas relu par un tiers expert</strong> : les calculs sont testés
+          contre les exemples et barèmes publiés par la CAF et l'Urssaf, et les sources sont
+          publiques, mais aucune validation externe n'est revendiquée.
         </p>
       </div>
     </section>

@@ -36,6 +36,12 @@ export const EDITEUR = {
   siren: null as string | null,
 };
 
+/** Dépôt du code source (projet open source). */
+export const DEPOT = {
+  url: "https://github.com/aelmufti/creche",
+  licence: "MIT",
+};
+
 export const HEBERGEUR = {
   nom: "Vercel Inc.",
   adresse: "440 N Barranca Ave #4133, Covina, CA 91723, États-Unis",

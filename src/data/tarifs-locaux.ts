@@ -52,7 +52,7 @@ export interface TarifsLocaux {
 /**
  * Tarifs nationaux indicatifs (hypothèses de saisie, modifiables — PAS du barème).
  * Salaires AMA / garde à domicile = données réelles URSSAF (cf. SOURCE_TARIFS) ;
- * tarif micro-crèche national (pas de source départementale, plafonné à 10 €/h).
+ * tarif micro-crèche national (pas de source départementale ; au-delà de 10 €/h, pas de CMG).
  */
 export const TARIFS_NATIONAL: TarifsLocaux = tarifsJson.national;
 

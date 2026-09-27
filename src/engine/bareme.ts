@@ -12,6 +12,6 @@ export const defauts = {
   tauxHoraireAma: 4.0, // €/h net AMA, moyenne nationale indicative
   fraisAnnexesAma: 90, // indemnités entretien + repas, mensuel
   coutHoraireDomicile: 17.5, // €/h total employeur (salaire + charges)
-  tarifMicroCreche: 10.0, // €/h structure (plafonné à 10 pour le calcul)
+  tarifMicroCreche: 10.0, // €/h structure (au-delà de 10 €/h, pas de CMG structure)
   tarifCrecheNonUtilise: 0, // le tarif crèche PSU est calculé, jamais saisi
 } as const;

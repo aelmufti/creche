@@ -7,7 +7,7 @@ const site = "https://creche-ou-nounou.fr";
 const path = "/guides/micro-creche-cmg-structure";
 const title = "Micro-crèche 2026 : CMG structure et reste à charge";
 const description =
-  "Micro-crèche PAJE : le CMG structure couvre jusqu'à 85 % du coût (plafond 10 €/h), selon un forfait par tranche de revenus. Calcul et exemples 2026.";
+  "Micro-crèche PAJE : le CMG structure couvre jusqu'à 85 % du coût si le tarif ne dépasse pas 10 €/h, selon un forfait par tranche de revenus. Calcul 2026.";
 
 const jsonLd = [
   {
@@ -31,7 +31,7 @@ const jsonLd = [
         name: "Quelle aide pour une micro-crèche en 2026 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "En micro-crèche en tarification PAJE, le CMG « structure » couvre 85 % du coût éligible (plafonné à 10 €/h), dans la limite d'un forfait mensuel qui dépend de votre tranche de revenus, avec un reste à charge minimum de 15 %.",
+          text: "En micro-crèche en tarification PAJE, le CMG « structure » couvre 85 % du coût, dans la limite d'un forfait mensuel qui dépend de votre tranche de revenus (au 1er avril 2026, pour un enfant de moins de 3 ans et un couple avec 1 enfant : 992,13 €, 855,25 € ou 718,41 €), avec un reste à charge minimum de 15 %. Si le tarif horaire dépasse 10 €, le CMG n'est pas versé.",
         },
       },
       {
@@ -70,7 +70,7 @@ const jsonLd = [
       <p>
         <strong>En bref.</strong> Une micro-crèche en tarification PAJE ouvre droit au
         <strong>CMG « structure »</strong> : il couvre <strong>85 % du coût éligible</strong>
-        (plafonné à 10 €/h), dans la limite d'un <strong>forfait selon votre tranche de revenus</strong>,
+        (à condition que le tarif ne dépasse pas 10 €/h), dans la limite d'un <strong>forfait selon votre tranche de revenus</strong>,
         avec un <strong>reste à charge minimum de 15 %</strong>. La logique est différente de l'emploi
         direct, et la réforme de septembre 2025 ne s'y applique pas.
       </p>
@@ -82,7 +82,8 @@ const jsonLd = [
     <section class="text-sm leading-relaxed">
       <h2 class="text-xl font-extrabold">Comment se calcule l'aide</h2>
       <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li>Coût éligible = heures × tarif horaire, <strong>plafonné à 10 €/h</strong>.</li>
+        <li>Condition : un tarif horaire de <strong>10 € au plus</strong> ; au-delà, le CMG n'est pas versé.</li>
+        <li>Forfait maximum au 1ᵉʳ avril 2026 (enfant de moins de 3 ans, couple avec 1 enfant) : <strong>992,13 €</strong> (revenus 2024 jusqu'à 24 333 €), <strong>855,25 €</strong> (jusqu'à 54 075 €), <strong>718,41 €</strong> au-delà. Parent isolé : montants majorés de 30 %, seuils de 40 %.</li>
         <li>Aide = <strong>85 %</strong> du coût éligible, dans la limite du <strong>forfait de votre tranche</strong> de revenus.</li>
         <li><strong>Reste à charge minimum 15 %</strong> : vous payez toujours au moins 15 % du coût éligible.</li>
         <li>Aide <strong>divisée par deux</strong> pour un enfant de 3 à 6 ans.</li>

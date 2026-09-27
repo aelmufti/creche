@@ -253,13 +253,13 @@ export function Calculator() {
             <Field label="Taux horaire assistante maternelle" htmlFor="ta" hint={`${sourceTarif} : ${tauxAma} €/h net`}>
               <NumberInput id="ta" value={tauxAma} onChange={(n) => set("tauxHoraireAma", n)} step={0.1} suffix="€/h" />
             </Field>
-            <Field label="Frais annexes AMA (repas, entretien)" htmlFor="fa" hint="Mensuel, indicatif.">
+            <Field label="Frais annexes AMA (repas, entretien)" htmlFor="fa" hint="Mensuel, indicatif. Pris en compte dans le CMG.">
               <NumberInput id="fa" value={inputs.fraisAnnexesAma ?? defauts.fraisAnnexesAma} onChange={(n) => set("fraisAnnexesAma", n)} step={5} suffix="€" />
             </Field>
             <Field label="Coût horaire garde à domicile" htmlFor="cd" hint={`Total employeur. ${sourceTarif} : ${coutDom} €/h`}>
               <NumberInput id="cd" value={coutDom} onChange={(n) => set("coutHoraireDomicile", n)} step={0.5} suffix="€/h" />
             </Field>
-            <Field label="Tarif micro-crèche" htmlFor="tm" hint={`Plafonné à 10 €/h pour l'aide. ${sourceTarif} : ${tarifMicro} €/h`}>
+            <Field label="Tarif micro-crèche" htmlFor="tm" hint={`Au-delà de 10 €/h, pas de CMG. ${sourceTarif} : ${tarifMicro} €/h`}>
               <NumberInput id="tm" value={tarifMicro} onChange={(n) => set("tarifMicroCreche", n)} step={0.5} suffix="€/h" />
             </Field>
             <Field label="Participation employeur / CESU" htmlFor="pe" hint="Mensuel. Réduit le reste à charge avant crédit d'impôt.">
@@ -269,7 +269,6 @@ export function Calculator() {
               <NumberInput id="nf" value={inputs.nbFamillesPartage ?? 2} onChange={(n) => set("nbFamillesPartage", Math.max(2, Math.round(n)))} min={2} max={3} />
             </Field>
             <Toggle id="aeeh" checked={!!inputs.aeeh} onChange={(b) => set("aeeh", b)} label="Enfant en situation de handicap (AEEH)" />
-            <Toggle id="at" checked={!!inputs.horairesAtypiques} onChange={(b) => set("horairesAtypiques", b)} label="Horaires atypiques (nuit, dimanche, férié)" />
           </div>
         )}
 

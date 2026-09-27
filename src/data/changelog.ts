@@ -29,6 +29,24 @@ export const TYPE_LABEL: Record<ChangeType, string> = {
 export const CHANGELOG: ChangeEntry[] = [
   {
     date: "2026-09-27",
+    type: "donnees",
+    texte:
+      "Barème mis à jour avec la revalorisation du 1er avril 2026 : coût horaire de référence du CMG 4,91 €/h (assistante maternelle) et 10,50 €/h (garde à domicile), plafond horaire 8,09 €/h (assistante maternelle), plafond de prise en charge des cotisations en garde à domicile 524 €/mois (moins de 3 ans) et 263 €/mois (3-6 ans), forfaits micro-crèche 992,13 / 855,25 / 718,41 € et seuils de revenus 24 333 € et 54 075 €. Les valeurs précédentes dataient de 2025.",
+  },
+  {
+    date: "2026-09-27",
+    type: "correction",
+    texte:
+      "Calcul du CMG en emploi direct aligné sur les règles publiées par la CAF depuis la réforme de septembre 2025 : suppression du montant maximum mensuel (il n'existe plus), intégration des indemnités d'entretien et de repas dans le coût de l'assistante maternelle, calcul de la garde à domicile sur le salaire net, AEEH traitée par le taux d'effort de la tranche inférieure, suppression des majorations parent isolé et horaires spécifiques (abrogées). Micro-crèche : forfaits T2/T3 corrigés (ils étaient sous-estimés), majoration parent isolé appliquée, et plus de CMG au-delà de 10 €/h. Le verdict peut changer : l'assistante maternelle et la crèche sont désormais très proches, conformément à l'objectif de la réforme.",
+  },
+  {
+    date: "2026-09-27",
+    type: "methode",
+    texte:
+      "Tests du moteur : l'exemple chiffré publié par la CAF (2 000 €, 160 h, 4,91 €/h → CMG de 587,52 €) et les montants officiels 2026 sont désormais vérifiés automatiquement, en plus des invariants.",
+  },
+  {
+    date: "2026-09-27",
     type: "correction",
     texte:
       "Licence des données corrigée : les données Urssaf (« Salariés des particuliers employeurs en 2024 ») sont publiées sous licence ODbL, et non sous Licence Ouverte Etalab comme indiqué jusqu'ici. Le fichier CSV et les tableaux par département, qui en dérivent, sont désormais mis à disposition sous ODbL 1.0, avec mention de la source.",

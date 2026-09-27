@@ -1,7 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr } from "../../lib/format";
+import { fmtDateFr, fmtEuro2 } from "../../lib/format";
+import { bareme as b } from "../../engine/bareme";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/cmg-2026";
@@ -42,7 +43,7 @@ const jsonLd = [
         name: "Comment est calculé le CMG depuis septembre 2025 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence), plafonné. Il prend aussi en charge les cotisations sociales (100 % pour l'assistante maternelle, 50 % pour la garde à domicile).",
+          text: "Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence), sans montant maximum mensuel. Il prend aussi en charge les cotisations sociales (100 % pour l'assistante maternelle, 50 % dans une limite mensuelle pour la garde à domicile).",
         },
       },
       {
@@ -94,8 +95,12 @@ const jsonLd = [
       <h2 class="text-xl font-extrabold">La formule (emploi direct, depuis sept. 2025)</h2>
       <pre class="card-brutal mt-2 overflow-x-auto p-3 text-xs">CMG = coût_mensuel × (1 − revenu × taux_effort / coût_référence)</pre>
       <p class="mt-2">
-        Le résultat est plafonné. Le coût de référence est de 4,85 €/h pour l'assistante maternelle et
-        de 10,38 €/h pour la garde à domicile (avec un taux d'effort doublé). Plus vos revenus sont
+        Au 1ᵉʳ avril 2026, le coût de référence est de {fmtEuro2(b.cout_horaire_ref.ama)} de l'heure
+        pour l'assistante maternelle et de {fmtEuro2(b.cout_horaire_ref.domicile)} pour la garde à
+        domicile (avec un taux d'effort doublé). Il n'y a plus de montant maximum : le coût horaire
+        est seulement retenu dans la limite de {fmtEuro2(b.plafond_horaire.ama)} (assistante
+        maternelle) ou {fmtEuro2(b.plafond_horaire.domicile)} (garde à domicile). Exemple publié par
+        la CAF : 2 000 € de ressources, 160 h à 4,91 €/h, 1 enfant → CMG de 587,52 €. Plus vos revenus sont
         élevés, plus le CMG diminue.
       </p>
     </section>

@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import { fmtDateFr } from "../lib/format";
 import {
   EDITEUR,
+  DEPOT,
   HEBERGEUR,
   LEGAL_DATES,
   SOURCES_DONNEES,
@@ -46,8 +47,9 @@ const pro = EDITEUR.statut === "professionnel";
             <p class="mt-1">
               Site édité à titre non professionnel par {EDITEUR.nom}
               (<a class="underline" href={EDITEUR.site}>{EDITEUR.site.replace("https://", "")}</a>).
-              Le site est gratuit et n'a aucune activité commerciale : ni publicité, ni
-              affiliation, ni vente, ni collecte de contacts.
+              C'est un projet personnel et open source, gratuit et sans aucune activité commerciale :
+              ni publicité, ni affiliation, ni vente de produit ou de service, ni collecte de
+              contacts.
             </p>
             <p class="mt-2">
               Conformément à l'article 1-1, II de la LCEN, les éléments d'identification
@@ -106,10 +108,16 @@ const pro = EDITEUR.statut === "professionnel";
     <section class="card-brutal p-4 text-sm leading-relaxed" id="propriete-intellectuelle">
       <h2 class="font-extrabold uppercase tracking-brutal">Propriété intellectuelle</h2>
       <p class="mt-1">
-        Les textes, le code, la mise en page, les illustrations et le moteur de calcul du site sont
-        la propriété de l'éditeur, sauf mention contraire. Toute reproduction substantielle
-        sans autorisation est interdite. Les courtes citations sont autorisées avec mention de la
-        source et un lien vers la page citée.
+        Le <strong>code source</strong> du site (moteur de calcul, composants, gabarits) est
+        publié en open source sous licence {DEPOT.licence} :
+        {" "}<a class="underline" href={DEPOT.url}>{DEPOT.url.replace("https://", "")}</a>.
+      </p>
+      <p class="mt-2">
+        Le <strong>contenu éditorial</strong> (textes des guides et des pages), le nom
+        « Crèche ou nounou ? », le logo et les illustrations restent la propriété de l'éditeur et ne
+        sont pas couverts par cette licence. Leur reproduction substantielle sans autorisation est
+        interdite ; les courtes citations sont autorisées avec mention de la source et un lien vers
+        la page citée.
       </p>
       <p class="mt-2">
         Les données dérivées publiées par le site (tableaux par département et fichier

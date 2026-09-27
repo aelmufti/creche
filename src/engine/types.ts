@@ -14,13 +14,16 @@ export interface Bareme {
   };
   taux_effort_collectif: Record<"1" | "2" | "3" | "4_7" | "8_plus", number>;
   cout_horaire_ref: { ama: number; domicile: number };
-  plafond_horaire: { ama: number; domicile: number; micro_creche: number };
+  /** Coût horaire retenu au plus à ce plafond (écrêtement, pas une condition d'éligibilité). */
+  plafond_horaire: { ama: number; domicile: number };
   cotisations: {
     prise_en_charge_ama: number;
     prise_en_charge_domicile: number;
-    taux_charges_domicile_approx: number;
+    /** Plafond mensuel de la prise en charge des cotisations (garde à domicile), selon l'âge. */
+    plafond_prise_en_charge_domicile: { moins3ans: number; de3a6ans: number };
+    /** Approximation : coût total employeur ≈ salaire net × facteur (garde à domicile). */
+    facteur_cout_total_domicile: number;
   };
-  cmg_max_emploi_direct: { ama: number; domicile: number };
   credit_impot: {
     frais_garde: { taux: number; plafond_par_enfant: number };
     emploi_domicile: {
@@ -30,20 +33,17 @@ export interface Bareme {
       plafond_max: number;
     };
   };
-  majorations: { isole_plafond: number; aeeh: number; atypique: number };
-  tranches_revenus_annuels_1enfant: { T1_max: number; T2_max: number };
   micro_creche_structure: {
+    /** Tarif horaire au-delà duquel le CMG structure n'est plus versé. */
     plafond_horaire: number;
     couverture_max: number;
     reste_a_charge_min: number;
     distinction_age: boolean;
     reduction_3_6ans: number;
-    forfait_max_mensuel_1enfant_moins3ans: {
-      T1: number;
-      T2: number;
-      T3: number;
-      _note?: string;
-    };
+    tranches_revenus_annuels_1enfant: { T1_max: number; T2_max: number };
+    forfait_max_mensuel_1enfant_moins3ans: { T1: number; T2: number; T3: number };
+    /** Parent isolé : seuils de revenus et montants majorés. */
+    majoration_isole: { plafonds: number; montants: number };
   };
 }
 
@@ -67,12 +67,18 @@ export interface Inputs {
 
   // --- Champs avancés (repliés) ---
   tauxHoraireAma?: number;
-  fraisAnnexesAma?: number; // indemnités entretien + repas, mensuel (non aidé)
+  fraisAnnexesAma?: number; // indemnités entretien + repas, mensuel (incluses dans la base du CMG)
   coutHoraireDomicile?: number; // coût horaire total employeur
   tarifMicroCreche?: number; // €/h structure
   participationEmployeur?: number; // mensuel (CESU / part employeur)
   nbFamillesPartage?: number; // garde partagée, défaut 2
+  /**
+   * Sans effet depuis la réforme du 1er sept. 2025 (majoration « horaires
+   * spécifiques » supprimée en emploi direct). Conservé pour ne pas casser les
+   * liens de simulation déjà partagés (paramètre d'URL « at »).
+   */
   horairesAtypiques?: boolean;
+  /** Un enfant du foyer bénéficie de l'AEEH → taux d'effort de la tranche inférieure. */
   aeeh?: boolean;
 }
 

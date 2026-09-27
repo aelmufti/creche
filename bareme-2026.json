@@ -1,6 +1,14 @@
 {
   "version": "2026-04",
-  "source": "CNAF circ. 2019-005 / Pajemploi / service-public.fr",
+  "source": "CNAF (barème des participations familiales 2026, CMG) / Urssaf-Pajemploi (revalorisation du 1er avril 2026) / impots.gouv.fr",
+  "_sources": {
+    "ressources, taux_effort_collectif": "CNAF, barème national des participations familiales EAJE 2026 (15/12/2025), applicable du 1er janv. au 31 déc. 2026. Mêmes plancher et plafond pour le CMG emploi direct (caf.fr, FAQ réforme du CMG).",
+    "cout_horaire_ref, plafond_horaire": "Urssaf, « Réévaluation du coût médian et du plafond horaire du CMG », au 1er avril 2026 : AMA 4,91 €/h et 8,09 €/h ; garde à domicile 10,50 €/h et 15,18 €/h.",
+    "formule CMG emploi direct": "caf.fr, FAQ réforme du CMG : CMG = coût mensuel × (1 − revenu × taux d'effort / coût horaire de référence), sans montant maximum mensuel ; taux d'effort doublé en garde à domicile ; indemnités d'entretien et de repas incluses dans le coût (AMA) ; coût horaire écrêté au plafond horaire ; AEEH = taux de la tranche inférieure ; majorations parent isolé et horaires spécifiques supprimées. Exemple officiel : 2 000 €, 160 h, 4,91 €/h, 1 enfant → 587,52 €.",
+    "cotisations": "AMA : 100 % des cotisations prises en charge. Garde à domicile : 50 %, dans la limite de 524 €/mois (enfant < 3 ans) et 263 €/mois (3-6 ans) au 1er avril 2026 (revalorisation +0,8 %).",
+    "micro_creche_structure": "CMG structure (non concerné par la réforme de sept. 2025). Montants au 1er avril 2026, couple 1 enfant < 3 ans : 992,13 / 855,25 / 718,41 €/mois ; seuils de revenus 2024 : 24 333 € et 54 075 € ; parent isolé : montants +30 %, seuils +40 % (1 289,77 / 1 111,82 / 933,94 € ; 34 066 € et 75 705 €). Tarif horaire > 10 € : CMG non versé (caf.fr, fiche micro-crèche PAJE).",
+    "credit_impot": "impots.gouv.fr : frais de garde hors domicile 50 % dans la limite de 3 500 €/enfant de moins de 6 ans ; emploi à domicile 50 % dans la limite de 12 000 € + 1 500 €/enfant, plafonné à 15 000 €."
+  },
   "ressources": {
     "type": "net_categoriel_N2",
     "plancher": 814.62,
@@ -13,31 +21,31 @@
     "4_7": 0.000310,
     "8_plus": 0.000206
   },
-  "cout_horaire_ref": { "ama": 4.85, "domicile": 10.38 },
-  "plafond_horaire": { "ama": 8.0, "domicile": 15.18, "micro_creche": 10.0 },
+  "cout_horaire_ref": { "ama": 4.91, "domicile": 10.50 },
+  "plafond_horaire": { "ama": 8.09, "domicile": 15.18 },
   "cotisations": {
     "prise_en_charge_ama": 1.0,
     "prise_en_charge_domicile": 0.5,
-    "taux_charges_domicile_approx": 0.4
+    "plafond_prise_en_charge_domicile": { "moins3ans": 524, "de3a6ans": 263 },
+    "_facteur_note": "Approximation (non réglementaire) : coût total employeur ≈ salaire net × 1,8 pour une garde à domicile. Sert à retrouver le salaire net (base du CMG) et les cotisations à partir du coût total saisi. Même facteur que scripts/build-tarifs-data.mjs.",
+    "facteur_cout_total_domicile": 1.8
   },
-  "cmg_max_emploi_direct": { "ama": 825.16, "domicile": 797.80 },
   "credit_impot": {
     "frais_garde": { "taux": 0.5, "plafond_par_enfant": 3500 },
     "emploi_domicile": { "taux": 0.5, "plafond_base": 12000, "majoration_par_enfant": 1500, "plafond_max": 15000 }
   },
-  "majorations": { "isole_plafond": 0.40, "aeeh": 0.30, "atypique": 0.10 },
-  "tranches_revenus_annuels_1enfant": { "T1_max": 22691, "T2_max": 50425 },
   "micro_creche_structure": {
     "plafond_horaire": 10,
     "couverture_max": 0.85,
     "reste_a_charge_min": 0.15,
     "distinction_age": true,
     "reduction_3_6ans": 0.5,
+    "tranches_revenus_annuels_1enfant": { "T1_max": 24333, "T2_max": 54075 },
     "forfait_max_mensuel_1enfant_moins3ans": {
       "T1": 992.13,
-      "T2": 835,
-      "T3": 501,
-      "_note": "T2/T3 À CONFIRMER verbatim depuis le barème officiel Pajemploi avant prod."
-    }
+      "T2": 855.25,
+      "T3": 718.41
+    },
+    "majoration_isole": { "plafonds": 0.40, "montants": 0.30 }
   }
 }

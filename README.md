@@ -105,11 +105,14 @@ coût brut → − aide (CMG ou tarif PSU) → − participation employeur → r
 
 Toute valeur chiffrée provient de `bareme-2026.json` — **jamais en dur** dans le code.
 
-**Cas « golden » (doivent passer) :** CMG emploi direct AMA = **577,92 €** · tarif crèche PSU = **2,06 €/h**
-· crèche parent isolé ≈ **223 €/mois** · forfait micro-crèche T1 = **992,13 €**.
+**Cas officiels (doivent passer, `src/engine/__tests__/golden.test.ts`) :** exemple CAF du CMG
+assistante maternelle (2 000 €, 160 h, 4,91 €/h) = **587,52 €** · tarif crèche PSU 2026 de **0,50 €** à
+**5,26 €/h** · forfaits micro-crèche au 1ᵉʳ avril 2026 **992,13 / 855,25 / 718,41 €** · règles de la
+réforme du CMG (pas de montant maximum, indemnités incluses, plafonds horaires, AEEH).
+Les sources de chaque paramètre sont listées dans `bareme-2026.json` (`_sources`).
 
 ```bash
-npm test   # 28 tests : golden cases, invariants (net ≥ 0, monotonie…), cas limites, multi-enfants
+npm test   # cas officiels CAF/Urssaf, invariants (net ≥ 0, monotonie…), garde-fous SEO et juridiques
 ```
 
 ---
@@ -168,7 +171,9 @@ de sécurité (HSTS, etc.) et de cache. Après déploiement : lancer le ping Ind
 
 Conçu et maintenu par **[Ali El Mufti](https://aelm.dev)**.
 
-Code : © Ali El Mufti, tous droits réservés.
+Code : [licence MIT](LICENSE). Le contenu éditorial (textes des guides et des pages), le nom
+« Crèche ou nounou ? » et le logo restent © Ali El Mufti, tous droits réservés. Détail complet :
+[NOTICE.md](NOTICE.md).
 
 Données :
 - `src/data/tarifs-departements.json` et le CSV de l'Observatoire sont une base dérivée de

@@ -4,17 +4,17 @@
 
 export const DATES = {
   home: { published: "2026-06-15", modified: "2026-09-27" },
-  guides: { published: "2026-06-16", modified: "2026-07-24" },
+  guides: { published: "2026-06-16", modified: "2026-09-27" },
   // Guide publié après le lot initial : dates propres, pour ne pas lui prêter
   // une ancienneté qu'il n'a pas.
   tarifCreche: { published: "2026-09-27", modified: "2026-09-27" },
-  departements: { published: "2026-06-16", modified: "2026-07-24" },
-  villes: { published: "2026-06-17", modified: "2026-07-24" },
-  methodologie: { published: "2026-06-15", modified: "2026-07-24" },
+  departements: { published: "2026-06-16", modified: "2026-09-27" },
+  villes: { published: "2026-06-17", modified: "2026-09-27" },
+  methodologie: { published: "2026-06-15", modified: "2026-09-27" },
   observatoire: { published: "2026-06-16", modified: "2026-07-24" },
-  // Le glossaire n'a pas changé : un lastmod « aujourd'hui » sur une page
-  // inchangée est ignoré par Google, voire coûteux en confiance (§3.3).
-  glossaire: { published: "2026-06-16", modified: "2026-06-16" },
+  // Ne dater « aujourd'hui » que les pages réellement modifiées : un lastmod
+  // qui bouge sans changement est ignoré par Google, voire coûteux en confiance (§3.3).
+  glossaire: { published: "2026-06-16", modified: "2026-09-27" },
   site: { published: "2026-06-15", modified: "2026-07-24" },
   // Mentions légales, confidentialité, conditions d'utilisation.
   legal: { published: "2026-06-15", modified: "2026-09-27" },
