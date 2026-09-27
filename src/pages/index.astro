@@ -1,11 +1,19 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Calculator } from "../components/Calculator";
+import { comparer, inputsParDefaut } from "../engine";
+import { fmtEuro } from "../lib/format";
+import { ORGANIZATION, PERSON, WEBSITE, ORG_ID } from "../lib/schema";
 
 const site = "https://creche-ou-nounou.fr";
 const title = "Crèche ou nounou ? Comparateur de coût 2026";
 const description =
-  "Crèche, micro-crèche, assistante maternelle, garde à domicile ou partagée : trouvez le mode de garde le moins cher pour votre famille. Verdict chiffré au barème 2026 (CMG, crédit d'impôt, reste à charge). Gratuit, sans inscription.";
+  "Crèche, assistante maternelle ou garde à domicile : trouvez le mode de garde le moins cher. Verdict chiffré au barème 2026, gratuit, sans inscription.";
+
+// Réponse directe citable (answer-first) : calculée au build par le moteur, au
+// scénario par défaut du comparateur — le chiffre suit donc le barème.
+const exemple = comparer(inputsParDefaut);
+const [premier, second] = exemple.classement;
 
 const jsonLd = [
   {
@@ -18,21 +26,20 @@ const jsonLd = [
     inLanguage: "fr-FR",
     offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
     description,
-    creator: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    isAccessibleForFree: true,
+    featureList: [
+      "Comparaison de 5 modes de garde (crèche, micro-crèche, assistante maternelle, garde à domicile, garde partagée)",
+      "CMG 2026 après la réforme du 1er septembre 2025",
+      "Crédit d'impôt frais de garde et emploi à domicile",
+      "Tarifs locaux par département (URSSAF)",
+      "Sans inscription, calcul dans le navigateur",
+    ],
+    creator: { "@id": PERSON["@id"] },
+    publisher: { "@id": ORG_ID },
   },
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "creche-ou-nounou.fr",
-    url: site,
-    sameAs: ["https://aelm.dev", "https://freelance-ou-cdi.fr"],
-    founder: {
-      "@type": "Person",
-      name: "Ali El Mufti",
-      url: "https://aelm.dev",
-      sameAs: ["https://aelm.dev", "https://freelance-ou-cdi.fr"],
-    },
-  },
+  { "@context": "https://schema.org", ...WEBSITE },
+  { "@context": "https://schema.org", ...ORGANIZATION },
+  { "@context": "https://schema.org", ...PERSON },
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -88,6 +95,15 @@ const jsonLd = [
       </div>
     </section>
 
+    <p class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <strong>En bref.</strong> Pour un couple gagnant 3 000 € net par mois, avec 1 enfant gardé
+      160 h/mois, le mode de garde le moins cher en 2026 est la <strong>{premier.label.toLowerCase()}</strong>
+      à <strong>{fmtEuro(premier.netReel)}/mois</strong> en coût net réel, devant
+      {" "}la {second.label.toLowerCase()} ({fmtEuro(second.netReel)}/mois), après CMG et crédit
+      d'impôt (barème au 1ᵉʳ avril 2026). Le verdict change avec vos revenus, vos heures et votre
+      département : ajustez le comparateur ci-dessous.
+    </p>
+
     <Calculator client:load />
 
     <section class="card-brutal p-5 text-sm leading-relaxed">
@@ -115,6 +131,7 @@ const jsonLd = [
         {
           [
             ["/guides/creche-ou-assistante-maternelle", "Crèche ou assistante maternelle ?"],
+            ["/guides/tarif-creche-2026", "Tarif crèche 2026 : calcul CAF"],
             ["/guides/cmg-2026", "CMG 2026 : montant et calcul"],
             ["/guides/reforme-cmg-septembre-2025", "Réforme du CMG (sept. 2025)"],
             ["/guides/credit-impot-frais-de-garde", "Crédit d'impôt frais de garde"],

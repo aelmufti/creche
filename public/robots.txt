@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
+# Préférences d'usage du contenu (Content Signals) : indexation, réponses IA
+# (grounding / citation) et entraînement autorisés. Choix assumé : plan-seo-geo.md §6.1.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
 # Crawlers IA — explicitement autorisés (citation + grounding)
 User-agent: GPTBot
@@ -39,6 +42,25 @@ User-agent: Amazonbot
 Allow: /
 
 User-agent: meta-externalagent
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+# Le Chat (Mistral) — assistant IA très utilisé en France
+User-agent: MistralAI-User
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Google-CloudVertexBot
 Allow: /
 
 Sitemap: https://creche-ou-nounou.fr/sitemap-index.xml

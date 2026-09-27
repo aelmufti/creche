@@ -9,6 +9,7 @@
     "prebuild": "node scripts/build-og-pages.mjs",
     "build": "astro build",
     "postbuild": "node scripts/indexnow-ping.mjs",
+    "audit:seo": "node scripts/seo-audit.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",

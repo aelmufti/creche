@@ -28,6 +28,18 @@ export const TYPE_LABEL: Record<ChangeType, string> = {
 /** Du plus récent au plus ancien. */
 export const CHANGELOG: ChangeEntry[] = [
   {
+    date: "2026-09-27",
+    type: "contenu",
+    texte:
+      "Nouveau guide « Tarif crèche 2026 » : calcul du tarif en crèche collective (ressources × taux d'effort CNAF), barème 2026 par nombre d'enfants et exemples par niveau de revenus, calculés par le même moteur que le comparateur.",
+  },
+  {
+    date: "2026-09-27",
+    type: "contenu",
+    texte:
+      "Accueil : ajout d'une réponse chiffrée en tête de page (mode le moins cher pour le scénario par défaut), calculée au build à partir du barème en vigueur.",
+  },
+  {
     date: "2026-07-24",
     type: "correction",
     texte:

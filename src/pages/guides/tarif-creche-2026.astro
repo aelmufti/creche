@@ -1,0 +1,329 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { DATES } from "../../data/content-dates.mjs";
+import { fmtDateFr, fmtEuro, fmtEuro2, fmtHeure } from "../../lib/format";
+import { bareme, calcCreche, inputsParDefaut } from "../../engine";
+
+const site = "https://creche-ou-nounou.fr";
+const path = "/guides/tarif-creche-2026";
+const title = "Tarif crèche 2026 : calcul CAF au taux d'effort";
+const description =
+  "Tarif crèche 2026 : ressources × taux d'effort CNAF, de 0,50 € à 5,26 €/h pour 1 enfant. Barème, exemples par revenu et coût après crédit d'impôt.";
+
+// Tous les chiffres sont tirés du barème versionné (bareme-2026.json) et du
+// moteur : la page suit automatiquement chaque mise à jour du barème.
+const { plancher, plafond } = bareme.ressources;
+const te = bareme.taux_effort_collectif;
+const heures = inputsParDefaut.heuresMois;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+
+const lignesTaux: [string, number][] = [
+  ["1 enfant", te["1"]],
+  ["2 enfants", te["2"]],
+  ["3 enfants", te["3"]],
+  ["4 à 7 enfants", te["4_7"]],
+  ["8 enfants et plus", te["8_plus"]],
+];
+
+const tarifMin1 = plancher * te["1"];
+const tarifMax1 = plafond * te["1"];
+
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const exemples = revenus.map((r) => {
+  const un = calcCreche(bareme, { ...inputsParDefaut, revenuMensuelNet: r, nbEnfants: 1 });
+  const deux = calcCreche(bareme, { ...inputsParDefaut, revenuMensuelNet: r, nbEnfants: 2 });
+  return {
+    revenu: r,
+    tarif1: un.details.tarifHoraire,
+    mois1: un.tresorerieMensuelle,
+    net1: un.netReel,
+    tarif2: deux.details.tarifHoraire,
+    mois2: deux.tresorerieMensuelle,
+  };
+});
+const ex3000 = exemples.find((e) => e.revenu === 3000)!;
+
+const faq = [
+  {
+    q: "Combien coûte une crèche par mois en 2026 ?",
+    a: `En crèche collective conventionnée (PSU), le tarif dépend des revenus du foyer et du nombre d'enfants à charge. Pour un foyer avec 1 enfant et 3 000 € de ressources mensuelles, il est de ${fmtHeure(ex3000.tarif1)}, soit ${fmtEuro(ex3000.mois1)} par mois pour ${heures} h de garde, et ${fmtEuro(ex3000.net1)} par mois après le crédit d'impôt de 50 %.`,
+  },
+  {
+    q: "Quel est le tarif minimum et maximum d'une crèche en 2026 ?",
+    a: `Pour 1 enfant à charge, le tarif horaire va de ${fmtHeure(tarifMin1)} (ressources au plancher de ${fmtEuro2(plancher)}/mois) à ${fmtHeure(tarifMax1)} (ressources au plafond de ${fmtEuro(plafond)}/mois), selon le barème national CNAF 2026.`,
+  },
+  {
+    q: "Comment la CAF calcule-t-elle le tarif de la crèche ?",
+    a: "Tarif horaire = ressources mensuelles du foyer × taux d'effort. Les ressources sont celles de l'année N-2 (revenus 2024 pour 2026), divisées par 12 et bornées par un plancher et un plafond. Le taux d'effort baisse avec le nombre d'enfants à charge.",
+  },
+  {
+    q: "A-t-on droit au CMG en crèche collective ?",
+    a: "Non. En crèche collective financée par la PSU, l'aide de la CAF est déjà intégrée dans le tarif : il n'y a pas de CMG. Le CMG existe pour l'assistante maternelle, la garde à domicile et la micro-crèche en tarification PAJE.",
+  },
+  {
+    q: "Les frais de crèche ouvrent-ils droit au crédit d'impôt ?",
+    a: `Oui. Les frais de crèche pour un enfant de moins de 6 ans ouvrent droit au crédit d'impôt frais de garde : 50 % des sommes versées, dans la limite de ${fmtEuro(bareme.credit_impot.frais_garde.plafond_par_enfant)} de dépenses par enfant et par an. Il est versé même si vous n'êtes pas imposable.`,
+  },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    datePublished: DATES.tarifCreche.published,
+    dateModified: DATES.tarifCreche.modified,
+    about: [
+      { "@type": "Thing", name: "Prestation de service unique (PSU)" },
+      { "@type": "Thing", name: "Taux d'effort CNAF" },
+      { "@type": "Thing", name: "Crèche collective" },
+    ],
+    citation: [
+      "https://www.caf.fr/professionnels/actualites/actualisation-du-bareme-national-des-aides-aux-partenaires-pour-2026",
+      "https://monenfant.fr/",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "Comment calculer le tarif d'une crèche en 2026",
+    step: [
+      {
+        "@type": "HowToStep",
+        position: 1,
+        name: "Relever les ressources N-2 du foyer",
+        text: "Additionnez les revenus nets catégoriels 2024 des deux parents (avis d'imposition 2025) et divisez par 12.",
+        url: site + path + "#calcul",
+      },
+      {
+        "@type": "HowToStep",
+        position: 2,
+        name: "Appliquer le plancher et le plafond",
+        text: `Les ressources retenues sont bornées entre ${fmtEuro2(plancher)} et ${fmtEuro(plafond)} par mois en 2026.`,
+        url: site + path + "#calcul",
+      },
+      {
+        "@type": "HowToStep",
+        position: 3,
+        name: "Multiplier par le taux d'effort",
+        text: `Le taux d'effort dépend du nombre d'enfants à charge : ${pct(te["1"])} pour 1 enfant, ${pct(te["2"])} pour 2 enfants, ${pct(te["3"])} pour 3 enfants.`,
+        url: site + path + "#calcul",
+      },
+      {
+        "@type": "HowToStep",
+        position: 4,
+        name: "Multiplier par les heures réservées",
+        text: "Le tarif horaire multiplié par les heures prévues au contrat d'accueil donne la facture mensuelle.",
+        url: site + path + "#calcul",
+      },
+      {
+        "@type": "HowToStep",
+        position: 5,
+        name: "Déduire le crédit d'impôt",
+        text: "50 % des frais de garde, dans la limite de 3 500 € de dépenses par enfant et par an, sont remboursés par le crédit d'impôt l'année suivante.",
+        url: site + path + "#calcul",
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: site + "/" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: site + "/guides" },
+      { "@type": "ListItem", position: 3, name: "Tarif crèche 2026", item: site + path },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} path={path} jsonLd={jsonLd} ogType="article" datePublished={DATES.tarifCreche.published} dateModified={DATES.tarifCreche.modified} ogImage={"/og/page-tarif-creche-2026.png"}>
+  <article class="mx-auto flex max-w-3xl flex-col gap-6">
+    <nav aria-label="Fil d'Ariane" class="text-xs text-muted-foreground">
+      <a class="underline" href="/">Accueil</a> › <a class="underline" href="/guides">Guides</a> › Tarif crèche 2026
+    </nav>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Tarif crèche 2026 : combien coûte une crèche selon vos revenus ?</h1>
+      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.tarifCreche.modified)}.</p>
+    </header>
+
+    <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <p>
+        <strong>En bref.</strong> En crèche collective conventionnée, le tarif horaire est égal aux
+        <strong>ressources mensuelles du foyer × taux d'effort CNAF</strong>. En 2026, pour 1 enfant
+        à charge, il va de <strong>{fmtHeure(tarifMin1)}</strong> à <strong>{fmtHeure(tarifMax1)}</strong>.
+        Exemple : avec 3 000 € de ressources mensuelles et {heures} h de garde, la facture est de
+        <strong>{fmtEuro(ex3000.mois1)}/mois</strong>, soit <strong>{fmtEuro(ex3000.net1)}/mois</strong>
+        après le crédit d'impôt de 50 %.
+      </p>
+      <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
+        → Comparer la crèche aux autres modes de garde
+      </a>
+    </div>
+
+    <section class="text-sm leading-relaxed" id="calcul">
+      <h2 class="text-xl font-extrabold">Le calcul du tarif crèche, étape par étape</h2>
+      <p class="mt-2">
+        Les crèches financées par la CAF via la <em>Prestation de service unique</em> (PSU) appliquent
+        toutes le même barème national. Le prix ne dépend ni de la crèche ni de la ville, seulement de
+        vos revenus, de votre nombre d'enfants et des heures réservées.
+      </p>
+      <ol class="mt-3 list-decimal space-y-2 pl-5">
+        <li>
+          <strong>Ressources du foyer</strong> : revenus nets catégoriels de l'année N-2 (pour 2026 :
+          revenus 2024, figurant sur l'avis d'imposition 2025), divisés par 12.
+        </li>
+        <li>
+          <strong>Plancher et plafond</strong> : les ressources retenues sont bornées entre
+          {" "}<strong>{fmtEuro2(plancher)}</strong> et <strong>{fmtEuro(plafond)}</strong> par mois
+          en 2026. Au-delà du plafond, le tarif n'augmente plus.
+        </li>
+        <li>
+          <strong>Taux d'effort</strong> : un pourcentage fixé par la CNAF, qui baisse avec le nombre
+          d'enfants à charge (tableau ci-dessous). Un enfant en situation de handicap (bénéficiaire de
+          l'AEEH) fait appliquer le taux de la tranche inférieure.
+        </li>
+        <li>
+          <strong>Heures réservées</strong> : le tarif horaire est multiplié par les heures prévues au
+          contrat d'accueil. La facture est en général lissée sur l'année (mensualisation).
+        </li>
+        <li>
+          <strong>Crédit d'impôt</strong> : 50 % des frais, dans la limite de
+          {" "}{fmtEuro(bareme.credit_impot.frais_garde.plafond_par_enfant)} de dépenses par enfant et
+          par an, remboursés l'année suivante (voir le
+          {" "}<a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt frais de garde</a>).
+        </li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Barème 2026 : taux d'effort et tarif horaire</h2>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Taux d'effort CNAF 2026 en accueil collectif et tarifs horaires minimum et maximum</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Enfants à charge</th>
+              <th scope="col" class="p-2">Taux d'effort horaire</th>
+              <th scope="col" class="p-2">Tarif minimum</th>
+              <th scope="col" class="p-2">Tarif maximum</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesTaux.map(([label, t]) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{label}</th>
+                  <td class="p-2">{pct(t)}</td>
+                  <td class="p-2">{fmtHeure(plancher * t)}</td>
+                  <td class="p-2">{fmtHeure(plafond * t)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Barème national CNAF, accueil collectif, ressources de {fmtEuro2(plancher)} à
+        {" "}{fmtEuro(plafond)} par mois (2026).
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Combien coûte une crèche selon vos revenus</h2>
+      <p class="mt-2 text-sm leading-relaxed">
+        Exemples pour {heures} h de garde par mois (temps plein), un seul enfant en crèche. « Après
+        crédit d'impôt » correspond au coût net réel, une fois le crédit d'impôt de 50 % encaissé.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Tarif crèche 2026 par niveau de ressources mensuelles, pour 1 et 2 enfants à charge</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">1 enfant à charge</th>
+              <th scope="col" class="p-2">Après crédit d'impôt</th>
+              <th scope="col" class="p-2">2 enfants à charge</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              exemples.map((e) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(e.revenu)}</th>
+                  <td class="p-2">
+                    {fmtEuro(e.mois1)}/mois <span class="text-muted-foreground">({fmtHeure(e.tarif1)})</span>
+                  </td>
+                  <td class="p-2 font-bold">{fmtEuro(e.net1)}/mois</td>
+                  <td class="p-2">
+                    {fmtEuro(e.mois2)}/mois <span class="text-muted-foreground">({fmtHeure(e.tarif2)})</span>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        « 2 enfants à charge » : un enfant en crèche, un second enfant à charge dans le foyer (taux
+        d'effort réduit). Si deux enfants sont en crèche, chaque place est facturée.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Crèche, micro-crèche ou nounou : qui est le moins cher ?</h2>
+      <p class="mt-2">
+        Le barème PSU ne s'applique qu'aux crèches conventionnées. Une
+        {" "}<a class="underline" href="/guides/micro-creche-cmg-structure">micro-crèche en tarification PAJE</a>
+        {" "}fixe librement son prix horaire, et vous recevez le CMG structure. Pour une
+        {" "}<a class="underline" href="/guides/reste-a-charge-nounou">assistante maternelle</a>, vous
+        payez un salaire puis touchez le CMG. Pour des revenus modestes à moyens, la crèche collective
+        est souvent la moins chère. Pour des revenus élevés, l'écart se resserre :
+        {" "}<a class="underline" href="/guides/creche-ou-assistante-maternelle">crèche ou assistante maternelle, le comparatif</a>.
+      </p>
+      <p class="mt-2">
+        Le tarif crèche est identique partout en France, mais le salaire des assistantes maternelles
+        varie selon le département : voir le
+        {" "}<a class="underline" href="/cout-garde-enfant">coût de la garde par département</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
+    </section>
+
+    <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
+      <strong class="uppercase tracking-brutal">Guides liés</strong>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/creche-ou-assistante-maternelle">Crèche ou assistante maternelle</a></li>
+        <li><a class="underline" href="/guides/micro-creche-cmg-structure">Micro-crèche : CMG structure</a></li>
+        <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Crédit d'impôt frais de garde</a></li>
+        <li><a class="underline" href="/glossaire">Glossaire : PSU, taux d'effort, CMG</a></li>
+      </ul>
+    </nav>
+
+    <p class="text-xs text-muted-foreground">
+      Sources : CNAF, barème national des participations familiales 2026 (caf.fr) ; monenfant.fr.
+      Calcul : <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative, pas
+      un avis officiel. Le tarif exact figure sur votre contrat d'accueil.
+    </p>
+  </article>
+</Layout>

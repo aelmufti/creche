@@ -1,10 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { PERSON, ORG_ID } from "../lib/schema";
 
 const site = "https://creche-ou-nounou.fr";
 const title = "À propos — qui est derrière creche-ou-nounou.fr";
 const description =
-  "Comparateur indépendant des modes de garde d'enfant, créé par Ali El Mufti. Méthode transparente, sources officielles datées, zéro inscription. Pourquoi vous pouvez faire confiance aux calculs.";
+  "Comparateur indépendant des modes de garde d'enfant créé par Ali El Mufti : méthode transparente, sources officielles datées, zéro inscription.";
 
 const jsonLd = [
   {
@@ -13,13 +14,12 @@ const jsonLd = [
     name: title,
     url: site + "/a-propos",
     description,
+    mainEntity: { "@id": PERSON["@id"] },
+    publisher: { "@id": ORG_ID },
   },
   {
     "@context": "https://schema.org",
-    "@type": "Person",
-    name: "Ali El Mufti",
-    url: "https://aelm.dev",
-    sameAs: ["https://aelm.dev", "https://freelance-ou-cdi.fr"],
+    ...PERSON,
     knowsAbout: [
       "Complément de libre choix du mode de garde",
       "modes de garde d'enfant",
@@ -49,7 +49,7 @@ const jsonLd = [
       </p>
     </header>
 
-    <section class="card-brutal p-4 text-sm leading-relaxed">
+    <section id="ali-el-mufti" class="card-brutal p-4 text-sm leading-relaxed">
       <h2 class="font-extrabold uppercase tracking-brutal">L'auteur</h2>
       <p class="mt-2">
         Ce site est conçu et maintenu par <a class="underline font-bold" href="https://aelm.dev"

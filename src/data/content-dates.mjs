@@ -3,8 +3,11 @@
 // Format ISO (AAAA-MM-JJ). Alimente le JSON-LD des pages ET le <lastmod> du sitemap.
 
 export const DATES = {
-  home: { published: "2026-06-15", modified: "2026-07-24" },
+  home: { published: "2026-06-15", modified: "2026-09-27" },
   guides: { published: "2026-06-16", modified: "2026-07-24" },
+  // Guide publié après le lot initial : dates propres, pour ne pas lui prêter
+  // une ancienneté qu'il n'a pas.
+  tarifCreche: { published: "2026-09-27", modified: "2026-09-27" },
   departements: { published: "2026-06-16", modified: "2026-07-24" },
   villes: { published: "2026-06-17", modified: "2026-07-24" },
   methodologie: { published: "2026-06-15", modified: "2026-07-24" },
@@ -19,6 +22,7 @@ export const DATES = {
 export function lastmodFor(url) {
   const path = new URL(url).pathname;
   if (path === "/") return DATES.home.modified;
+  if (path === "/guides/tarif-creche-2026") return DATES.tarifCreche.modified;
   if (path.startsWith("/guides")) return DATES.guides.modified;
   if (path.startsWith("/cout-garde-enfant")) {
     // /cout-garde-enfant/[departement]/[ville] a 3 segments.

@@ -90,6 +90,7 @@ for (const code of Object.keys(deps)) {
 // Pages de contenu (guides, observatoire, glossaire).
 const contenu = {
   "creche-ou-assistante-maternelle": "Crèche ou assistante maternelle ?",
+  "tarif-creche-2026": "Tarif crèche 2026 : calcul CAF",
   "cmg-2026": "CMG 2026 : montant et calcul",
   "reforme-cmg-septembre-2025": "Réforme du CMG septembre 2025",
   "micro-creche-cmg-structure": "Micro-crèche : CMG structure",
