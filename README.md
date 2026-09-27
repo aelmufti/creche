@@ -168,8 +168,20 @@ de sécurité (HSTS, etc.) et de cache. Après déploiement : lancer le ping Ind
 
 Conçu et maintenu par **[Ali El Mufti](https://aelm.dev)**.
 
-Code : © Ali El Mufti, tous droits réservés. Les données dérivées d'URSSAF (Observatoire / `tarifs-departements.json`)
-sont réutilisables sous [licence ouverte Etalab](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
+Code : © Ali El Mufti, tous droits réservés.
+
+Données :
+- `src/data/tarifs-departements.json` et le CSV de l'Observatoire sont une base dérivée de
+  « Salariés des particuliers employeurs en 2024 » (Urssaf Caisse nationale, open.urssaf.fr),
+  publiée sous [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). La base dérivée est
+  donc elle aussi sous **ODbL 1.0** (partage à l'identique, mention de la source).
+- `src/data/departements.json` et `src/data/codes-postaux.json` : Insee (COG) et La Poste
+  (Base officielle des codes postaux) via geo.api.gouv.fr, sous
+  [Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
+- Police JetBrains Mono : SIL Open Font License 1.1 (`public/fonts/OFL.txt`).
+
+Toutes les informations légales du site (éditeur, hébergeur, licences) sont centralisées dans
+`src/data/legal.ts`.
 
 > Estimation indicative — ce n'est pas un avis officiel. Vérifiez votre situation sur
 > [caf.fr](https://www.caf.fr) et [pajemploi.urssaf.fr](https://www.pajemploi.urssaf.fr).

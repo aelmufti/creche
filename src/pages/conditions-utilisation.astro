@@ -1,0 +1,123 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fmtDateFr } from "../lib/format";
+import { EDITEUR, LEGAL_DATES, contactHref, contactLabel } from "../data/legal";
+
+const title = "Conditions d'utilisation — creche-ou-nounou.fr";
+const description =
+  "Conditions d'utilisation du comparateur creche-ou-nounou.fr : service gratuit et indépendant, estimations indicatives, responsabilité, propriété intellectuelle.";
+---
+
+<Layout title={title} description={description} path="/conditions-utilisation">
+  <article class="mx-auto flex max-w-3xl flex-col gap-4">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Conditions d'utilisation</h1>
+      <p class="mt-2 text-xs text-muted-foreground">
+        En vigueur au {fmtDateFr(LEGAL_DATES.modified)}.
+      </p>
+    </header>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">1. Objet</h2>
+      <p class="mt-1">
+        Les présentes conditions encadrent l'utilisation du site creche-ou-nounou.fr, édité par
+        {" "}{EDITEUR.nom} (voir les <a class="underline" href="/mentions-legales">mentions légales</a>).
+        Le site propose un comparateur du coût des modes de garde d'enfant, des guides et des
+        données par département. Utiliser le site vaut acceptation de ces conditions.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">2. Accès gratuit et sans compte</h2>
+      <p class="mt-1">
+        Le site est gratuit, accessible sans inscription et sans contrepartie. L'éditeur s'efforce
+        de le maintenir disponible mais ne garantit pas un accès continu : il peut être interrompu,
+        notamment pour maintenance ou en cas de défaillance de l'hébergeur.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">3. Nature des résultats</h2>
+      <p class="mt-1">
+        Les montants affichés (coût de garde, CMG, crédit d'impôt, reste à charge, tarifs
+        locaux) sont des <strong>estimations indicatives</strong>. Ils sont calculés à partir des
+        informations que vous saisissez, d'hypothèses simplificatrices décrites dans la
+        {" "}<a class="underline" href="/methodologie">méthodologie</a>, et de barèmes publics à la date
+        indiquée. Ils peuvent différer du montant réellement versé ou facturé.
+      </p>
+      <p class="mt-2">
+        Le site ne fournit <strong>ni conseil personnalisé</strong> (juridique, fiscal, social ou
+        financier), <strong>ni décision</strong> sur vos droits. Seuls la CAF, l'Urssaf/Pajemploi,
+        l'administration fiscale et l'établissement d'accueil déterminent les montants qui vous
+        sont applicables. Avant toute décision (choix d'un mode de garde, signature d'un contrat,
+        déclaration), vérifiez votre situation auprès de ces organismes.
+      </p>
+      <p class="mt-2">
+        Le site est indépendant et n'a aucun lien avec ces organismes. Il ne propose, ne classe ni
+        ne recommande aucun établissement, professionnel ou prestataire particulier.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">4. Responsabilité</h2>
+      <p class="mt-1">
+        L'éditeur apporte le plus grand soin à l'exactitude et à la mise à jour des informations et
+        corrige toute erreur signalée (voir la
+        {" "}<a class="underline" href="/methodologie#corrections">politique de correction</a>). Le
+        service étant gratuit et purement informatif, sa responsabilité ne saurait être engagée
+        pour une décision prise sur le seul fondement d'une estimation, pour une erreur de saisie,
+        pour une évolution réglementaire postérieure à la date de mise à jour, ni pour une
+        interruption du service, dans les limites permises par la loi. Aucune stipulation ne
+        limite la responsabilité de l'éditeur en cas de faute lourde ou intentionnelle.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">5. Liens</h2>
+      <p class="mt-1">
+        Les liens vers des sites tiers (organismes officiels, autres sites de l'éditeur) sont
+        fournis pour information. L'éditeur n'est pas responsable de leur contenu. Faire un lien
+        vers creche-ou-nounou.fr est libre, à condition de ne pas présenter le site comme un
+        service officiel et de ne pas l'afficher dans un cadre (iframe) qui en masque l'origine.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">6. Propriété intellectuelle et données</h2>
+      <p class="mt-1">
+        Les textes, le code et le moteur de calcul sont protégés par le droit d'auteur. Les données
+        publiées par le site restent soumises à la licence de leur source (Urssaf : ODbL ; Insee et
+        La Poste : Licence Ouverte 2.0), détaillée dans les
+        {" "}<a class="underline" href="/mentions-legales#credits">mentions légales</a>. Le fichier
+        CSV par département est réutilisable librement sous licence ODbL, avec mention de la
+        source et partage à l'identique des bases dérivées.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">7. Données personnelles</h2>
+      <p class="mt-1">
+        Aucune donnée personnelle n'est demandée. Les traitements techniques et vos droits sont
+        décrits dans la <a class="underline" href="/confidentialite">politique de confidentialité</a>.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">8. Signalement et contact</h2>
+      <p class="mt-1">
+        Pour signaler une erreur, un contenu illicite ou exercer un droit :
+        {" "}<a class="underline" href={contactHref()}>{contactLabel()}</a>.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">9. Modification et droit applicable</h2>
+      <p class="mt-1">
+        Ces conditions peuvent être modifiées ; la version applicable est celle en ligne lors de
+        votre visite, datée en tête de page. Elles sont soumises au droit français. En cas de
+        litige, une solution amiable sera recherchée en priorité ; à défaut, les tribunaux
+        compétents sont désignés selon les règles de droit commun.
+      </p>
+    </section>
+  </article>
+</Layout>

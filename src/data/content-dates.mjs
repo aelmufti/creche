@@ -16,6 +16,8 @@ export const DATES = {
   // inchangée est ignoré par Google, voire coûteux en confiance (§3.3).
   glossaire: { published: "2026-06-16", modified: "2026-06-16" },
   site: { published: "2026-06-15", modified: "2026-07-24" },
+  // Mentions légales, confidentialité, conditions d'utilisation.
+  legal: { published: "2026-06-15", modified: "2026-09-27" },
 };
 
 /** Date de dernière modification (lastmod sitemap) pour une URL du site. */
@@ -32,5 +34,7 @@ export function lastmodFor(url) {
   if (path.startsWith("/methodologie")) return DATES.methodologie.modified;
   if (path.startsWith("/observatoire")) return DATES.observatoire.modified;
   if (path.startsWith("/glossaire")) return DATES.glossaire.modified;
+  if (["/mentions-legales", "/confidentialite", "/conditions-utilisation"].includes(path))
+    return DATES.legal.modified;
   return DATES.site.modified;
 }

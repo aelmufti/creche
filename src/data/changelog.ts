@@ -29,6 +29,18 @@ export const TYPE_LABEL: Record<ChangeType, string> = {
 export const CHANGELOG: ChangeEntry[] = [
   {
     date: "2026-09-27",
+    type: "correction",
+    texte:
+      "Licence des données corrigée : les données Urssaf (« Salariés des particuliers employeurs en 2024 ») sont publiées sous licence ODbL, et non sous Licence Ouverte Etalab comme indiqué jusqu'ici. Le fichier CSV et les tableaux par département, qui en dérivent, sont désormais mis à disposition sous ODbL 1.0, avec mention de la source.",
+  },
+  {
+    date: "2026-09-27",
+    type: "contenu",
+    texte:
+      "Pages légales complétées : mentions légales (éditeur, directeur de la publication, hébergeur, sources et licences), politique de confidentialité détaillée (traitements, bases légales, durées, droits, réclamation CNIL) avec possibilité de s'opposer à la mesure d'audience, et nouvelles conditions d'utilisation.",
+  },
+  {
+    date: "2026-09-27",
     type: "contenu",
     texte:
       "Nouveau guide « Tarif crèche 2026 » : calcul du tarif en crèche collective (ressources × taux d'effort CNAF), barème 2026 par nombre d'enfants et exemples par niveau de revenus, calculés par le même moteur que le comparateur.",

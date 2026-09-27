@@ -1,33 +1,163 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { fmtDateFr } from "../lib/format";
+import {
+  EDITEUR,
+  HEBERGEUR,
+  LEGAL_DATES,
+  SOURCES_DONNEES,
+  DATE_EXTRACTION_GEO,
+  contactHref,
+  contactLabel,
+} from "../data/legal";
+
 const title = "Mentions légales — creche-ou-nounou.fr";
 const description =
-  "Mentions légales du comparateur creche-ou-nounou.fr : éditeur, hébergement, responsabilité.";
+  "Mentions légales de creche-ou-nounou.fr : éditeur, directeur de la publication, hébergeur, propriété intellectuelle, sources de données et licences.";
+const pro = EDITEUR.statut === "professionnel";
 ---
 
 <Layout title={title} description={description} path="/mentions-legales">
   <article class="mx-auto flex max-w-3xl flex-col gap-4">
-    <h1 class="text-3xl font-extrabold sm:text-4xl">Mentions légales</h1>
-    <section class="card-brutal p-4 text-sm leading-relaxed">
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Mentions légales</h1>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Mises à jour le {fmtDateFr(LEGAL_DATES.modified)}. Informations publiées en application de
+        l'article 1-1 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie
+        numérique (LCEN).
+      </p>
+    </header>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="editeur">
       <h2 class="font-extrabold uppercase tracking-brutal">Éditeur</h2>
+      {
+        pro ? (
+          <ul class="mt-2 space-y-1">
+            <li>{EDITEUR.nom}</li>
+            {EDITEUR.adresse && <li>Adresse : {EDITEUR.adresse}</li>}
+            {EDITEUR.telephone && <li>Téléphone : {EDITEUR.telephone}</li>}
+            {EDITEUR.siren && <li>SIREN : {EDITEUR.siren}</li>}
+            <li>
+              Contact : <a class="underline" href={contactHref()}>{contactLabel()}</a>
+            </li>
+          </ul>
+        ) : (
+          <>
+            <p class="mt-1">
+              Site édité à titre non professionnel par {EDITEUR.nom}
+              (<a class="underline" href={EDITEUR.site}>{EDITEUR.site.replace("https://", "")}</a>).
+              Le site est gratuit et n'a aucune activité commerciale : ni publicité, ni
+              affiliation, ni vente, ni collecte de contacts.
+            </p>
+            <p class="mt-2">
+              Conformément à l'article 1-1, II de la LCEN, les éléments d'identification
+              personnelle de l'éditeur ont été communiqués à l'hébergeur ci-dessous, auprès duquel
+              ils peuvent être obtenus dans les conditions prévues par la loi.
+            </p>
+            <p class="mt-2">
+              Contact : <a class="underline" href={contactHref()}>{contactLabel()}</a>
+            </p>
+          </>
+        )
+      }
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="directeur-publication">
+      <h2 class="font-extrabold uppercase tracking-brutal">Directeur de la publication</h2>
+      <p class="mt-1">{EDITEUR.nom}.</p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="hebergeur">
+      <h2 class="font-extrabold uppercase tracking-brutal">Hébergeur</h2>
+      <ul class="mt-2 space-y-1">
+        <li>{HEBERGEUR.nom}</li>
+        <li>{HEBERGEUR.adresse}</li>
+        <li>Téléphone : {HEBERGEUR.telephone}</li>
+        <li><a class="underline" href={HEBERGEUR.site}>{HEBERGEUR.site.replace("https://", "")}</a></li>
+      </ul>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="independance">
+      <h2 class="font-extrabold uppercase tracking-brutal">Indépendance</h2>
       <p class="mt-1">
-        Site édité par Ali El Mufti — <a class="underline" href="https://aelm.dev">aelm.dev</a>.
-        Contact : via aelm.dev.
+        creche-ou-nounou.fr est un site indépendant. Il n'a aucun lien avec la CAF, la CNAF,
+        l'Urssaf, Pajemploi, l'administration fiscale (DGFiP), service-public.fr ni aucun
+        organisme public ou établissement d'accueil. Les noms de ces organismes ne sont cités que
+        pour indiquer la source des barèmes et des données.
       </p>
     </section>
-    <section class="card-brutal p-4 text-sm leading-relaxed">
-      <h2 class="font-extrabold uppercase tracking-brutal">Hébergement</h2>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="responsabilite">
+      <h2 class="font-extrabold uppercase tracking-brutal">Nature des informations</h2>
       <p class="mt-1">
-        Site statique hébergé chez un fournisseur d'hébergement web (à compléter avant mise en
-        production).
+        Les résultats du comparateur et les contenus du site sont des <strong>estimations
+        indicatives</strong>, établies à partir de barèmes et de données publics à la date
+        indiquée sur chaque page. Ils ne constituent ni un conseil personnalisé (juridique,
+        fiscal ou financier), ni une décision ou un engagement de la CAF, de l'Urssaf/Pajemploi ou
+        de l'administration fiscale. Seuls ces organismes déterminent vos droits : vérifiez votre
+        situation sur <a class="underline" href="https://www.caf.fr">caf.fr</a>,
+        {" "}<a class="underline" href="https://www.pajemploi.urssaf.fr">pajemploi.urssaf.fr</a> et
+        {" "}<a class="underline" href="https://www.impots.gouv.fr">impots.gouv.fr</a>. Les
+        conditions d'utilisation du site sont détaillées dans les
+        {" "}<a class="underline" href="/conditions-utilisation">conditions d'utilisation</a>.
       </p>
     </section>
-    <section class="card-brutal p-4 text-sm leading-relaxed">
-      <h2 class="font-extrabold uppercase tracking-brutal">Responsabilité</h2>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="propriete-intellectuelle">
+      <h2 class="font-extrabold uppercase tracking-brutal">Propriété intellectuelle</h2>
       <p class="mt-1">
-        Les résultats sont des estimations indicatives fondées sur des barèmes publics. Ils ne
-        constituent ni un avis officiel, ni un engagement de la CAF, de l'Urssaf/Pajemploi ou de
-        l'administration fiscale. Vérifiez votre situation sur les sites officiels.
+        Les textes, le code, la mise en page, les illustrations et le moteur de calcul du site sont
+        la propriété de l'éditeur, sauf mention contraire. Toute reproduction substantielle
+        sans autorisation est interdite. Les courtes citations sont autorisées avec mention de la
+        source et un lien vers la page citée.
+      </p>
+      <p class="mt-2">
+        Les données dérivées publiées par le site (tableaux par département et fichier
+        {" "}<a class="underline" href="/data/cout-garde-par-departement-2026.csv">CSV</a>) restent
+        soumises à la licence de leur source, indiquée ci-dessous.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="credits">
+      <h2 class="font-extrabold uppercase tracking-brutal">Sources de données et licences</h2>
+      <ul class="mt-2 list-disc space-y-2 pl-5">
+        {
+          SOURCES_DONNEES.map((s) => (
+            <li>
+              <a class="underline" href={s.url}>{s.nom}</a> — {s.producteur}, sous
+              {" "}<a class="underline" href={s.licenceUrl}>{s.licence}</a>. Utilisée pour : {s.usage}.
+            </li>
+          ))
+        }
+      </ul>
+      <p class="mt-2">
+        Les pages départements, villes et l'Observatoire contiennent des informations issues de la
+        base « Salariés des particuliers employeurs en 2024 » de l'Urssaf Caisse nationale,
+        disponible sous licence ODbL. La base dérivée (salaire horaire moyen par département et coût
+        horaire estimé de la garde à domicile) est elle-même mise à disposition sous licence
+        {" "}<strong>ODbL 1.0</strong>, conformément à l'obligation de partage à l'identique.
+      </p>
+      <p class="mt-2">
+        Les données géographiques (Insee, La Poste) ont été extraites le
+        {" "}{fmtDateFr(DATE_EXTRACTION_GEO)} via l'API Découpage administratif (geo.api.gouv.fr) et
+        transformées (un code postal rattaché à un seul département).
+      </p>
+      <p class="mt-2">
+        Barèmes officiels cités (CNAF, Urssaf/Pajemploi, service-public.fr, impots.gouv.fr) :
+        informations publiques reproduites avec mention de la source, sans dénaturation.
+      </p>
+      <p class="mt-2">
+        Police de caractères : JetBrains Mono, © The JetBrains Mono Project Authors, sous
+        {" "}<a class="underline" href="/fonts/OFL.txt">SIL Open Font License 1.1</a>.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="donnees-personnelles">
+      <h2 class="font-extrabold uppercase tracking-brutal">Données personnelles et cookies</h2>
+      <p class="mt-1">
+        Le site ne dépose aucun cookie et ne demande aucune donnée personnelle. Le détail des
+        traitements (hébergement, mesure d'audience) et de vos droits figure dans la
+        {" "}<a class="underline" href="/confidentialite">politique de confidentialité</a>.
       </p>
     </section>
   </article>

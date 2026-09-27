@@ -1,41 +1,223 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = "Confidentialité — aucune collecte de données";
+import { fmtDateFr } from "../lib/format";
+import { EDITEUR, HEBERGEUR, LEGAL_DATES, contactHref, contactLabel } from "../data/legal";
+
+const title = "Confidentialité : vos données restent chez vous";
 const description =
-  "Politique de confidentialité : aucune inscription, aucune donnée envoyée à un serveur. Tout est calculé dans votre navigateur. Sauvegarde par URL.";
+  "Politique de confidentialité : pas de compte, pas de cookie, simulation calculée dans votre navigateur. Hébergement, mesure d'audience, vos droits RGPD.";
 ---
 
 <Layout title={title} description={description} path="/confidentialite">
   <article class="mx-auto flex max-w-3xl flex-col gap-4">
-    <h1 class="text-3xl font-extrabold sm:text-4xl">Confidentialité</h1>
-    <section class="card-brutal p-4 text-sm leading-relaxed">
-      <h2 class="font-extrabold uppercase tracking-brutal">Vos chiffres ne partent pas</h2>
+    <header>
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Confidentialité</h1>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Mise à jour le {fmtDateFr(LEGAL_DATES.modified)}. Information délivrée en application des
+        articles 12 et 13 du règlement (UE) 2016/679 (RGPD) et de l'article 82 de la loi
+        Informatique et Libertés.
+      </p>
+    </header>
+
+    <section class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <h2 class="font-extrabold uppercase tracking-brutal">En bref</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>Aucun compte, aucun formulaire, <strong>aucun cookie</strong>.</li>
+        <li>
+          Ce que vous saisissez dans le comparateur (revenus, heures, enfants, code postal) est
+          calculé <strong>dans votre navigateur</strong> et n'est ni collecté ni conservé par le site.
+        </li>
+        <li>
+          Seuls deux traitements techniques existent : les journaux de l'hébergeur et une mesure
+          d'audience anonyme, <a class="underline" href="#opposition">à laquelle vous pouvez vous opposer</a>.
+        </li>
+      </ul>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="responsable">
+      <h2 class="font-extrabold uppercase tracking-brutal">Responsable du traitement</h2>
       <p class="mt-1">
-        Le calcul tourne entièrement dans votre navigateur. Aucune inscription, aucun compte. Ce que
-        vous saisissez — <strong>revenus, heures de garde, nombre et âge des enfants, code
-        postal</strong> — n'est envoyé à aucun serveur, ni au nôtre, ni à un tiers.
+        {EDITEUR.nom}, éditeur du site. Contact :
+        {" "}<a class="underline" href={contactHref()}>{contactLabel()}</a>. Aucun délégué à la
+        protection des données n'a été désigné (non obligatoire pour ce site).
       </p>
     </section>
-    <section class="card-brutal p-4 text-sm leading-relaxed">
-      <h2 class="font-extrabold uppercase tracking-brutal">Sauvegarde par URL</h2>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="simulation">
+      <h2 class="font-extrabold uppercase tracking-brutal">Vos données de simulation</h2>
       <p class="mt-1">
-        Votre scénario est encodé dans l'adresse de la page (les paramètres après le « ? »). Copier
-        ce lien suffit à sauvegarder ou partager votre simulation — sans aucun compte.
-      </p>
-    </section>
-    <section class="card-brutal p-4 text-sm leading-relaxed">
-      <h2 class="font-extrabold uppercase tracking-brutal">Cookies & mesure d'audience</h2>
-      <p class="mt-1">
-        Le site utilise <strong>Vercel Web Analytics</strong>, sans cookie et sans identifiant
-        publicitaire. Ce qui est transmis : l'<strong>adresse de la page consultée</strong> et des
-        informations techniques agrégées (provenance, pays, type d'appareil).
+        Le calcul s'exécute entièrement dans votre navigateur. Vos saisies ne sont envoyées ni à
+        nous ni à un tiers, et aucune n'est enregistrée sur votre appareil.
       </p>
       <p class="mt-2">
-        Point important : votre scénario est encodé dans les paramètres de l'adresse (après le
-        « ? »), et <strong>ces paramètres sont retirés avant tout envoi</strong>. La mesure
-        d'audience voit donc « <code>/</code> », jamais « <code>/?r=4200&amp;cp=75011</code> ». Aucun
-        profil n'est constitué, aucune donnée n'est revendue.
+        Pour permettre la sauvegarde sans compte, votre scénario est inscrit dans l'adresse de la
+        page (les paramètres après le « ? »). Ces paramètres restent dans votre navigateur tant que
+        vous ne rechargez pas la page. Si vous <strong>rechargez, ouvrez ou partagez</strong> un tel
+        lien, l'adresse complète est transmise à l'hébergeur, comme toute adresse web demandée, et
+        peut figurer dans ses journaux techniques (ci-dessous). Ne partagez un lien de simulation
+        qu'avec des personnes de confiance : il contient les chiffres saisis.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="hebergement">
+      <h2 class="font-extrabold uppercase tracking-brutal">Journaux de l'hébergeur</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>
+          <strong>Données</strong> : adresse IP, date et heure, adresse de la page demandée,
+          navigateur et système (en-tête « User-Agent »), page de provenance.
+        </li>
+        <li>
+          <strong>Finalités</strong> : afficher le site, en assurer la sécurité (prévention des
+          abus et des attaques) et le bon fonctionnement.
+        </li>
+        <li>
+          <strong>Base légale</strong> : intérêt légitime de l'éditeur à fournir un site sûr et
+          disponible (art. 6.1.f RGPD).
+        </li>
+        <li>
+          <strong>Durée</strong> : conservation limitée, fixée par l'hébergeur pour ces seules
+          finalités (voir sa <a class="underline" href={HEBERGEUR.confidentialite}>politique de
+          confidentialité</a>). L'éditeur n'exploite pas ces journaux.
+        </li>
+      </ul>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="audience">
+      <h2 class="font-extrabold uppercase tracking-brutal">Mesure d'audience</h2>
+      <p class="mt-1">
+        Le site utilise <strong>Vercel Web Analytics</strong> pour compter les visites et savoir
+        quelles pages sont utiles.
+      </p>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>
+          <strong>Données transmises</strong> : adresse de la page consultée
+          {" "}<strong>sans ses paramètres</strong> (la mesure voit « <code>/</code> », jamais
+          « <code>/?r=4200&amp;cp=75011</code> »), page de provenance, pays, type d'appareil,
+          navigateur et système.
+        </li>
+        <li>
+          <strong>Pas de cookie ni d'identifiant stocké</strong> sur votre appareil. Un visiteur
+          est reconnu pendant 24 heures au plus par une empreinte calculée côté serveur à partir de
+          la requête, puis effacée. Aucun suivi d'un site à l'autre, aucun profil, aucune revente.
+        </li>
+        <li>
+          <strong>Finalité</strong> : statistiques anonymes de fréquentation, pour le seul compte
+          de l'éditeur.
+        </li>
+        <li>
+          <strong>Base légale</strong> : intérêt légitime (art. 6.1.f RGPD). Cette mesure, limitée à
+          la production de statistiques anonymes, relève de l'exemption de consentement prévue par
+          la CNIL pour la mesure d'audience ; vous pouvez vous y opposer à tout moment.
+        </li>
+        <li>
+          <strong>Durée</strong> : l'empreinte de visite est supprimée au bout de 24 heures ; les
+          statistiques agrégées sont conservées au plus 25 mois.
+        </li>
+      </ul>
+
+      <div id="opposition" class="mt-3 border-[3px] border-border bg-muted p-3">
+        <p class="font-bold">Vous opposer à la mesure d'audience</p>
+        <p class="mt-1" id="audience-etat">
+          Votre choix s'applique à ce navigateur. Le signal « Global Privacy Control » de votre
+          navigateur, s'il est activé, est respecté automatiquement.
+        </p>
+        <button
+          type="button"
+          id="audience-toggle"
+          class="btn-brutal mt-2 bg-card px-3 py-1.5 text-xs"
+          hidden
+        ></button>
+        <noscript>
+          <p class="mt-1">
+            JavaScript est désactivé : aucune mesure d'audience n'est effectuée.
+          </p>
+        </noscript>
+      </div>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="destinataires">
+      <h2 class="font-extrabold uppercase tracking-brutal">Destinataires et transferts</h2>
+      <p class="mt-1">
+        Le seul destinataire est l'hébergeur, {HEBERGEUR.nom} ({HEBERGEUR.adresse}), qui agit en
+        qualité de sous-traitant pour l'hébergement et la mesure d'audience. Ces données peuvent
+        être traitées aux États-Unis : Vercel est certifié au
+        {" "}<a class="underline" href="https://www.dataprivacyframework.gov/">Data Privacy Framework UE–États-Unis</a>,
+        qui bénéficie d'une décision d'adéquation de la Commission européenne du 10 juillet 2023.
+      </p>
+      <p class="mt-2">
+        Aucune police, aucun script ni aucune image n'est chargé depuis un service tiers : tout est
+        servi par le domaine du site.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="traceurs">
+      <h2 class="font-extrabold uppercase tracking-brutal">Cookies et stockage local</h2>
+      <p class="mt-1">
+        Le site ne dépose <strong>aucun cookie</strong>. Il n'écrit sur votre appareil que si vous
+        vous opposez à la mesure d'audience : une seule valeur est alors conservée dans le stockage
+        local de votre navigateur (clé <code>cn-audience-optout</code>), pour mémoriser ce choix.
+        Vous pouvez l'effacer à tout moment depuis les réglages de votre navigateur.
+      </p>
+    </section>
+
+    <section class="card-brutal p-4 text-sm leading-relaxed" id="droits">
+      <h2 class="font-extrabold uppercase tracking-brutal">Vos droits</h2>
+      <p class="mt-1">
+        Vous disposez des droits d'accès, de rectification, d'effacement, de limitation et
+        d'opposition (art. 15 à 21 RGPD), ainsi que du droit de définir des directives sur le sort
+        de vos données après votre décès. Pour les exercer :
+        {" "}<a class="underline" href={contactHref()}>{contactLabel()}</a>. Faute de compte et
+        d'identifiant, l'éditeur ne peut généralement relier aucune donnée à votre personne
+        (art. 11 RGPD) ; indiquez, si vous le souhaitez, des éléments permettant de vous identifier.
+      </p>
+      <p class="mt-2">
+        Vous pouvez introduire une réclamation auprès de la Commission nationale de l'informatique
+        et des libertés (CNIL), 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 —
+        {" "}<a class="underline" href="https://www.cnil.fr/fr/plaintes">cnil.fr/fr/plaintes</a>.
+      </p>
+      <p class="mt-2">
+        Aucune décision automatisée produisant des effets juridiques n'est prise vous concernant :
+        le verdict du comparateur est une estimation affichée dans votre navigateur, sans effet sur
+        vos droits auprès des organismes.
       </p>
     </section>
   </article>
+
+  <script is:inline>
+    (function () {
+      var KEY = "cn-audience-optout";
+      var btn = document.getElementById("audience-toggle");
+      var etat = document.getElementById("audience-etat");
+      var gpc = navigator.globalPrivacyControl === true;
+      function lire() {
+        try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+      }
+      function rendre() {
+        if (gpc) {
+          etat.textContent =
+            "Votre navigateur envoie le signal Global Privacy Control : aucune mesure d'audience n'est effectuée.";
+          btn.hidden = true;
+          return;
+        }
+        var oppose = lire();
+        etat.textContent = oppose
+          ? "Vous êtes opposé(e) à la mesure d'audience sur ce navigateur : aucune visite n'est comptée."
+          : "La mesure d'audience anonyme est active sur ce navigateur.";
+        btn.textContent = oppose ? "Réactiver la mesure d'audience" : "M'opposer à la mesure d'audience";
+        btn.hidden = false;
+      }
+      btn.addEventListener("click", function () {
+        try {
+          if (lire()) localStorage.removeItem(KEY);
+          else localStorage.setItem(KEY, "1");
+        } catch (e) {
+          etat.textContent =
+            "Votre navigateur bloque le stockage local : le choix ne peut pas être mémorisé.";
+          return;
+        }
+        rendre();
+      });
+      rendre();
+    })();
+  </script>
 </Layout>

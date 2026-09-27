@@ -10,7 +10,7 @@
 - [Comparateur (accueil)](https://creche-ou-nounou.fr/): calcule le mode de garde le moins cher pour une famille
 - [Méthodologie & sources](https://creche-ou-nounou.fr/methodologie): formules, barème daté, sources officielles
 - [Observatoire du coût de la garde 2026](https://creche-ou-nounou.fr/observatoire-cout-garde-2026): salaires et coûts par département (données URSSAF 2024)
-- [Données ouvertes (CSV)](https://creche-ou-nounou.fr/data/cout-garde-par-departement-2026.csv): coût de la garde par département, licence ouverte
+- [Données ouvertes (CSV)](https://creche-ou-nounou.fr/data/cout-garde-par-departement-2026.csv): coût de la garde par département, licence ODbL 1.0 (base dérivée des données Urssaf)
 - [Glossaire](https://creche-ou-nounou.fr/glossaire): définitions (CMG, PSU, PAJE, taux d'effort, micro-crèche…)
 - [À propos](https://creche-ou-nounou.fr/a-propos): auteur, expertise, indépendance
 
@@ -33,5 +33,6 @@
 ## Principes
 
 - Estimation indicative, pas un avis officiel — à vérifier sur caf.fr et pajemploi.urssaf.fr.
-- Aucune inscription, aucune donnée envoyée à un serveur : tout est calculé dans le navigateur.
-- Tarifs locaux par département issus des données open data URSSAF (Salariés des particuliers employeurs 2024).
+- Aucune inscription, aucun cookie : la simulation est calculée dans le navigateur, les chiffres saisis ne sont pas collectés.
+- Tarifs locaux par département issus des données open data URSSAF (Salariés des particuliers employeurs 2024, Urssaf Caisse nationale, licence ODbL).
+- Site indépendant, sans lien avec la CAF, l'Urssaf ou l'administration.

@@ -131,7 +131,14 @@ const isActive = (href: string) =>
       // n'envoie déjà que le pathname (disableAutoTrack + path calculé au build),
       // mais ce beforeSend verrouille la garantie donnée sur /confidentialite au
       // lieu de la faire dépendre d'un détail d'implémentation d'une dépendance.
+      // Droit d'opposition (/confidentialite#opposition) : si le visiteur s'est
+      // opposé, ou si son navigateur envoie Global Privacy Control, l'événement
+      // est abandonné (beforeSend renvoie null) et rien n'est transmis.
       window.webAnalyticsBeforeSend = function (event) {
+        try {
+          if (navigator.globalPrivacyControl === true) return null;
+          if (localStorage.getItem("cn-audience-optout") === "1") return null;
+        } catch (e) {}
         try {
           var u = new URL(event.url, window.location.origin);
           return Object.assign({}, event, { url: u.origin + u.pathname });
@@ -192,12 +199,20 @@ const isActive = (href: string) =>
             <a href="/a-propos" class="underline">À propos</a>
             <a href="/mentions-legales" class="underline">Mentions légales</a>
             <a href="/confidentialite" class="underline">Confidentialité</a>
+            <a href="/conditions-utilisation" class="underline">Conditions d'utilisation</a>
             <a href="https://freelance-ou-cdi.fr" class="underline">freelance-ou-cdi.fr</a>
           </nav>
         </div>
-        <div class="container pb-6 text-xs opacity-70">
-          Estimation indicative, ce n'est pas un avis officiel. Vérifiez sur caf.fr /
-          pajemploi.urssaf.fr. Barème au 1ᵉʳ avril 2026.
+        <div class="container space-y-1 pb-6 text-xs opacity-70">
+          <p>
+            Site indépendant, sans lien avec la CAF, l'Urssaf ou l'administration. Estimation
+            indicative, ce n'est pas un avis officiel. Vérifiez sur caf.fr / pajemploi.urssaf.fr.
+          </p>
+          <p>
+            Données locales : Urssaf Caisse nationale, base « Salariés des particuliers employeurs
+            en 2024 », sous <a href="/mentions-legales#credits" class="underline">licence ODbL</a>.
+            Données géographiques : Insee, La Poste (Licence Ouverte 2.0).
+          </p>
         </div>
       </footer>
     </div>

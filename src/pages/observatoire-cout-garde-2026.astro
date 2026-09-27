@@ -5,6 +5,9 @@ import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../data/tar
 import { fmtEuro2, fmtDateFr } from "../lib/format";
 import { slugify } from "../lib/slug";
 import { DATES } from "../data/content-dates.mjs";
+import { ODBL_URL, SOURCES_DONNEES } from "../data/legal";
+
+const urssaf = SOURCES_DONNEES.find((s) => s.id === "urssaf")!;
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/observatoire-cout-garde-2026";
@@ -41,7 +44,9 @@ const jsonLd = [
     datePublished: DATES.observatoire.published,
     dateModified: DATES.observatoire.modified,
     isBasedOn: SOURCE_TARIFS.source,
-    license: "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    // Base dérivée d'une base Urssaf sous ODbL : partage à l'identique obligatoire.
+    license: ODBL_URL,
+    creditText: `${urssaf.producteur}, « ${urssaf.nom} » (ODbL)`,
     distribution: [
       {
         "@type": "DataDownload",
@@ -98,6 +103,11 @@ const jsonLd = [
       >
         ↓ Télécharger les données (CSV)
       </a>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Base dérivée de « {urssaf.nom} » ({urssaf.producteur}), mise à disposition sous
+        {" "}<a class="underline" href={ODBL_URL}>licence ODbL 1.0</a> : réutilisation libre, avec
+        mention de la source et partage à l'identique des bases dérivées.
+      </p>
     </div>
 
     <section>
@@ -157,8 +167,10 @@ const jsonLd = [
       <p class="mt-2">
         Salaire horaire net = masse salariale nette / heures déclarées, par département et par
         catégorie d'emploi, d'après {SOURCE_TARIFS.source}. Le coût de la garde à domicile est
-        converti du net au coût total employeur (× 1,8 environ). Données réutilisables sous licence
-        ouverte (Etalab). Détails sur la <a class="underline" href="/methodologie">méthodologie</a>.
+        converti du net au coût total employeur (× 1,8 environ). Les données source et la base dérivée
+        sont sous <a class="underline" href={ODBL_URL}>licence ODbL 1.0</a> (voir les
+        {" "}<a class="underline" href="/mentions-legales#credits">sources et licences</a>). Détails
+        sur la <a class="underline" href="/methodologie">méthodologie</a>.
       </p>
       <p class="mt-2">
         Le coût de référence (crèche PSU, CMG, plafonds) est national : seuls les salaires AMA et
