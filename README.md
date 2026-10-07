@@ -83,15 +83,17 @@ scripts/                         Scripts de génération de données et d'assets
 ### Pages
 
 - `/` — le comparateur (îlot calculateur + verdict)
-- `/guides/*` — 8 guides (CMG 2026, crédit d'impôt, micro-crèche, garde à domicile, garde partagée,
-  réforme CMG sept. 2025, reste à charge nounou, crèche ou assistante maternelle) + hub `/guides`
+- `/guides/*` — 9 guides (CMG 2026, tarif crèche 2026, crédit d'impôt, micro-crèche, garde à domicile,
+  garde partagée, réforme CMG sept. 2025, reste à charge nounou, crèche ou assistante maternelle)
+  + hub `/guides`
 - `/cout-garde-enfant` — hub coût par département
 - `/cout-garde-enfant/[département]` — 100 pages programmatiques (données URSSAF locales)
 - `/cout-garde-enfant/[département]/[ville]` — 38 pages des grandes villes
 - `/observatoire-cout-garde-2026` — étude de données + CSV téléchargeable (schema `Dataset`)
-- `/glossaire`, `/methodologie`, `/a-propos`, `/mentions-legales`, `/confidentialite`, `/404`
+- `/glossaire`, `/methodologie`, `/a-propos`, `/404`
+- `/mentions-legales`, `/confidentialite`, `/conditions-utilisation` — pages légales (source unique : `src/data/legal.ts`)
 
-**~156 pages** générées en HTML statique (crawlable par les moteurs de recherche **et** les moteurs IA).
+**~158 pages** générées en HTML statique (crawlable par les moteurs de recherche **et** les moteurs IA).
 
 ---
 
@@ -127,9 +129,8 @@ npm test   # cas officiels CAF/Urssaf, invariants (net ≥ 0, monotonie…), gar
 | Salaire AMA / garde à domicile par département | open data **URSSAF 2024** | 2024 |
 | Code postal → département | **geo.api.gouv.fr** (IGN/INSEE) | — |
 
-Les chiffres affichés sont des **estimations indicatives** — voir `/methodologie`. Détails et limites
-documentés dans les plans : [`plan-implementation-comparateur-mode-de-garde.md`](plan-implementation-comparateur-mode-de-garde.md)
-et [`plan-seo-geo.md`](plan-seo-geo.md).
+Les chiffres affichés sont des **estimations indicatives**. Formules, sources et limites connues sont
+documentées sur [`/methodologie`](https://creche-ou-nounou.fr/methodologie).
 
 ### Régénérer les données (rituel de maintenance)
 
@@ -137,6 +138,8 @@ et [`plan-seo-geo.md`](plan-seo-geo.md).
 node scripts/build-geo-data.mjs       # départements + codes postaux (geo.api.gouv.fr)
 node scripts/build-tarifs-data.mjs    # tarifs par département (open data URSSAF)
 node scripts/build-og.mjs             # image Open Graph par défaut
+node scripts/build-icons.mjs          # favicon.ico et icônes PNG (depuis public/favicon.svg)
+npm run audit:seo                     # audit on-page du site construit (après npm run build)
 ```
 
 Mettre à jour `bareme-2026.json` à chaque échéance (**janvier** : barème CNAF · **avril** :
@@ -144,17 +147,18 @@ revalorisations) et régénérer les tarifs URSSAF chaque année.
 
 ---
 
-## Configuration (`.env`)
+## Configuration
+
+Aucune variable d'environnement n'est requise. La mesure d'audience passe par Vercel Web Analytics
+(sans cookie) ; un garde-fou dans `Layout.astro` retire les paramètres de l'adresse avant tout envoi
+et respecte l'opposition du visiteur. Ne pas rebrancher un autre script d'analytics tel quel : le
+scénario de l'utilisateur (revenu, code postal) vit dans la query string (cf. `.env.example`).
+
+IndexNow (indexation rapide) : le ping part automatiquement en `postbuild` sur Vercel en production.
+Pour le forcer à la main :
 
 ```bash
-# Analytics privacy-first (cookieless) — vide = désactivé
-PUBLIC_PLAUSIBLE_DOMAIN=
-```
-
-IndexNow (indexation rapide, après déploiement) :
-
-```bash
-HOST=creche-ou-nounou.fr node scripts/indexnow-ping.mjs
+FORCE_INDEXNOW=1 node scripts/indexnow-ping.mjs
 ```
 
 ---
@@ -162,7 +166,7 @@ HOST=creche-ou-nounou.fr node scripts/indexnow-ping.mjs
 ## Déploiement
 
 Site statique déployé sur **Vercel** (`npm run build` → `dist/`). `vercel.json` configure les en-têtes
-de sécurité (HSTS, etc.) et de cache. Après déploiement : lancer le ping IndexNow et soumettre le sitemap
+de sécurité (HSTS, etc.) et de cache. Après le premier déploiement : soumettre le sitemap
 (`/sitemap-index.xml`) à Google Search Console et Bing Webmaster Tools.
 
 ---
