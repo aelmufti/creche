@@ -16,3 +16,6 @@ tmp
 
 # OG images générées au build (prebuild)
 public/og
+
+# Notes de travail internes (non publiées)
+plan-*.md

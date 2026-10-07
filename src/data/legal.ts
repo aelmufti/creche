@@ -11,7 +11,7 @@
 
 export const LEGAL_DATES = {
   /** Dernière mise à jour des pages légales (ISO). */
-  modified: "2026-09-27",
+  modified: "2026-10-07",
 };
 
 /**
@@ -29,7 +29,7 @@ export const EDITEUR = {
   nom: "Ali El Mufti",
   site: "https://aelm.dev",
   /** Adresse e-mail de contact publique. null → contact via le site de l'éditeur. */
-  email: null as string | null,
+  email: "alielmufti25@gmail.com" as string | null,
   // Champs requis uniquement si statut = "professionnel" :
   adresse: null as string | null,
   telephone: null as string | null,

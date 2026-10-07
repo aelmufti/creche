@@ -122,7 +122,7 @@ npm test   # cas officiels CAF/Urssaf, invariants (net ≥ 0, monotonie…), gar
 | Donnée | Source | Validité |
 |---|---|---|
 | Taux d'effort EAJE / PSU | CNAF, circ. 2019-005 | 1ᵉʳ janv. 2026 |
-| Formule + plafonds CMG (réforme sept. 2025) | Urssaf/Pajemploi ; art. 99 LFSS 2024 | avril 2026 |
+| Formule + plafonds CMG (réforme sept. 2025) | Urssaf/Pajemploi ; art. 86 LFSS 2023 | avril 2026 |
 | Crédits d'impôt | service-public.fr / impots.gouv.fr | 2026 |
 | Salaire AMA / garde à domicile par département | open data **URSSAF 2024** | 2024 |
 | Code postal → département | **geo.api.gouv.fr** (IGN/INSEE) | — |

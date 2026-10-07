@@ -28,6 +28,12 @@ export const TYPE_LABEL: Record<ChangeType, string> = {
 /** Du plus récent au plus ancien. */
 export const CHANGELOG: ChangeEntry[] = [
   {
+    date: "2026-10-07",
+    type: "correction",
+    texte:
+      "Référence légale de la réforme du CMG corrigée : article 86 de la loi de financement de la sécurité sociale pour 2023 (loi n° 2022-1616), et non article 99 de la LFSS 2024. Les montants et les calculs ne changent pas.",
+  },
+  {
     date: "2026-09-27",
     type: "donnees",
     texte:

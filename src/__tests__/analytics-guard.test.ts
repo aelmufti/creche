@@ -52,8 +52,9 @@ describe("garde-fou analytics (promesse de /confidentialite)", () => {
     }
   });
 
-  it("une URL illisible ne fait pas échouer la page (repli sur l'événement d'origine)", () => {
-    expect(guard({ url: "pas-une-url::" }).url).toBeDefined();
+  it("une URL illisible n'est jamais envoyée telle quelle (événement abandonné)", () => {
+    expect(layout).not.toMatch(/return event;/);
+    expect(guard({ url: "http://[" })).toBeNull();
   });
 
   it("le garde-fou est défini avant le composant Analytics (sinon il ne s'applique pas)", () => {

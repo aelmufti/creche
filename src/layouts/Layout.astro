@@ -143,7 +143,7 @@ const isActive = (href: string) =>
           var u = new URL(event.url, window.location.origin);
           return Object.assign({}, event, { url: u.origin + u.pathname });
         } catch (e) {
-          return event;
+          return null;
         }
       };
     </script>
