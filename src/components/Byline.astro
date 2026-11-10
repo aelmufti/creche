@@ -1,0 +1,20 @@
+---
+// Signature visible des pages éditoriales (guides, pages locales, observatoire).
+// Sujet YMYL : l'auteur, la date de révision et la méthode doivent être lisibles
+// sur la page elle-même, pas seulement dans le JSON-LD (E-E-A-T, citation par
+// les moteurs génératifs).
+import { fmtDateFr } from "../lib/format";
+
+interface Props {
+  /** Date ISO (AAAA-MM-JJ) de dernière révision du contenu. */
+  modified: string;
+}
+
+const { modified } = Astro.props;
+---
+
+<p class="mt-2 text-xs text-muted-foreground">
+  Par <a class="underline" href="/a-propos#ali-el-mufti" rel="author">Ali El Mufti</a> · Mis à jour
+  le <time datetime={modified}>{fmtDateFr(modified)}</time> ·
+  <a class="underline" href="/methodologie">Méthode et sources</a>
+</p>

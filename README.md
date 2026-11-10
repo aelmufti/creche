@@ -107,10 +107,14 @@ coût brut → − aide (CMG ou tarif PSU) → − participation employeur → r
 
 Toute valeur chiffrée provient de `bareme-2026.json` — **jamais en dur** dans le code.
 
-**Cas officiels (doivent passer, `src/engine/__tests__/golden.test.ts`) :** exemple CAF du CMG
-assistante maternelle (2 000 €, 160 h, 4,91 €/h) = **587,52 €** · tarif crèche PSU 2026 de **0,50 €** à
-**5,26 €/h** · forfaits micro-crèche au 1ᵉʳ avril 2026 **992,13 / 855,25 / 718,41 €** · règles de la
-réforme du CMG (pas de montant maximum, indemnités incluses, plafonds horaires, AEEH).
+**Cas officiels (doivent passer, `src/engine/__tests__/golden.test.ts`) :** exemple publié par l'Urssaf du
+CMG assistante maternelle (2 000 €, 160 h, 4,91 €/h) = **587,52 €** · plancher de ressources du CMG
+de **821 €** (instruction DSS/2B/2026/46, distinct du plancher PSU de 814,62 €) : 500 € de ressources → **704,29 €** ·
+tarif crèche PSU 2026 de **0,50 €** à **5,26 €/h** · forfaits micro-crèche au 1ᵉʳ avril 2026
+**992,13 / 855,25 / 718,41 €** (montants majorés de 30 % : **1 289,77 / 1 111,82 / 933,94 €**), seuils de
+revenus par nombre d'enfants à charge, et exemples service-public (enfant de 3 ans, facture de 600 € →
+**427,63 €** ; 420 € → **357 €**) · règles de la réforme du CMG (pas de montant maximum, indemnités
+incluses, plafonds horaires appliqués par contrat, AEEH).
 Les sources de chaque paramètre sont listées dans `bareme-2026.json` (`_sources`).
 
 ```bash
@@ -140,7 +144,20 @@ node scripts/build-tarifs-data.mjs    # tarifs par département (open data URSSA
 node scripts/build-og.mjs             # image Open Graph par défaut
 node scripts/build-icons.mjs          # favicon.ico et icônes PNG (depuis public/favicon.svg)
 npm run audit:seo                     # audit on-page du site construit (après npm run build)
+node scripts/seo-audit.mjs /autre/dist   # même audit sur un autre dossier de build (ou DIST_DIR=…)
+node scripts/build-llms-full.mjs      # régénère dist/llms-full.txt (déjà lancé en postbuild)
 ```
+
+`npm run audit:seo` échoue (code 1) à la moindre violation : title, description, h1, canonical, OG,
+alt et JSON-LD valides, plus **parité FAQ** (chaque question et réponse du JSON-LD `FAQPage` doit figurer
+mot pour mot dans le texte visible de `<main>`), **600 mots minimum** par guide, **liens internes**
+résolus (page ou fichier de `dist/`, ancre `#id` existante, jamais de `/` final), `BreadcrumbList`
+absolu dont le dernier élément est le canonical, et ordre des titres (pas de `<h3>` avant le
+premier `<h2>`, pas de titre vide).
+
+`/llms.txt` est l'index pour les LLM ; `/llms-full.txt` en est la version texte intégral (accueil,
+guides, méthodologie, glossaire, observatoire, à propos, convertis en Markdown depuis le HTML construit).
+Il est généré par `scripts/build-llms-full.mjs` après `astro build`, donc jamais commité.
 
 Mettre à jour `bareme-2026.json` à chaque échéance (**janvier** : barème CNAF · **avril** :
 revalorisations) et régénérer les tarifs URSSAF chaque année.
@@ -153,6 +170,9 @@ Aucune variable d'environnement n'est requise. La mesure d'audience passe par Ve
 (sans cookie) ; un garde-fou dans `Layout.astro` retire les paramètres de l'adresse avant tout envoi
 et respecte l'opposition du visiteur. Ne pas rebrancher un autre script d'analytics tel quel : le
 scénario de l'utilisateur (revenu, code postal) vit dans la query string (cf. `.env.example`).
+
+Le `postbuild` enchaîne `build-llms-full.mjs` (qui fait échouer le build si `dist/` est vide) puis le
+ping IndexNow (qui, lui, ne le fait jamais échouer).
 
 IndexNow (indexation rapide) : le ping part automatiquement en `postbuild` sur Vercel en production.
 Pour le forcer à la main :
@@ -167,7 +187,7 @@ FORCE_INDEXNOW=1 node scripts/indexnow-ping.mjs
 
 Site statique déployé sur **Vercel** (`npm run build` → `dist/`). `vercel.json` configure les en-têtes
 de sécurité (HSTS, etc.) et de cache. Après le premier déploiement : soumettre le sitemap
-(`/sitemap-index.xml`) à Google Search Console et Bing Webmaster Tools.
+(`/sitemap-index.xml` ; `/sitemap.xml` y redirige en 308 pour les outils qui sondent ce chemin) à Google Search Console et Bing Webmaster Tools.
 
 ---
 

@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { slugify } from "../lib/slug";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/glossaire";
@@ -7,21 +8,21 @@ const title = "Glossaire des aides et modes de garde d'enfant (2026)";
 const description =
   "Glossaire de la garde d'enfant : CMG, PSU, PAJE, taux d'effort, micro-crèche, CESU, crédit d'impôt, reste à charge. Des définitions claires et sourcées.";
 
-const termes: { terme: string; def: string }[] = [
-  { terme: "CMG", def: "Complément de libre choix du mode de garde : aide de la CAF qui prend en charge une partie du salaire et des cotisations pour une assistante maternelle, une garde à domicile ou une micro-crèche (enfant de moins de 6 ans). Depuis sept. 2025, il est proportionnel au reste à charge en emploi direct." },
-  { terme: "PSU", def: "Prestation de service unique : financement des crèches collectives conventionnées par la CAF. Le tarif horaire facturé aux parents est calculé selon leurs ressources et le nombre d'enfants à charge (taux d'effort) — il n'y a pas de CMG." },
-  { terme: "PAJE", def: "Prestation d'accueil du jeune enfant : ensemble d'aides aux familles, dont le CMG. La micro-crèche « en PAJE » ouvre droit au CMG structure, contrairement aux crèches PSU." },
-  { terme: "Assistante maternelle (AMA)", def: "Professionnelle agréée qui garde des enfants à son domicile. En emploi direct, les parents sont employeurs (contrat, Pajemploi) et perçoivent le CMG ainsi que la prise en charge à 100 % des cotisations." },
-  { terme: "Micro-crèche", def: "Petite structure d'accueil (12 places max). En tarification PAJE, elle ouvre droit au CMG structure (85 % du coût dans la limite d'un forfait selon les revenus, reste à charge minimum 15 %, tarif de 10 €/h au plus)." },
-  { terme: "Garde à domicile", def: "Garde de l'enfant au domicile des parents. Relève du crédit d'impôt emploi à domicile (plafond ~12 000 €), bien plus élevé que le crédit frais de garde des autres modes." },
-  { terme: "Garde partagée", def: "Garde à domicile mutualisée entre deux familles : le coût de l'intervenant est divisé, et chaque famille perçoit son propre CMG." },
-  { terme: "Crédit d'impôt frais de garde", def: "Réduction restituable de 50 % des dépenses de garde hors domicile (crèche, micro-crèche, assistante maternelle), plafonnée à 3 500 € par enfant. Versé même aux foyers non imposables." },
-  { terme: "Crédit d'impôt emploi à domicile", def: "Réduction restituable de 50 % des dépenses de garde à domicile, plafonnée à ~12 000 €/an (majorée par enfant, max 15 000 €)." },
-  { terme: "Taux d'effort", def: "Pourcentage des ressources appliqué pour calculer le tarif d'une crèche PSU (et le CMG en emploi direct). Il diminue avec le nombre d'enfants à charge. Barème national CNAF." },
-  { terme: "CESU préfinancé", def: "Chèque emploi service universel financé en partie par l'employeur. Il réduit le reste à charge, mais la part payée par l'employeur n'ouvre pas droit au crédit d'impôt." },
-  { terme: "Reste à charge", def: "Ce qui reste à payer après déduction des aides (CMG, participation employeur), avant crédit d'impôt." },
-  { terme: "Trésorerie mensuelle", def: "Ce qui part réellement du compte chaque mois, avant crédit d'impôt." },
-  { terme: "Coût net réel", def: "Coût final après crédit d'impôt (50 %), encaissé l'année suivante. C'est le critère de comparaison entre modes de garde." },
+const termes: { terme: string; def: string; href: string; lien: string }[] = [
+  { terme: "CMG", def: "Complément de libre choix du mode de garde : aide de la CAF qui prend en charge une partie du salaire et des cotisations pour une assistante maternelle, une garde à domicile ou une micro-crèche (enfant de moins de 6 ans). Depuis sept. 2025, il est proportionnel au reste à charge en emploi direct.", href: "/guides/cmg-2026", lien: "Le guide du CMG 2026" },
+  { terme: "PSU", def: "Prestation de service unique : financement des crèches collectives conventionnées par la CAF. Le tarif horaire facturé aux parents est calculé selon leurs ressources et le nombre d'enfants à charge (taux d'effort) — il n'y a pas de CMG.", href: "/guides/tarif-creche-2026", lien: "Tarif crèche 2026 : calcul au taux d'effort" },
+  { terme: "PAJE", def: "Prestation d'accueil du jeune enfant : ensemble d'aides aux familles, dont le CMG. La micro-crèche « en PAJE » ouvre droit au CMG structure, contrairement aux crèches PSU.", href: "/guides/reforme-cmg-septembre-2025", lien: "La réforme du CMG de septembre 2025" },
+  { terme: "Assistante maternelle (AMA)", def: "Professionnelle agréée qui garde des enfants à son domicile. En emploi direct, les parents sont employeurs (contrat, Pajemploi) et perçoivent le CMG ainsi que la prise en charge à 100 % des cotisations.", href: "/guides/creche-ou-assistante-maternelle", lien: "Crèche ou assistante maternelle ?" },
+  { terme: "Micro-crèche", def: "Petite structure d'accueil (12 places max). En tarification PAJE, elle ouvre droit au CMG structure (85 % du coût dans la limite d'un forfait selon les revenus, reste à charge minimum 15 %, tarif de 10 €/h au plus).", href: "/guides/micro-creche-cmg-structure", lien: "Micro-crèche : le CMG structure" },
+  { terme: "Garde à domicile", def: "Garde de l'enfant au domicile des parents. Relève du crédit d'impôt emploi à domicile (plafond ~12 000 €), bien plus élevé que le crédit frais de garde des autres modes.", href: "/guides/garde-a-domicile-cout-reel", lien: "Garde à domicile : le coût réel" },
+  { terme: "Garde partagée", def: "Garde à domicile mutualisée entre deux familles : le coût de l'intervenant est divisé, et chaque famille perçoit son propre CMG.", href: "/guides/garde-partagee", lien: "Le guide de la garde partagée" },
+  { terme: "Crédit d'impôt frais de garde", def: "Crédit d'impôt de 50 % des dépenses de garde hors domicile (crèche, micro-crèche, assistante maternelle), restituable, avec des dépenses retenues dans la limite de 3 500 € par enfant. Versé même aux foyers non imposables.", href: "/guides/credit-impot-frais-de-garde", lien: "Le guide du crédit d'impôt frais de garde" },
+  { terme: "Crédit d'impôt emploi à domicile", def: "Crédit d'impôt de 50 % des dépenses de garde à domicile, restituable, avec des dépenses retenues dans la limite de ~12 000 €/an (majorée par enfant, max 15 000 €).", href: "/guides/garde-a-domicile-cout-reel", lien: "Garde à domicile : le coût réel" },
+  { terme: "Taux d'effort", def: "Pourcentage des ressources appliqué pour calculer le tarif d'une crèche PSU (et le CMG en emploi direct). Il diminue avec le nombre d'enfants à charge. Barème national CNAF.", href: "/guides/tarif-creche-2026", lien: "Tarif crèche 2026 : le barème du taux d'effort" },
+  { terme: "CESU préfinancé", def: "Chèque emploi service universel financé en partie par l'employeur. Il réduit le reste à charge, mais la part payée par l'employeur n'ouvre pas droit au crédit d'impôt.", href: "/guides/reste-a-charge-nounou", lien: "Reste à charge d'une nounou" },
+  { terme: "Reste à charge", def: "Ce qui reste à payer après déduction des aides (CMG, participation employeur), avant crédit d'impôt.", href: "/guides/reste-a-charge-nounou", lien: "Reste à charge d'une nounou" },
+  { terme: "Trésorerie mensuelle", def: "Ce qui part réellement du compte chaque mois, avant crédit d'impôt.", href: "/methodologie", lien: "Méthodologie du calcul" },
+  { terme: "Coût net réel", def: "Coût final après crédit d'impôt (50 %), encaissé l'année suivante. C'est le critère de comparaison entre modes de garde.", href: "/methodologie", lien: "Méthodologie du calcul" },
 ];
 
 const jsonLd = [
@@ -33,8 +34,11 @@ const jsonLd = [
     inLanguage: "fr-FR",
     hasDefinedTerm: termes.map((t) => ({
       "@type": "DefinedTerm",
+      "@id": `${site}${path}#${slugify(t.terme)}`,
       name: t.terme,
+      url: `${site}${path}#${slugify(t.terme)}`,
       description: t.def,
+      inDefinedTermSet: site + path,
     })),
   },
   {
@@ -62,8 +66,13 @@ const jsonLd = [
       {
         termes.map((t) => (
           <div class="card-brutal p-4">
-            <dt class="font-extrabold">{t.terme}</dt>
-            <dd class="mt-1 text-sm leading-relaxed">{t.def}</dd>
+            <dt id={slugify(t.terme)} class="scroll-mt-24 font-extrabold">{t.terme}</dt>
+            <dd class="mt-1 text-sm leading-relaxed">
+              <p>{t.def}</p>
+              <a class="mt-2 block font-bold underline" href={t.href}>
+                {t.lien} →
+              </a>
+            </dd>
           </div>
         ))
       }

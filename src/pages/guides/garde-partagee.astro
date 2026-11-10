@@ -1,13 +1,103 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Byline from "../../components/Byline.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr } from "../../lib/format";
+import { fmtEuro, fmtEuro2, fmtHeure, fmtRang } from "../../lib/format";
+import { bareme, calcDomicile, comparer } from "../../engine";
+import { inputsReference, TARIFS_REFERENCE } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/garde-partagee";
 const title = "Garde partagée 2026 : fonctionnement, coût et aides";
 const description =
-  "Garde partagée : une nounou à domicile pour deux familles. Coût divisé, CMG par famille, crédit d'impôt emploi à domicile. Budget 2026 chiffré.";
+  "Garde partagée en 2026 : coût par famille, CMG et crédit d'impôt emploi à domicile, comparés à une garde à domicile seule. Budget chiffré par revenu.";
+
+// Tous les chiffres viennent du barème versionné (bareme-2026.json) et du moteur
+// du comparateur : la page suit chaque mise à jour du barème.
+const heures = inputsReference.heuresMois;
+const coutH = TARIFS_REFERENCE.coutHoraireDomicile;
+const facteur = bareme.cotisations.facteur_cout_total_domicile;
+const fmtFacteur = String(facteur).replace(".", ",");
+const ed = bareme.credit_impot.emploi_domicile;
+const cotis = bareme.cotisations;
+const refDom = bareme.cout_horaire_ref.domicile;
+const plafondHDom = bareme.plafond_horaire.domicile;
+// Bornes du CMG ([INSTR] : 821 € – 8 500 €), distinctes du plancher PSU de la crèche.
+const { plancher, plafond } = bareme.ressources_cmg;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+const pct0 = (x: number) => `${Math.round(x * 100)} %`;
+const plafondCredit = (nbEnfants: number) =>
+  Math.min(ed.plafond_base + ed.majoration_par_enfant * nbEnfants, ed.plafond_max);
+const creditMax = (nbEnfants: number) => ed.taux * plafondCredit(nbEnfants);
+
+const nbF = Math.max(2, inputsReference.nbFamillesPartage ?? 2);
+
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const lignes = revenus.map((r) => {
+  const i = { ...inputsReference, revenuMensuelNet: r, nbFamillesPartage: nbF };
+  const seule = calcDomicile(bareme, i, false);
+  const part = calcDomicile(bareme, i, true);
+  const c = comparer(i);
+  return {
+    revenu: r,
+    netSeule: seule.netReel,
+    aide: part.aide,
+    cmg: part.details.cmg,
+    cotis: part.details.cmgCotis,
+    reste: part.tresorerieMensuelle,
+    net: part.netReel,
+    economie: seule.netReel - part.netReel,
+    rang: c.classement.findIndex((x) => x.mode === "partagee") + 1,
+    gagnant: c.gagnant.label,
+  };
+});
+const ex3000 = lignes.find((l) => l.revenu === 3000)!;
+const ex8500 = lignes.find((l) => l.revenu === 8500)!;
+const gagnePartagee = lignes.filter((l) => l.rang === 1);
+
+// Effet du nombre de familles (foyer de référence, 3 000 € de ressources).
+const lignesFamilles = [2, 3, 4].map((n) => {
+  const d = calcDomicile(bareme, { ...inputsReference, nbFamillesPartage: n }, true);
+  return { n, part: d.coutBrut, aide: d.aide, reste: d.tresorerieMensuelle, net: d.netReel };
+});
+
+// Exemple pas à pas : foyer de référence, nbF familles.
+const seule = calcDomicile(bareme, inputsReference, false);
+const ex = calcDomicile(bareme, { ...inputsReference, nbFamillesPartage: nbF }, true);
+const revenuRetenu = Math.min(Math.max(inputsReference.revenuMensuelNet, plancher), plafond);
+const teDouble = bareme.taux_effort_collectif["1"] * 2;
+const netHoraire = coutH / facteur;
+// Le plafond horaire s'applique au tarif de chaque contrat, donc à la part de chaque famille.
+const salairePart = heures * Math.min(netHoraire / nbF, plafondHDom);
+const partRestante = (revenuRetenu * teDouble) / refDom;
+const cotisEstimees = salairePart * (facteur - 1);
+const cotisMoitie = cotis.prise_en_charge_domicile * cotisEstimees;
+const plafondCotis = cotis.plafond_prise_en_charge_domicile.moins3ans;
+const depensesAnnuelles = ex.tresorerieMensuelle * 12;
+const depensesRetenues = Math.min(depensesAnnuelles, plafondCredit(1));
+
+const faq = [
+  {
+    q: "Comment fonctionne la garde partagée ?",
+    a: `Deux familles emploient ensemble une même personne pour garder leurs enfants, en alternance au domicile de l'une ou de l'autre. Le coût total de l'intervenant est réparti entre les familles et chaque famille perçoit son propre CMG. Dans nos calculs, l'intervenant travaille ${heures} h par mois au total, pour un coût employeur de ${fmtEuro(ex.details.coutBrutTotal)} par mois à ${fmtHeure(coutH)}, partagé à parts égales.`,
+  },
+  {
+    q: "Combien coûte une garde partagée par famille ?",
+    a: `À 2 familles, la part de chaque famille est de ${fmtEuro(ex.coutBrut)} par mois avant aides. Pour un foyer à 3 000 € de ressources mensuelles avec 1 enfant, le reste à charge est de ${fmtEuro(ex3000.reste)} par mois et le coût net réel de ${fmtEuro(ex3000.net)} par mois après crédit d'impôt, contre ${fmtEuro(ex3000.netSeule)} par mois pour la même garde à domicile assumée seul.`,
+  },
+  {
+    q: "La garde partagée est-elle moins chère que la garde à domicile ?",
+    a: `Oui, dans toutes les situations testées : à 2 familles, l'économie sur le coût net réel est de ${fmtEuro(Math.min(...lignes.map((l) => l.economie)))} à ${fmtEuro(Math.max(...lignes.map((l) => l.economie)))} par mois selon les revenus, de 1 500 € à 8 500 € de ressources mensuelles. L'intervenant est le même, mais chaque famille n'en paie que la moitié, tout en conservant le crédit d'impôt emploi à domicile.`,
+  },
+  {
+    q: "Chaque famille touche-t-elle le CMG en garde partagée ?",
+    a: `Oui, chaque famille perçoit son propre CMG, calculé selon ses revenus. Dans notre calcul, il porte sur la part de la famille, avec le taux d'effort doublé de la garde à domicile et le coût de référence de ${fmtEuro2(refDom)} par heure. À 3 000 € de ressources mensuelles, il est de ${fmtEuro(ex.details.cmg)} par mois, auquel s'ajoute ${fmtEuro(ex.details.cmgCotis)} d'aide aux cotisations.`,
+  },
+  {
+    q: "Quel crédit d'impôt pour une garde partagée ?",
+    a: `Comme pour la garde à domicile, c'est le crédit d'impôt « emploi à domicile » : ${pct0(ed.taux)} des dépenses restant à votre charge, dans la limite de ${fmtEuro(ed.plafond_base)} par an majorée de ${fmtEuro(ed.majoration_par_enfant)} par enfant (plafond ${fmtEuro(ed.plafond_max)}). Pour 1 enfant, jusqu'à ${fmtEuro(creditMax(1))} de crédit par an. Dans l'exemple à 3 000 € de ressources, il est de ${fmtEuro(ex.creditImpotAnnuel)} par an.`,
+  },
+];
 
 const jsonLd = [
   {
@@ -20,29 +110,16 @@ const jsonLd = [
     dateModified: DATES.guides.modified,
     author: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
     publisher: { "@type": "Organization", name: "creche-ou-nounou.fr", url: site },
-    citation: ["https://www.pajemploi.urssaf.fr/"],
+    citation: ["https://www.pajemploi.urssaf.fr/", "https://www.impots.gouv.fr/"],
   },
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Comment fonctionne la garde partagée ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Deux familles emploient ensemble une même personne pour garder leurs enfants, en alternance au domicile de l'une ou de l'autre. Le coût total de l'intervenant est partagé entre les deux familles, et chaque famille perçoit son propre CMG.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "La garde partagée est-elle moins chère que la garde à domicile ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Oui : le coût de l'intervenant étant divisé entre deux familles, le reste à charge par famille est nettement inférieur à une garde à domicile classique, tout en conservant le crédit d'impôt emploi à domicile (~12 000 €).",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   {
     "@context": "https://schema.org",
@@ -63,49 +140,239 @@ const jsonLd = [
     </nav>
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Garde partagée : fonctionnement, coût et aides</h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-orange p-4 text-sm leading-relaxed">
       <p>
-        <strong>En bref.</strong> La garde partagée est une garde à domicile mutualisée entre
-        <strong>deux familles</strong> : le coût de l'intervenant est <strong>divisé</strong>, chaque
-        famille perçoit son <strong>propre CMG</strong>, et le <strong>crédit d'impôt emploi à
-        domicile</strong> (~12 000 €) s'applique. Souvent le meilleur ratio coût/souplesse.
+        <strong>En bref.</strong> Une garde partagée est une garde à domicile mutualisée entre
+        {" "}{nbF} familles : chacune ne paie que sa part du coût de l'intervenant. Pour un foyer à
+        3 000 € de ressources mensuelles avec 1 enfant, le coût net réel est de
+        <strong>{fmtEuro(ex3000.net)}/mois</strong> en garde partagée contre
+        <strong>{fmtEuro(ex3000.netSeule)}/mois</strong> en garde à domicile seule, après CMG et
+        crédit d'impôt emploi à domicile. L'économie va de {fmtEuro(Math.min(...lignes.map((l) => l.economie)))}
+        à {fmtEuro(Math.max(...lignes.map((l) => l.economie)))} par mois selon les revenus.
       </p>
       <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
         → Estimer ma part en garde partagée
       </a>
     </div>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Comment ça marche</h2>
+    <section class="text-sm leading-relaxed" id="fonctionnement">
+      <h2 class="text-xl font-extrabold">Comment fonctionne la garde partagée</h2>
       <p class="mt-2">
-        Une seule personne garde les enfants de deux familles, en alternance au domicile de chacune.
-        Le contrat et les cotisations passent par Pajemploi. Le coût total horaire de l'intervenant
-        est partagé : chaque famille n'en supporte qu'une fraction, mais conserve l'accès aux aides.
+        Une seule personne garde les enfants de plusieurs familles, en alternance au domicile de
+        chacune. Le contrat et les cotisations passent par
+        {" "}<a class="underline" href="https://www.pajemploi.urssaf.fr/" rel="noopener">Pajemploi</a>. Le coût
+        total de l'intervenant est réparti entre les familles : chacune n'en supporte qu'une fraction,
+        mais conserve l'accès aux aides, et <strong>chaque famille perçoit son propre CMG</strong>.
+      </p>
+      <p class="mt-2">
+        C'est une garde à domicile dont on divise la facture : les mêmes règles s'appliquent (CMG au
+        taux d'effort doublé, prise en charge de {pct0(cotis.prise_en_charge_domicile)} des cotisations,
+        crédit d'impôt emploi à domicile). Voir le guide
+        {" "}<a class="underline" href="/guides/garde-a-domicile-cout-reel">coût réel d'une garde à domicile</a>
+        et les définitions du <a class="underline" href="/glossaire">glossaire</a>.
       </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Avantages et limites</h2>
-      <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li><strong>+</strong> Coût divisé entre deux familles, souplesse d'horaires, garde au domicile.</li>
-        <li><strong>+</strong> Crédit d'impôt emploi à domicile (plafond élevé).</li>
-        <li><strong>−</strong> Nécessite de trouver une famille compatible et de s'organiser ensemble.</li>
+    <section id="cout-par-famille">
+      <h2 class="text-xl font-extrabold">Combien coûte une garde partagée selon vos revenus</h2>
+      <p class="mt-2 text-sm leading-relaxed">
+        Le tableau compare, pour chaque niveau de ressources, le coût net réel de la garde à domicile
+        assumée seul et celui de la garde partagée entre {nbF} familles. La dernière colonne donne le
+        rang de la garde partagée parmi les cinq modes du comparateur.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Coût net réel d'une garde à domicile seule et d'une garde partagée entre deux familles en 2026, par niveau de ressources mensuelles, avec l'économie réalisée et le rang parmi les modes de garde</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">Garde à domicile seule (net réel)</th>
+              <th scope="col" class="p-2">Partagée : aides</th>
+              <th scope="col" class="p-2">Partagée : reste à charge</th>
+              <th scope="col" class="p-2">Partagée : net réel</th>
+              <th scope="col" class="p-2">Économie</th>
+              <th scope="col" class="p-2">Rang (sur 5)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignes.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.netSeule)}/mois</td>
+                  <td class="p-2">{fmtEuro(l.aide)}</td>
+                  <td class="p-2">{fmtEuro(l.reste)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net)}/mois</td>
+                  <td class="p-2">{fmtEuro(l.economie)}/mois</td>
+                  <td class="p-2">
+                    {fmtRang(l.rang)} <span class="text-muted-foreground">({l.gagnant} en tête)</span>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 1 enfant de moins de 3 ans par famille, couple, intervenant employé {heures} h par
+        mois au total, coût total employeur de {fmtHeure(coutH)} (moyenne nationale Urssaf 2024), soit
+        {" "}{fmtEuro(ex.details.coutBrutTotal)}/mois répartis à parts égales entre {nbF} familles
+        ({fmtEuro(ex.coutBrut)} chacune avant aides). Aucune participation d'employeur.
+      </p>
+      <p class="mt-3 text-sm leading-relaxed">
+        <strong>Lecture.</strong>
+        {
+          gagnePartagee.length > 0
+            ? `La garde partagée est le mode le moins cher du comparateur pour ${gagnePartagee.map((l) => fmtEuro(l.revenu)).join(", ")} de ressources mensuelles ; aux autres niveaux, la crèche ou l'assistante maternelle restent moins chères.`
+            : "Sur ces hypothèses, la garde partagée n'est le mode le moins cher à aucun des niveaux de revenus du tableau : la crèche ou l'assistante maternelle restent moins chères."
+        }
+        À {fmtEuro(ex8500.revenu)} de ressources, le CMG est de {fmtEuro(ex8500.cmg)} par mois et
+        l'aide aux cotisations de {fmtEuro(ex8500.cotis)} : l'essentiel de l'avantage vient du
+        partage du coût. Comparez avec le
+        <a class="underline" href="/guides/tarif-creche-2026">tarif crèche 2026</a> et le comparatif
+        <a class="underline" href="/guides/creche-ou-assistante-maternelle">crèche ou assistante maternelle</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="exemple">
+      <h2 class="text-xl font-extrabold">Exemple pas à pas : 3 000 € de ressources, 1 enfant, {nbF} familles</h2>
+      <ol class="mt-3 list-decimal space-y-2 pl-5">
+        <li>
+          <strong>Coût total de l'intervenant</strong> : {heures} h × {fmtHeure(coutH)} =
+          {" "}{fmtEuro(ex.details.coutBrutTotal)} par mois, réparti entre {nbF} familles :
+          {" "}<strong>{fmtEuro(ex.coutBrut)}</strong> pour vous.
+        </li>
+        <li>
+          <strong>Salaire net estimé de votre part</strong> : {fmtHeure(coutH)} ÷ {fmtFacteur} ≈
+          {" "}{fmtHeure(netHoraire)}, soit {fmtEuro(salairePart)} par mois (le facteur {fmtFacteur} est une
+          approximation moyenne, pas une règle).
+        </li>
+        <li>
+          <strong>CMG</strong> : taux d'effort doublé ({pct(teDouble)}) × {fmtEuro(revenuRetenu)} de
+          ressources = {fmtEuro2(revenuRetenu * teDouble)} par heure, soit {pct0(partRestante)} du coût de
+          référence de {fmtEuro2(refDom)}. Le CMG couvre le reste :
+          {" "}{fmtEuro(salairePart)} × (1 − {pct0(partRestante)}) ≈ <strong>{fmtEuro(ex.details.cmg)}</strong>.
+        </li>
+        <li>
+          <strong>Aide aux cotisations</strong> : cotisations estimées à {fmtEuro(cotisEstimees)}, dont
+          {" "}{pct0(cotis.prise_en_charge_domicile)} = {fmtEuro(cotisMoitie)}, dans la limite de
+          {" "}{fmtEuro(plafondCotis)} par mois (enfant de moins de 3 ans) :
+          {" "}<strong>{fmtEuro(ex.details.cmgCotis)}</strong>.
+        </li>
+        <li>
+          <strong>Reste à charge</strong> : {fmtEuro(ex.coutBrut)} − {fmtEuro(ex.details.cmg)} −
+          {" "}{fmtEuro(ex.details.cmgCotis)} = <strong>{fmtEuro(ex.tresorerieMensuelle)}</strong> par mois
+          ({fmtEuro(depensesAnnuelles)} par an).
+        </li>
+        <li>
+          <strong>Crédit d'impôt emploi à domicile</strong> : {pct0(ed.taux)} de {fmtEuro(depensesRetenues)}
+          {" "}= <strong>{fmtEuro(ex.creditImpotAnnuel)}</strong> par an, soit {fmtEuro(ex.creditImpotMensuel)}
+          {" "}par mois (plafond de dépenses : {fmtEuro(plafondCredit(1))} pour 1 enfant).
+        </li>
+        <li>
+          <strong>Coût net réel</strong> : {fmtEuro(ex.tresorerieMensuelle)} − {fmtEuro(ex.creditImpotMensuel)}
+          {" "}= <strong>{fmtEuro(ex.netReel)}</strong> par mois, contre {fmtEuro(seule.netReel)} en garde à
+          domicile seule.
+        </li>
+      </ol>
+    </section>
+
+    <section id="nombre-familles">
+      <h2 class="text-xl font-extrabold">Combien de familles partagent l'intervenant ?</h2>
+      <p class="mt-2 text-sm leading-relaxed">
+        Le comparateur retient {nbF} familles par défaut et permet d'en saisir davantage. Effet du
+        nombre de familles pour un foyer à 3 000 € de ressources mensuelles, 1 enfant :
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Effet du nombre de familles qui partagent l'intervenant sur le coût d'une garde partagée pour un foyer à 3 000 € de ressources mensuelles</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Familles</th>
+              <th scope="col" class="p-2">Votre part avant aides</th>
+              <th scope="col" class="p-2">Aides</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Net réel après crédit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesFamilles.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{l.n} familles</th>
+                  <td class="p-2">{fmtEuro(l.part)}</td>
+                  <td class="p-2">{fmtEuro(l.aide)}</td>
+                  <td class="p-2">{fmtEuro(l.reste)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net)}/mois</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Même coût total de l'intervenant ({fmtEuro(ex.details.coutBrutTotal)}/mois) réparti à parts égales.
+        Un partage à plus de 2 familles est une simulation du comparateur, à confronter à votre
+        organisation réelle.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="limites">
+      <h2 class="text-xl font-extrabold">Avantages, limites et pièges</h2>
+      <ul class="mt-2 list-disc space-y-2 pl-5">
+        <li><strong>+</strong> Coût divisé entre les familles, souplesse d'horaires, garde au domicile, crédit d'impôt emploi à domicile (plafond élevé).</li>
+        <li><strong>−</strong> Il faut trouver une famille compatible et s'organiser ensemble.</li>
+        <li>
+          <strong>Trésorerie contre coût net.</strong> Le coût net est calculé après crédit d'impôt, mais
+          le crédit d'impôt n'est pas déduit de vos paiements mensuels : dans l'exemple, {fmtEuro(ex.tresorerieMensuelle)}
+          {" "}par mois sortent réellement du compte pour un coût net de {fmtEuro(ex.netReel)}.
+        </li>
+        <li>
+          <strong>Partage simplifié.</strong> Le comparateur répartit le coût à parts égales et applique à
+          la part de chaque famille les règles de la garde à domicile ; un partage inégal des heures
+          n'est pas modélisé. Le salaire net est estimé à partir du coût total (facteur {fmtFacteur}) : voir les
+          {" "}<a class="underline" href="/methodologie">limites connues</a>.
+        </li>
+        <li>
+          <strong>Coût horaire local.</strong> Le coût de l'intervenant varie selon le département : voir
+          l'<a class="underline" href="/observatoire-cout-garde-2026">observatoire du coût de la garde</a> et le
+          {" "}<a class="underline" href="/cout-garde-enfant">coût par département</a>.
+        </li>
       </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="faq">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
       <strong class="uppercase tracking-brutal">Guides liés</strong>
       <ul class="mt-2 list-disc space-y-1 pl-5">
         <li><a class="underline" href="/guides/garde-a-domicile-cout-reel">Coût réel d'une garde à domicile</a></li>
-        <li><a class="underline" href="/guides/cmg-2026">CMG 2026</a></li>
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
+        <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Les deux crédits d'impôt</a></li>
+        <li><a class="underline" href="/guides/creche-ou-assistante-maternelle">Crèche ou assistante maternelle</a></li>
+        <li><a class="underline" href="/observatoire-cout-garde-2026">Observatoire du coût de la garde</a></li>
       </ul>
     </nav>
 
     <p class="text-xs text-muted-foreground">
-      Sources : Pajemploi (2026). Estimation indicative, pas un avis officiel.
+      Sources : <a class="underline" href="https://www.pajemploi.urssaf.fr/" rel="noopener">Pajemploi (Urssaf)</a>,
+      {" "}<a class="underline" href="https://www.impots.gouv.fr/" rel="noopener">impots.gouv.fr</a>,
+      {" "}<a class="underline" href="https://www.caf.fr/" rel="noopener">caf.fr</a> (barème 2026). Calcul :
+      {" "}<a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative, pas un avis
+      officiel : vérifiez votre situation auprès de la CAF et de l'administration fiscale.
     </p>
   </article>
 </Layout>

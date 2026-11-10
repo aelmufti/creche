@@ -7,7 +7,14 @@ export type ModeId = "creche" | "micro_creche" | "ama" | "domicile" | "partagee"
 export interface Bareme {
   version: string;
   source: string;
+  /** Ressources de la crèche (PSU) — [CAF-PSU] : plancher 814,62 €, plafond 8 500 €. */
   ressources: {
+    type: string;
+    plancher: number;
+    plafond: number;
+  };
+  /** Ressources du CMG emploi direct — [INSTR] §II.4.2 : plancher 821 €, plafond 8 500 €. */
+  ressources_cmg: {
     type: string;
     plancher: number;
     plafond: number;
@@ -39,11 +46,23 @@ export interface Bareme {
     couverture_max: number;
     reste_a_charge_min: number;
     distinction_age: boolean;
+    /** Enfant de 3 à 6 ans : le MONTANT MAXIMUM (forfait) est multiplié par ce coefficient. */
     reduction_3_6ans: number;
-    tranches_revenus_annuels_1enfant: { T1_max: number; T2_max: number };
     forfait_max_mensuel_1enfant_moins3ans: { T1: number; T2: number; T3: number };
-    /** Parent isolé : seuils de revenus et montants majorés. */
-    majoration_isole: { plafonds: number; montants: number };
+    /**
+     * Seuils annuels de revenus ([SP-STRUCT]) : [seuil T1, seuil T2] selon le nombre
+     * d'enfants à charge (lignes publiées 1 à 4) ; au-delà, ajouter le pas par enfant
+     * supplémentaire.
+     */
+    seuils_revenus_annuels: Record<
+      "couple" | "isole",
+      {
+        base: Record<"1" | "2" | "3" | "4", [number, number]>;
+        par_enfant_supplementaire: [number, number];
+      }
+    >;
+    /** Montants majorés de 30 % (monoparental, AEEH, AAH), enfant de moins de 3 ans. */
+    montants_majores_30pct_moins3ans: { T1: number; T2: number; T3: number };
   };
 }
 

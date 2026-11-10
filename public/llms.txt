@@ -11,6 +11,7 @@
 - [Méthodologie & sources](https://creche-ou-nounou.fr/methodologie): formules, barème daté, sources officielles
 - [Observatoire du coût de la garde 2026](https://creche-ou-nounou.fr/observatoire-cout-garde-2026): salaires et coûts par département (données URSSAF 2024)
 - [Données ouvertes (CSV)](https://creche-ou-nounou.fr/data/cout-garde-par-departement-2026.csv): coût de la garde par département, licence ODbL 1.0 (base dérivée des données Urssaf)
+- [Version complète (texte intégral)](https://creche-ou-nounou.fr/llms-full.txt): le texte de toutes les pages clés en Markdown, en une seule requête
 - [Glossaire](https://creche-ou-nounou.fr/glossaire): définitions (CMG, PSU, PAJE, taux d'effort, micro-crèche…)
 - [À propos](https://creche-ou-nounou.fr/a-propos): auteur, expertise, indépendance
 

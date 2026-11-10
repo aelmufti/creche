@@ -1,13 +1,70 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Byline from "../../components/Byline.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr } from "../../lib/format";
+import { fmtEuro, fmtEuro2 } from "../../lib/format";
+import { bareme as b, calcAma, calcCreche } from "../../engine";
+import { inputsReference, TARIFS_REFERENCE } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/reforme-cmg-septembre-2025";
 const title = "Réforme du CMG (sept. 2025) : ce qui change concrètement";
 const description =
-  "Réforme du CMG du 1er septembre 2025 : aide proportionnelle au reste à charge, fin de la distinction d'âge. Avant/après et impact pour les parents.";
+  "Réforme du CMG du 1er septembre 2025 : aide proportionnelle au reste à charge, fin de la distinction d'âge. Avant/après et exemples chiffrés par revenu.";
+
+const heures = inputsReference.heuresMois;
+const te = b.taux_effort_collectif;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+const refAma = b.cout_horaire_ref.ama;
+const plafAma = b.plafond_horaire.ama;
+
+// Comparaison crèche / assistante maternelle payée au coût de référence / assistante
+// maternelle au salaire moyen national Urssaf 2024, à revenus croissants.
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const lignes = revenus.map((r) => {
+  const base = { ...inputsReference, revenuMensuelNet: r };
+  const creche = calcCreche(b, base);
+  const amaRef = calcAma(b, { ...base, tauxHoraireAma: refAma, fraisAnnexesAma: 0 });
+  const amaDef = calcAma(b, base);
+  return {
+    revenu: r,
+    creche: creche.tresorerieMensuelle,
+    amaRef: amaRef.tresorerieMensuelle,
+    cmgRef: amaRef.details.cmg,
+    amaDef: amaDef.tresorerieMensuelle,
+    cmgDef: amaDef.details.cmg,
+  };
+});
+const l2000 = lignes.find((l) => l.revenu === 2000)!;
+const l3000 = lignes.find((l) => l.revenu === 3000)!;
+
+// Exemple pas à pas à 3 000 €.
+const exR = 3000;
+const exCout = heures * refAma;
+const exPart = (exR * te["1"]) / refAma;
+
+const faq = [
+  {
+    q: "Qu'est-ce qui change avec la réforme du CMG de septembre 2025 ?",
+    a: `Depuis le 1er septembre 2025, le CMG en emploi direct (assistante maternelle, garde à domicile) n'est plus forfaitaire mais proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence). La distinction selon l'âge de l'enfant, le reste à charge minimum de 15 % et les majorations parent isolé et horaires spécifiques sont supprimés en emploi direct. Il n'y a plus de montant maximum mensuel : le coût horaire est seulement retenu dans la limite de ${fmtEuro2(plafAma)}/h (assistante maternelle).`,
+  },
+  {
+    q: "Comment se calcule le nouveau CMG ?",
+    a: `Le CMG est égal au coût mensuel de la garde multiplié par (1 − revenu × taux d'effort / coût de référence). Pour une assistante maternelle payée au coût de référence de ${fmtEuro2(refAma)}/h, ${heures} h par mois, 1 enfant et ${fmtEuro(exR)} de ressources, le coût est de ${fmtEuro2(exCout)} et le reste à charge de ${fmtEuro2(l3000.amaRef)} par mois, soit le tarif d'une crèche collective.`,
+  },
+  {
+    q: "La réforme concerne-t-elle la micro-crèche et la crèche ?",
+    a: "Non. La micro-crèche en tarification PAJE (CMG structure) conserve sa logique forfaitaire, la division par deux entre 3 et 6 ans et le reste à charge minimum de 15 %. La crèche collective (PSU) n'a jamais relevé du CMG.",
+  },
+  {
+    q: "Une assistante maternelle coûte-t-elle autant qu'une crèche depuis la réforme ?",
+    a: `À salaire égal au coût de référence (${fmtEuro2(refAma)}/h, indemnités comprises), oui : le reste à charge avant crédit d'impôt est identique au tarif de la crèche collective, par exemple ${fmtEuro(l2000.creche)} par mois avec 2 000 € de ressources et ${heures} h de garde. Il est plus bas si l'assistante maternelle coûte moins cher que ce coût de référence, plus haut si elle coûte plus cher.`,
+  },
+  {
+    q: "Sur quelle base légale repose la réforme du CMG ?",
+    a: "La réforme repose sur l'article 86 de la loi de financement de la sécurité sociale pour 2023 (loi n° 2022-1616), en vigueur depuis le 1er septembre 2025. Les montants de référence sont revalorisés : ceux de ce guide sont ceux du 1er avril 2026.",
+  },
+];
 
 const jsonLd = [
   {
@@ -25,24 +82,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Qu'est-ce qui change avec la réforme du CMG de septembre 2025 ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Depuis le 1er septembre 2025, le CMG en emploi direct (assistante maternelle, garde à domicile) n'est plus forfaitaire mais proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence). La distinction selon l'âge de l'enfant et le reste à charge minimum sont supprimés en emploi direct.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "La réforme concerne-t-elle la micro-crèche et la crèche ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Non. La micro-crèche en tarification PAJE (CMG structure) conserve sa logique forfaitaire, la division par deux entre 3 et 6 ans et le reste à charge minimum de 15 %. La crèche collective (PSU) n'a jamais relevé du CMG.",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   {
     "@context": "https://schema.org",
@@ -63,37 +107,162 @@ const jsonLd = [
     </nav>
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Réforme du CMG de septembre 2025</h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-red p-4 text-sm leading-relaxed">
       <p>
         <strong>En bref.</strong> Depuis le <strong>1ᵉʳ septembre 2025</strong>, le CMG en emploi
-        direct est <strong>proportionnel au reste à charge</strong> (et non plus forfaitaire). C'est
-        la transformation la plus profonde du dispositif depuis 2004 :
-        <strong>beaucoup de contenus en ligne sont périmés</strong>. Notre comparateur applique le
-        nouveau calcul.
+        direct est <strong>proportionnel au reste à charge</strong> (et non plus forfaitaire), sans
+        montant maximum. Conséquence : une assistante maternelle payée au coût de référence de
+        {" "}{fmtEuro2(refAma)}/h laisse le même reste à charge que la crèche, soit
+        {" "}<strong>{fmtEuro(l3000.amaRef)}/mois</strong> avec 3 000 € de ressources et {heures} h de garde.
+        Beaucoup de contenus en ligne décrivent encore l'ancien système : notre comparateur applique
+        le nouveau calcul.
       </p>
       <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
         → Calculer mon CMG nouvelle formule
       </a>
     </div>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Avant / après</h2>
-      <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li><strong>Avant</strong> : CMG forfaitaire par tranche de revenus + distinction d'âge + reste à charge minimum.</li>
-        <li><strong>Après</strong> : CMG = coût × (1 − revenu × taux d'effort / coût de référence), sans montant maximum mensuel (le coût horaire est retenu dans la limite d'un plafond) ; plus de distinction d'âge, de reste à charge minimum ni de majorations parent isolé ou horaires spécifiques <em>en emploi direct</em>.</li>
-      </ul>
+    <section class="text-sm leading-relaxed" id="avant-apres">
+      <h2 class="text-xl font-extrabold">Avant / après : ce qui change</h2>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Le CMG en emploi direct avant et après la réforme du 1er septembre 2025</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Point</th>
+              <th scope="col" class="p-2">Avant</th>
+              <th scope="col" class="p-2">Depuis le 1ᵉʳ sept. 2025</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t border-border/30">
+              <th scope="row" class="p-2 text-left font-bold">Principe</th>
+              <td class="p-2">Forfaitaire, par tranche de revenus</td>
+              <td class="p-2">Proportionnel au reste à charge</td>
+            </tr>
+            <tr class="border-t border-border/30">
+              <th scope="row" class="p-2 text-left font-bold">Montant maximum</th>
+              <td class="p-2">Un montant maximum mensuel s'appliquait</td>
+              <td class="p-2">Aucun ; coût horaire retenu au plus à {fmtEuro2(plafAma)}/h (assistante maternelle)</td>
+            </tr>
+            <tr class="border-t border-border/30">
+              <th scope="row" class="p-2 text-left font-bold">Âge de l'enfant</th>
+              <td class="p-2">Distinction selon l'âge</td>
+              <td class="p-2">Supprimée en emploi direct</td>
+            </tr>
+            <tr class="border-t border-border/30">
+              <th scope="row" class="p-2 text-left font-bold">Reste à charge minimum</th>
+              <td class="p-2">Oui</td>
+              <td class="p-2">Supprimé en emploi direct</td>
+            </tr>
+            <tr class="border-t border-border/30">
+              <th scope="row" class="p-2 text-left font-bold">Majorations</th>
+              <td class="p-2">Parent isolé, horaires spécifiques</td>
+              <td class="p-2">Supprimées en emploi direct</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Ce guide ne reprend pas les anciens montants forfaitaires : ils ne s'appliquent plus en
+        emploi direct. Voir la <a class="underline" href="/methodologie">méthodologie</a> pour les règles
+        appliquées par le comparateur.
+      </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
+    <section class="text-sm leading-relaxed" id="nouveau-calcul">
+      <h2 class="text-xl font-extrabold">Le nouveau calcul, pas à pas</h2>
+      <pre class="card-brutal mt-2 overflow-x-auto p-3 text-xs">CMG = coût_mensuel × (1 − revenu × taux_effort / coût_référence)</pre>
+      <p class="mt-2">
+        Exemple : {fmtEuro(exR)} de ressources mensuelles, {heures} h par mois, assistante maternelle
+        payée {fmtEuro2(refAma)}/h, 1 enfant.
+      </p>
+      <ol class="mt-2 list-decimal space-y-1 pl-5">
+        <li><strong>Coût mensuel</strong> : {heures} h × {fmtEuro2(refAma)} = {fmtEuro2(exCout)}.</li>
+        <li><strong>Taux d'effort</strong> pour 1 enfant : {pct(te["1"])}.</li>
+        <li><strong>Part à charge des parents</strong> : {fmtEuro(exR)} × {pct(te["1"])} / {fmtEuro2(refAma)} = {pct(exPart)} du coût.</li>
+        <li><strong>CMG</strong> : {fmtEuro2(exCout)} × (1 − {pct(exPart)}) = <strong>{fmtEuro2(l3000.cmgRef)}</strong> par mois.</li>
+        <li><strong>Reste à charge</strong> : {fmtEuro2(exCout)} − {fmtEuro2(l3000.cmgRef)} = <strong>{fmtEuro2(l3000.amaRef)}</strong>, soit exactement le tarif crèche pour ces ressources.</li>
+      </ol>
+      <p class="mt-2">
+        Les montants de référence ({fmtEuro2(refAma)}/h, plafond de {fmtEuro2(plafAma)}/h) sont ceux du
+        1ᵉʳ avril 2026. Pour tous les cas (garde à domicile comprise), voir le guide
+        {" "}<a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="impact">
+      <h2 class="text-xl font-extrabold">Impact : assistante maternelle ou crèche, qui coûte quoi ?</h2>
+      <p class="mt-2">
+        L'objectif de la réforme est de rapprocher le reste à charge d'une assistante maternelle de
+        celui d'une crèche. Le tableau compare, avant crédit d'impôt, le tarif d'une crèche collective
+        et le reste à charge d'une assistante maternelle (CMG déduit) selon son salaire.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Reste à charge mensuel en crèche et chez une assistante maternelle depuis la réforme, par niveau de ressources</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">Crèche collective</th>
+              <th scope="col" class="p-2">Assistante maternelle à {fmtEuro2(refAma)}/h</th>
+              <th scope="col" class="p-2">Assistante maternelle à {fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h + indemnités</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignes.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.creche)}</td>
+                  <td class="p-2">{fmtEuro(l.amaRef)} <span class="text-muted-foreground">(CMG {fmtEuro(l.cmgRef)})</span></td>
+                  <td class="p-2 font-bold">{fmtEuro(l.amaDef)} <span class="text-muted-foreground font-normal">(CMG {fmtEuro(l.cmgDef)})</span></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 1 enfant, couple, {heures} h par mois. Dernière colonne : salaire de
+        {" "}{fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h et {fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités d'entretien et de repas par mois.
+        Reste à charge avant crédit d'impôt, cotisations prises en charge à 100 % non incluses.
+      </p>
+      <p class="mt-2">
+        Pour le comparatif complet, voir
+        {" "}<a class="underline" href="/guides/creche-ou-assistante-maternelle">crèche ou assistante maternelle</a>
+        et le <a class="underline" href="/guides/reste-a-charge-nounou">reste à charge d'une assistante maternelle</a>.
+        Les salaires locaux varient : voir le <a class="underline" href="/cout-garde-enfant">coût par département</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="inchange">
       <h2 class="text-xl font-extrabold">Ce qui ne change pas</h2>
       <p class="mt-2">
-        La <strong>micro-crèche structure (PAJE)</strong> garde sa logique forfaitaire, le ÷2 entre 3
-        et 6 ans et le reste à charge minimum de 15 %. La <strong>crèche collective (PSU)</strong>
-        reste hors CMG. Les <strong>crédits d'impôt</strong> sont inchangés.
+        La <strong>micro-crèche structure (PAJE)</strong> garde sa logique forfaitaire, la division par deux du
+        forfait entre 3 et 6 ans et le reste à charge minimum de {pct(b.micro_creche_structure.reste_a_charge_min)}
+        (<a class="underline" href="/guides/micro-creche-cmg-structure">guide micro-crèche</a>). La
+        <strong> crèche collective (PSU)</strong> reste hors CMG
+        (<a class="underline" href="/guides/tarif-creche-2026">tarif crèche 2026</a>). Les
+        <strong> crédits d'impôt</strong> sont inchangés : 50 % du reste à charge, dans la limite de
+        {" "}{fmtEuro(b.credit_impot.frais_garde.plafond_par_enfant)} de dépenses par enfant pour les frais de garde
+        hors domicile (<a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt frais de garde</a>).
       </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="faq">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
@@ -101,11 +270,15 @@ const jsonLd = [
       <ul class="mt-2 list-disc space-y-1 pl-5">
         <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
         <li><a class="underline" href="/guides/reste-a-charge-nounou">Reste à charge d'une assistante maternelle</a></li>
+        <li><a class="underline" href="/guides/creche-ou-assistante-maternelle">Crèche ou assistante maternelle</a></li>
+        <li><a class="underline" href="/glossaire">Glossaire : CMG, PSU, PAJE</a></li>
       </ul>
     </nav>
 
     <p class="text-xs text-muted-foreground">
-      Sources : Urssaf/Pajemploi, art. 86 LFSS 2023 (loi n° 2022-1616). Estimation indicative, pas un avis officiel.
+      Sources : <a class="underline" href="https://www.pajemploi.urssaf.fr/">Urssaf/Pajemploi</a>,
+      <a class="underline" href="https://www.caf.fr/">caf.fr</a> ; art. 86 LFSS 2023 (loi n° 2022-1616).
+      Calcul : <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative, pas un avis officiel.
     </p>
   </article>
 </Layout>

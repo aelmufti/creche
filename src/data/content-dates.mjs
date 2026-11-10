@@ -3,18 +3,18 @@
 // Format ISO (AAAA-MM-JJ). Alimente le JSON-LD des pages ET le <lastmod> du sitemap.
 
 export const DATES = {
-  home: { published: "2026-06-15", modified: "2026-09-27" },
-  guides: { published: "2026-06-16", modified: "2026-09-27" },
+  home: { published: "2026-06-15", modified: "2026-11-10" },
+  guides: { published: "2026-06-16", modified: "2026-11-10" },
   // Guide publié après le lot initial : dates propres, pour ne pas lui prêter
   // une ancienneté qu'il n'a pas.
-  tarifCreche: { published: "2026-09-27", modified: "2026-09-27" },
-  departements: { published: "2026-06-16", modified: "2026-09-27" },
-  villes: { published: "2026-06-17", modified: "2026-09-27" },
-  methodologie: { published: "2026-06-15", modified: "2026-10-07" },
-  observatoire: { published: "2026-06-16", modified: "2026-07-24" },
+  tarifCreche: { published: "2026-09-27", modified: "2026-11-10" },
+  departements: { published: "2026-06-16", modified: "2026-11-10" },
+  villes: { published: "2026-06-17", modified: "2026-11-10" },
+  methodologie: { published: "2026-06-15", modified: "2026-11-10" },
+  observatoire: { published: "2026-06-16", modified: "2026-11-10" },
   // Ne dater « aujourd'hui » que les pages réellement modifiées : un lastmod
   // qui bouge sans changement est ignoré par Google, voire coûteux en confiance (§3.3).
-  glossaire: { published: "2026-06-16", modified: "2026-09-27" },
+  glossaire: { published: "2026-06-16", modified: "2026-11-10" },
   site: { published: "2026-06-15", modified: "2026-07-24" },
   // Mentions légales, confidentialité, conditions d'utilisation.
   legal: { published: "2026-06-15", modified: "2026-10-07" },

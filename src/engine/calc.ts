@@ -43,7 +43,8 @@ function cmgEmploiDirect(
     doubleTauxEffort: boolean; // garde à domicile = TE × 2
   },
 ): number {
-  const revenu = clamp(args.revenuMensuel, b.ressources.plancher, b.ressources.plafond);
+  // Bornes propres au CMG ([INSTR] §II.4.2 : 821 € – 8 500 €), distinctes du plancher PSU.
+  const revenu = clamp(args.revenuMensuel, b.ressources_cmg.plancher, b.ressources_cmg.plafond);
   const te = tauxEffortCollectif(b, args.nbPourTaux) * (args.doubleTauxEffort ? 2 : 1);
   const cmg = args.coutMensuelGarde * (1 - (revenu * te) / args.coutRef);
   return Math.max(cmg, 0);
@@ -65,17 +66,32 @@ function creditEmploiDomicileAnnuel(b: Bareme, resteMensuel: number, nbEnfants: 
 }
 
 /**
- * Tranche de revenus annuels pour la micro-crèche structure. Seuils « 1 enfant »
- * (les seuils officiels augmentent avec le nombre d'enfants : les appliquer à un
- * foyer plus grand est prudent, il peut basculer une tranche trop haut).
- * Parent isolé : seuils majorés de 40 %.
+ * Seuils annuels [T1, T2] du CMG structure ([SP-STRUCT], revenus nets catégoriels
+ * 2024), selon la situation et le nombre d'enfants à charge (≥ 1). Au-delà de la
+ * dernière ligne publiée (4 enfants), on ajoute le pas par enfant supplémentaire.
+ */
+export function seuilsMicroCreche(
+  b: Bareme,
+  situation: "couple" | "isole",
+  nbEnfants: number,
+): [number, number] {
+  const t = b.micro_creche_structure.seuils_revenus_annuels[situation];
+  const n = Math.max(1, Math.floor(nbEnfants));
+  if (n <= 4) return t.base[String(n) as "1" | "2" | "3" | "4"];
+  const extra = n - 4;
+  const [t1, t2] = t.base["4"];
+  return [t1 + extra * t.par_enfant_supplementaire[0], t2 + extra * t.par_enfant_supplementaire[1]];
+}
+
+/**
+ * Tranche de revenus pour la micro-crèche structure : tranche 1 si revenu annuel
+ * ≤ premier seuil, tranche 2 si ≤ second seuil, sinon tranche 3 ([SP-STRUCT]).
  */
 function trancheMicroCreche(b: Bareme, i: Inputs): "T1" | "T2" | "T3" {
-  const m = b.micro_creche_structure;
   const annuel = i.revenuMensuelNet * 12;
-  const k = i.situation === "isole" ? 1 + m.majoration_isole.plafonds : 1;
-  if (annuel <= m.tranches_revenus_annuels_1enfant.T1_max * k) return "T1";
-  if (annuel <= m.tranches_revenus_annuels_1enfant.T2_max * k) return "T2";
+  const [s1, s2] = seuilsMicroCreche(b, i.situation, i.nbEnfants);
+  if (annuel <= s1) return "T1";
+  if (annuel <= s2) return "T2";
   return "T3";
 }
 
@@ -129,7 +145,6 @@ export function calcCreche(b: Bareme, i: Inputs): ModeResult {
     flags: [
       "Place non garantie",
       "Tarif déjà aidé via le taux d'effort CNAF",
-      ...(nb > 1 ? ["Tarif dégressif multi-enfant non modélisé"] : []),
     ],
     details: { tarifHoraire, ressourcesRetenues: ressources, nbGardes: nb },
   };
@@ -140,9 +155,15 @@ export function calcMicroCreche(b: Bareme, i: Inputs): ModeResult {
   const m = b.micro_creche_structure;
   const tarif = i.tarifMicroCreche ?? defauts.tarifMicroCreche;
   const tranche = trancheMicroCreche(b, i);
-  const forfaitMax =
-    m.forfait_max_mensuel_1enfant_moins3ans[tranche] *
-    (i.situation === "isole" ? 1 + m.majoration_isole.montants : 1);
+  // Majoration de 30 % ([INSTR] §II.4.1) : familles monoparentales, AEEH (et AAH).
+  // Montants majorés publiés ([SP-STRUCT]), appliqués une seule fois même si
+  // plusieurs conditions sont réunies. Non modélisés (estimation prudente) : le
+  // cumul des majorations et le +10 % pour horaires atypiques. Les seuils +40 %
+  // concernent uniquement le parent isolé (tables de bareme-2026.json), pas l'AEEH.
+  const majore = i.situation === "isole" || i.aeeh === true;
+  // Forfait maximum d'un enfant de moins de 3 ans ; 3-6 ans : c'est ce MAXIMUM qui
+  // est divisé par 2 ([SP-STRUCT]), pas l'aide calculée.
+  const forfaitMax = (majore ? m.montants_majores_30pct_moins3ans : m.forfait_max_mensuel_1enfant_moins3ans)[tranche];
   // Au-delà de 10 €/h, le CMG structure n'est plus versé (caf.fr, micro-crèches PAJE).
   const eligible = tarif <= m.plafond_horaire;
   const nb = nbGardes(i);
@@ -154,9 +175,11 @@ export function calcMicroCreche(b: Bareme, i: Inputs): ModeResult {
   let creditAnnuel = 0;
   for (const age of i.agesGardes) {
     const coutTotal = i.heuresMois * tarif;
-    let aide = eligible ? Math.min(m.couverture_max * coutTotal, forfaitMax) : 0; // 85 % + forfait
-    // Distinction d'âge MAINTENUE ici : ÷2 de 3 à 6 ans (§8.1).
-    if (m.distinction_age && age >= 3) aide *= m.reduction_3_6ans;
+    // Distinction d'âge MAINTENUE ici : forfait ÷2 de 3 à 6 ans (§8.1, [SP-STRUCT]).
+    // L'enfant qui a 3 ans entre le 1er janvier et le 31 août garde le montant
+    // « moins de 3 ans » jusqu'en août ([INSTR]) : non modélisé (âges entiers).
+    const forfaitEnfant = m.distinction_age && age >= 3 ? forfaitMax * m.reduction_3_6ans : forfaitMax;
+    const aide = eligible ? Math.min(m.couverture_max * coutTotal, forfaitEnfant) : 0; // 85 % + forfait
     const resteMin = eligible ? m.reste_a_charge_min * coutTotal : 0; // plancher 15 % MAINTENU (§8.2)
     const tEnfant = Math.max(coutTotal - aide - partParEnfant, resteMin);
     coutBrut += coutTotal;
@@ -186,8 +209,7 @@ export function calcMicroCreche(b: Bareme, i: Inputs): ModeResult {
     flags: eligible
       ? [
           "Reste à charge minimum 15 %",
-          auMoinsUn3ans ? "Aide ÷2 entre 3 et 6 ans" : "Min. 16 h/mois requis",
-          ...(i.nbEnfants > 1 ? ["Seuils de revenus « 1 enfant » appliqués (estimation prudente)"] : []),
+          auMoinsUn3ans ? "Forfait maximum ÷2 entre 3 et 6 ans" : "Min. 16 h/mois requis",
         ]
       : ["Tarif supérieur à 10 €/h : pas de CMG"],
     details: {
@@ -268,8 +290,12 @@ export function calcDomicile(b: Bareme, i: Inputs, partagee = false): ModeResult
   // net (le coût de référence de 10,50 €/h est un salaire horaire net médian),
   // écrêté au plafond horaire. SOFT SPOT : net ≈ coût total / facteur (≈ 1,8).
   const facteur = b.cotisations.facteur_cout_total_domicile;
-  const netHoraireRetenu = Math.min(coutHoraire / facteur, b.plafond_horaire.domicile);
-  const coutMensuelGarde = (i.heuresMois * netHoraireRetenu) / nbFamilles;
+  // Le plafond horaire (15,18 €/h) s'applique au tarif horaire du contrat de
+  // CHAQUE famille employeuse ([CAF-REFORME]) : on écrête la part horaire de chaque
+  // famille, pas le salaire net horaire total.
+  const netHoraireFamille = coutHoraire / facteur / nbFamilles;
+  const netHoraireRetenu = Math.min(netHoraireFamille, b.plafond_horaire.domicile);
+  const coutMensuelGarde = i.heuresMois * netHoraireRetenu;
 
   const cmgRem = cmgEmploiDirect(b, {
     coutMensuelGarde,
@@ -324,6 +350,6 @@ export function calcDomicile(b: Bareme, i: Inputs, partagee = false): ModeResult
       "Crédit d'impôt emploi à domicile (~12 000 €)",
       ...(nbGardes(i) > 1 ? ["Un seul intervenant pour tous les enfants (coût non multiplié)"] : []),
     ],
-    details: { cmg, cmgCotis, coutBrutTotal, nbFamilles, nbGardes: nbGardes(i) },
+    details: { cmg, cmgCotis, coutBrutTotal, coutMensuelGarde, nbFamilles, nbGardes: nbGardes(i) },
   };
 }

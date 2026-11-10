@@ -28,6 +28,60 @@ export const TYPE_LABEL: Record<ChangeType, string> = {
 /** Du plus récent au plus ancien. */
 export const CHANGELOG: ChangeEntry[] = [
   {
+    date: "2026-11-10",
+    type: "correction",
+    texte:
+      "Micro-crèche, enfant de 3 à 6 ans : le calcul divisait l'aide par deux, alors que la règle divise par deux le montant maximum. À temps partiel, l'aide était sous-estimée : pour l'exemple de service-public.fr (couple à 28 000 € de revenus annuels, enfant de 3 ans, facture de 600 € par mois), le comparateur donnait 255 € au lieu de 427,63 €. Les deux exemples officiels sont désormais des tests automatiques. Les chiffres à temps plein ne changent pas.",
+  },
+  {
+    date: "2026-11-10",
+    type: "correction",
+    texte:
+      "CMG en emploi direct : le plancher de ressources est de 821 € par mois (instruction interministérielle du 20 mars 2026), et non 814,62 €, qui est le plancher du tarif crèche. Seuls les foyers dont les ressources sont inférieures à 821 € par mois voient leur estimation changer, de quelques euros.",
+  },
+  {
+    date: "2026-11-10",
+    type: "correction",
+    texte:
+      "Micro-crèche : les seuils de revenus officiels par nombre d'enfants à charge (1 à 4 enfants et au-delà, couple et parent isolé) remplacent les seuils « 1 enfant » appliqués jusqu'ici à tous les foyers. Les montants majorés de 30 % sont repris tels que publiés (1 289,77 / 1 111,82 / 933,94 €) et s'appliquent aussi lorsqu'un enfant du foyer bénéficie de l'AEEH, ce qui n'était pas pris en compte.",
+  },
+  {
+    date: "2026-11-10",
+    type: "correction",
+    texte:
+      "Sources et formulations corrigées. L'exemple de calcul du CMG (2 000 €, 160 h, 4,91 €/h → 587,52 €) est publié par l'Urssaf, et non par la CAF comme indiqué. Tarif crèche : les ressources retenues sont les revenus de l'année N-2 avant l'abattement fiscal de 10 %, et non le revenu net catégoriel ; le plafond de 8 500 € est la règle générale, mais un gestionnaire peut aller au-delà. Garde partagée : le plafond horaire s'applique à la part de chaque famille. Glossaire : les deux avantages fiscaux sont des crédits d'impôt, non des réductions.",
+  },
+  {
+    date: "2026-11-10",
+    type: "methode",
+    texte:
+      "Vérification complète du barème contre les textes officiels : instruction interministérielle n° DSS/2B/2026/46 du 20 mars 2026 (CMG au 1er avril 2026), barème CNAF des participations familiales 2026, fiches service-public.fr (CMG structure, crédits d'impôt). Les tarifs des 100 départements ont été recalculés à partir de l'open data Urssaf : aucun écart.",
+  },
+  {
+    date: "2026-11-10",
+    type: "correction",
+    texte:
+      "Scénario de référence unifié sur tout le site. L'encadré de l'accueil et les guides calculaient avec des tarifs indicatifs (assistante maternelle à 4,00 €/h, garde à domicile à 17,50 €/h) alors que le comparateur utilise les moyennes nationales Urssaf 2024 (4,03 €/h et 19,20 €/h) : un même foyer pouvait lire 138 € sur une page et 139 € sur une autre. Tous les exemples chiffrés partent désormais des moyennes nationales Urssaf, comme le comparateur.",
+  },
+  {
+    date: "2026-11-10",
+    type: "correction",
+    texte:
+      "Guide « Garde à domicile » : l'ancien texte la présentait comme compétitive pour les hauts revenus et les familles de plusieurs enfants. Le calcul ne le confirme pas : dans les exemples du guide, elle reste le mode le plus cher pour un enfant, et c'est la garde partagée qui devient intéressante aux revenus élevés. Le texte a été corrigé et les tableaux le montrent.",
+  },
+  {
+    date: "2026-11-10",
+    type: "contenu",
+    texte:
+      "Guides CMG 2026, réforme du CMG, reste à charge d'une assistante maternelle, crédit d'impôt, garde à domicile, garde partagée et micro-crèche réécrits : tableaux par niveau de revenus, exemples pas à pas et questions fréquentes, tous calculés par le moteur du comparateur à partir du barème en vigueur.",
+  },
+  {
+    date: "2026-11-10",
+    type: "contenu",
+    texte:
+      "Observatoire : classement complet des 100 départements, chiffres clés et citation prête à l'emploi. Pages département et ville : les questions fréquentes sont désormais affichées sur la page, avec les chiffres locaux. Signature (auteur, date de révision, méthode) ajoutée en tête des guides et des pages locales.",
+  },
+  {
     date: "2026-10-07",
     type: "correction",
     texte:
@@ -49,7 +103,7 @@ export const CHANGELOG: ChangeEntry[] = [
     date: "2026-09-27",
     type: "methode",
     texte:
-      "Tests du moteur : l'exemple chiffré publié par la CAF (2 000 €, 160 h, 4,91 €/h → CMG de 587,52 €) et les montants officiels 2026 sont désormais vérifiés automatiquement, en plus des invariants.",
+      "Tests du moteur : l'exemple chiffré publié par l'Urssaf (2 000 €, 160 h, 4,91 €/h → CMG de 587,52 €) et les montants officiels 2026 sont désormais vérifiés automatiquement, en plus des invariants.",
   },
   {
     date: "2026-09-27",

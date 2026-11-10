@@ -1,14 +1,15 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
+import Byline from "../../../components/Byline.astro";
 import { comparer, type Inputs } from "../../../engine";
 import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../../../data/tarifs-locaux";
 import departementsJson from "../../../data/departements.json";
 import { VILLES, villeLoc } from "../../../data/villes";
-import { fmtEuro, fmtEuro2, fmtDateFr, fmtRang } from "../../../lib/format";
+import { fmtEuro, fmtEuro2, fmtRang } from "../../../lib/format";
 import { DATES } from "../../../data/content-dates.mjs";
 import { slugify } from "../../../lib/slug";
 import { deptLoc } from "../../../data/departements-loc";
-import { basculesLocales, rangAma, NB_DEPARTEMENTS } from "../../../lib/departements-stats";
+import { basculesLocales, rangAma, avecArticle, NB_DEPARTEMENTS } from "../../../lib/departements-stats";
 import {
   rangVille,
   voisinesClassement,
@@ -66,7 +67,40 @@ const premiereBascule = bascules[0];
 // (Boulogne-Billancourt, Clermont-Ferrand) plutôt que d'être tronqué en SERP.
 const titleLong = `Crèche ou nounou ${loc} : prix et comparatif 2026`;
 const title = titleLong.length <= 60 ? titleLong : `Crèche ou nounou ${loc} : prix 2026`;
-const description = `Garde d'enfant ${loc} : assistante maternelle à ${fmtEuro2(tarifs.tauxHoraireAma)}/h net (URSSAF 2024), ${fmtRang(rang)} ville la plus chère sur ${NB_VILLES}. Comparez les 5 modes.`;
+const description = `Garde d'enfant ${loc} : assistante maternelle à ${fmtEuro2(tarifs.tauxHoraireAma)}/h net (URSSAF 2024), ${fmtRang(rang)} sur ${NB_VILLES} villes comparées. Comparez les 5 modes.`;
+
+const domicile = classement.find((r) => r.label === "Garde à domicile") ?? classement[0];
+const rangDomicile = classement.indexOf(domicile) + 1;
+const locCap = loc.charAt(0).toUpperCase() + loc.slice(1);
+const SCAN = { min: 1200, max: 8000 };
+
+// Source unique des Q&R : JSON-LD et section visible partagent ce tableau.
+const faq: { q: string; a: string }[] = [
+  {
+    q: `Combien coûte une nounou ${loc} ?`,
+    a: `${locCap}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (moyenne départementale ${deptNom}, URSSAF 2024), avant CMG et crédit d'impôt. Pour ${EX.heures} h/mois et un foyer à ${fmtEuro(EX.revenu)}/mois, cela représente ${fmtEuro(moi.coutAma)}/mois de coût net réel, après CMG et crédit d'impôt de 50 %.`,
+  },
+  {
+    q: `Crèche ou nounou ${loc} : lequel choisir ?`,
+    a: `Pour un foyer à ${fmtEuro(EX.revenu)}/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher ${loc} est ${avecArticle(gagnant.label)} à ${fmtEuro(gagnant.netReel)}/mois en coût net réel${ecartAuSuivant > 0.5 ? `, soit ${fmtEuro(ecartAuSuivant)}/mois de moins que l'option suivante` : ""}. Dans une grande ville, pensez aussi à la disponibilité : les places en crèche y sont très demandées, alors que l'assistante maternelle offre plus de souplesse d'horaires.`,
+  },
+  {
+    q: `La garde d'enfant est-elle chère ${loc} par rapport aux autres grandes villes ?`,
+    a: `Pour le coût d'une assistante maternelle, ${ville.nom} se classe ${fmtRang(rang)} sur les ${NB_VILLES} grandes villes couvertes (de la plus chère à la moins chère) : ${fmtEuro(moi.coutAma)}/mois de coût net réel (${EX.heures} h/mois, foyer à ${fmtEuro(EX.revenu)}/mois), contre ${fmtEuro(VILLE_MAX.coutAma)}/mois ${villeLoc(VILLE_MAX.nom)} (la plus chère) et ${fmtEuro(VILLE_MIN.coutAma)}/mois ${villeLoc(VILLE_MIN.nom)} (la moins chère). Les tarifs sont de granularité départementale (URSSAF 2024, ${deptNom}, ${fmtRang(rangDept)} sur ${NB_DEPARTEMENTS}).`,
+  },
+  {
+    q: `Combien coûte une garde à domicile ${loc} ?`,
+    a: `Avec les tarifs ${deptLocTxt}, une garde à domicile revient à environ ${fmtEuro2(tarifs.coutHoraireDomicile)}/h de coût total employeur (URSSAF 2024), avant crédit d'impôt de 50 %. Sur le scénario de référence (${fmtEuro(EX.revenu)}/mois, ${EX.heures} h/mois), elle revient à ${fmtEuro(domicile.netReel)}/mois en coût net réel, soit la ${rangDomicile}${rangDomicile === 1 ? "ʳᵉ" : "ᵉ"} option sur ${classement.length}.`,
+  },
+  ...(premiereBascule
+    ? [
+        {
+          q: `À partir de quel revenu le verdict change-t-il ${loc} ?`,
+          a: `Avec les tarifs ${deptLocTxt} (couple, 1 enfant, ${EX.heures} h/mois), le mode le moins cher change à partir de ${fmtEuro(premiereBascule.revenu)}/mois de revenu net du foyer : ${avecArticle(premiereBascule.apres)} passe alors devant ${avecArticle(premiereBascule.avant)}. En dessous de ce seuil, ${avecArticle(premiereBascule.avant)} reste le mode le moins cher.`,
+        },
+      ]
+    : []),
+];
 
 const jsonLd = [
   {
@@ -84,44 +118,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `Combien coûte une nounou ${loc} ?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${loc.charAt(0).toUpperCase() + loc.slice(1)}, le salaire horaire net moyen d'une assistante maternelle est de ${fmtEuro2(tarifs.tauxHoraireAma)}/h (moyenne départementale ${deptNom}, URSSAF 2024), avant CMG et crédit d'impôt. Pour ${EX.heures} h/mois et un foyer à ${EX.revenu} €/mois, cela représente ${fmtEuro(moi.coutAma)}/mois de coût net réel, après CMG et crédit d'impôt de 50 %.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Crèche ou nounou ${loc} : lequel choisir ?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Pour un foyer à ${EX.revenu} €/mois avec 1 enfant gardé ${EX.heures} h/mois, le mode le moins cher est « ${gagnant.label} » à ${fmtEuro(gagnant.netReel)}/mois (coût net réel). Dans les grandes villes, pensez aussi à la disponibilité : les places en crèche y sont très demandées.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `La garde d'enfant est-elle chère ${loc} par rapport aux autres grandes villes ?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${ville.nom} est la ${fmtRang(rang)} ville la plus chère sur les ${NB_VILLES} grandes villes couvertes pour le coût d'une assistante maternelle : ${fmtEuro(moi.coutAma)}/mois de coût net réel (${EX.heures} h/mois, foyer à ${EX.revenu} €/mois), contre ${fmtEuro(VILLE_MAX.coutAma)}/mois à ${VILLE_MAX.nom} (la plus chère) et ${fmtEuro(VILLE_MIN.coutAma)}/mois à ${VILLE_MIN.nom} (la moins chère). Les tarifs sont de granularité départementale (URSSAF 2024, ${deptNom}, ${fmtRang(rangDept)} sur ${NB_DEPARTEMENTS}).`,
-        },
-      },
-      ...(premiereBascule
-        ? [
-            {
-              "@type": "Question",
-              name: `À partir de quel revenu la crèche devient-elle plus intéressante ${loc} ?`,
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: `Avec les tarifs ${deptLocTxt} (couple, 1 enfant, ${EX.heures} h/mois), le mode le moins cher change à partir de ${fmtEuro(premiereBascule.revenu)}/mois de revenu net du foyer : « ${premiereBascule.apres} » passe alors devant « ${premiereBascule.avant} ». En dessous de ce seuil, « ${premiereBascule.avant} » reste l'option la moins chère.`,
-              },
-            },
-          ]
-        : []),
-    ],
+    mainEntity: faq.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
   },
   {
     "@context": "https://schema.org",
@@ -155,9 +156,7 @@ const jsonLd = [
 
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Crèche ou nounou — {ville.nom} : prix 2026</h1>
-      <p class="mt-2 text-xs text-muted-foreground">
-        Mis à jour le {fmtDateFr(DATES.villes.modified)}.
-      </p>
+      <Byline modified={DATES.villes.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
@@ -168,19 +167,18 @@ const jsonLd = [
         <span class="text-muted-foreground">Moyennes départementales URSSAF 2024.</span>
       </p>
       <p class="mt-2">
-        Pour un foyer à {EX.revenu} €/mois, 1 enfant gardé {EX.heures} h/mois, le mode le moins cher est
-        <strong>{gagnant.label}</strong> à <span class="marker">{fmtEuro(gagnant.netReel)}/mois</span>
+        Pour un foyer à {fmtEuro(EX.revenu)}/mois, 1 enfant gardé {EX.heures} h/mois, le mode le moins cher
+        {loc} est <strong>{avecArticle(gagnant.label)}</strong> à <span class="marker">{fmtEuro(gagnant.netReel)}/mois</span>
         {ecartAuSuivant > 0.5 ? ` (soit ${fmtEuro(ecartAuSuivant)}/mois de moins que le suivant)` : ""}.
-        Sur ce scénario, {ville.nom} est la <strong>{fmtRang(rang)} ville la plus chère</strong> des {
-          NB_VILLES
-        } grandes villes comparées.
+        Sur ce scénario, {ville.nom} se classe <strong>{fmtRang(rang)} sur {NB_VILLES}</strong> parmi
+        les grandes villes comparées (de la plus chère à la moins chère).
       </p>
     </div>
 
     <section>
       <h2 class="text-xl font-extrabold">Comparatif des 5 modes — {ville.nom} (exemple)</h2>
       <p class="mt-1 text-xs text-muted-foreground">
-        Hypothèse : couple, {EX.revenu} €/mois, 1 enfant, {EX.heures} h/mois. Coût net réel = après crédit
+        Hypothèse : couple, {fmtEuro(EX.revenu)}/mois, 1 enfant, {EX.heures} h/mois. Coût net réel = après crédit
         d'impôt 50 %.
       </p>
       <table class="card-brutal mt-3 w-full text-sm">
@@ -209,8 +207,8 @@ const jsonLd = [
       <h2 class="text-xl font-extrabold">{ville.nom} face aux autres grandes villes</h2>
       <p class="mt-1 text-sm leading-relaxed">
         Coût net réel mensuel d'une <strong>assistante maternelle</strong> ({EX.heures} h/mois, foyer à {
-          EX.revenu
-        } €/mois), classé de la ville la plus chère à la moins chère. {ville.nom} s'y place
+          fmtEuro(EX.revenu)
+        }/mois), classé de la ville la plus chère à la moins chère. {ville.nom} s'y place
         <strong>{fmtRang(rang)} sur {NB_VILLES}</strong>
         {
           plusChere && moinsChere
@@ -271,9 +269,9 @@ const jsonLd = [
             Le CMG étant dégressif avec les revenus, le mode le moins cher change au fil du revenu du
             foyer. Avec les tarifs {deptLocTxt} (couple, 1 enfant, {EX.heures} h/mois), la première
             bascule intervient à <strong>{fmtEuro(premiereBascule.revenu)}/mois</strong> de revenu net
-            du foyer : « {premiereBascule.apres} » passe alors devant « {premiereBascule.avant} ». En
-            dessous de ce seuil, « {premiereBascule.avant} » reste l'option la moins
-            chère{bascules.length > 1
+            du foyer : {avecArticle(premiereBascule.apres)} passe alors devant {avecArticle(premiereBascule.avant)}.
+            En dessous de ce seuil, {avecArticle(premiereBascule.avant)} reste le mode le moins
+            cher{bascules.length > 1
               ? ` — et le classement bascule encore ${bascules.length - 1} fois au-delà.`
               : "."}{" "}
             <a class="underline" href={`/cout-garde-enfant/${deptSlug}`}>Voir tous les seuils {deptLocTxt}</a>.
@@ -281,8 +279,8 @@ const jsonLd = [
         ) : (
           <p class="mt-2">
             Avec les tarifs {deptLocTxt} et l'hypothèse retenue (couple, 1 enfant, {EX.heures} h/mois),
-            « {gagnant.label} » reste le mode le moins cher sur toute la plage de revenus testée, de
-            1 200 à 8 000 €/mois. Vos heures de garde et votre nombre d'enfants peuvent en revanche
+            {avecArticle(gagnant.label)} reste le mode le moins cher sur toute la plage de revenus testée,
+            de {fmtEuro(SCAN.min)} à {fmtEuro(SCAN.max)}/mois. Vos heures de garde et votre nombre d'enfants peuvent en revanche
             changer ce verdict.
           </p>
         )
@@ -297,6 +295,25 @@ const jsonLd = [
         <strong>garde à domicile</strong> offrent souvent plus de disponibilité et de souplesse
         d'horaires — d'où l'intérêt de comparer le coût net réel <em>et</em> la disponibilité.
       </p>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((item, i) => (
+          <>
+            <h3 class="mt-3 font-bold">{item.q}</h3>
+            <p class="mt-1">{item.a}</p>
+            {i === 1 && (
+              <p class="mt-1">
+                <a class="underline" href={`/?cp=${ville.cp}`}>
+                  Calculer le coût net réel pour votre situation
+                </a>
+              </p>
+            )}
+          </>
+        ))
+      }
     </section>
 
     <div class="card-brutal bg-brutal-yellow p-4">

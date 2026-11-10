@@ -2,37 +2,60 @@
   "version": "2026-04",
   "source": "CNAF (barème des participations familiales 2026, CMG) / Urssaf-Pajemploi (revalorisation du 1er avril 2026) / impots.gouv.fr",
   "_sources": {
-    "ressources, taux_effort_collectif": "CNAF, barème national des participations familiales EAJE 2026 (15/12/2025), applicable du 1er janv. au 31 déc. 2026. Mêmes plancher et plafond pour le CMG emploi direct (caf.fr, FAQ réforme du CMG).",
+    "ressources, taux_effort_collectif": "[CAF-PSU] CAF, « Barème des participations familiales 2026 pour les EAJE » (15/12/2025), applicable du 1er janv. au 31 déc. 2026 : plancher 814,62 € et plafond 8 500 € de ressources mensuelles (crèche PSU uniquement). Le plafond n'est pas obligatoire pour le gestionnaire (il peut appliquer le taux d'effort au-delà ou fixer un plafond plus élevé), le plancher l'est.",
     "cout_horaire_ref, plafond_horaire": "Urssaf, « Réévaluation du coût médian et du plafond horaire du CMG », au 1er avril 2026 : AMA 4,91 €/h et 8,09 €/h ; garde à domicile 10,50 €/h et 15,18 €/h.",
-    "formule CMG emploi direct": "caf.fr, FAQ réforme du CMG : CMG = coût mensuel × (1 − revenu × taux d'effort / coût horaire de référence), sans montant maximum mensuel ; taux d'effort doublé en garde à domicile ; indemnités d'entretien et de repas incluses dans le coût (AMA) ; coût horaire écrêté au plafond horaire ; AEEH = taux de la tranche inférieure ; majorations parent isolé et horaires spécifiques supprimées. Exemple officiel : 2 000 €, 160 h, 4,91 €/h, 1 enfant → 587,52 €.",
+    "formule CMG emploi direct": "[CAF-REFORME] CAF, présentation « Réforme du CMG 2025 » et FAQ : CMG = coût mensuel × (1 − revenu × taux d'effort / coût horaire de référence), sans montant maximum mensuel ; taux d'effort doublé en garde à domicile ; indemnités d'entretien et de repas incluses dans le coût (AMA) ; coût horaire écrêté au plafond horaire ; AEEH = taux de la tranche inférieure ; majorations parent isolé et horaires spécifiques supprimées. Exemple publié par l'Urssaf (page « Évolution du complément de libre choix du mode de garde (CMG) », urssaf.fr) : 2 000 €, 160 h, 4,91 €/h, 1 enfant → 587,52 €. Le plafond horaire s'applique au tarif horaire de chaque contrat d'employeur (donc par famille en garde partagée).",
     "cotisations": "AMA : 100 % des cotisations prises en charge. Garde à domicile : 50 %, dans la limite de 524 €/mois (enfant < 3 ans) et 263 €/mois (3-6 ans) au 1er avril 2026 (revalorisation +0,8 %).",
-    "micro_creche_structure": "CMG structure (non concerné par la réforme de sept. 2025). Montants au 1er avril 2026, couple 1 enfant < 3 ans : 992,13 / 855,25 / 718,41 €/mois ; seuils de revenus 2024 : 24 333 € et 54 075 € ; parent isolé : montants +30 %, seuils +40 % (1 289,77 / 1 111,82 / 933,94 € ; 34 066 € et 75 705 €). Tarif horaire > 10 € : CMG non versé (caf.fr, fiche micro-crèche PAJE).",
-    "credit_impot": "impots.gouv.fr : frais de garde hors domicile 50 % dans la limite de 3 500 €/enfant de moins de 6 ans ; emploi à domicile 50 % dans la limite de 12 000 € + 1 500 €/enfant, plafonné à 15 000 €."
+    "micro_creche_structure": "[SP-STRUCT] service-public.gouv.fr, fiche F345 « CMG : structure » (vérifiée le 1er avril 2026) et [INSTR] §II.4. Seuils de revenus (revenus nets catégoriels 2024) selon la situation et le nombre d'enfants à charge, tableaux enregistrés tels que publiés (parent isolé : pas supplémentaire constant entre les lignes publiées). Montants mensuels pour un enfant de moins de 3 ans, couple : 992,13 / 855,25 / 718,41 € ; majorés de 30 % (familles monoparentales, AEEH, AAH) : 1 289,77 / 1 111,82 / 933,94 €. Pour un enfant de 3 à 6 ans, c'est le montant maximum qui est divisé par 2 (aide = min(85 % × coût, forfait ÷ 2)), exemple service-public : 28 000 €/an, 1 enfant de 3 ans, facture 600 € → 427,63 € ; facture 420 € → 357 € (85 %). Montants nets de CRDS : l'instruction [INSTR] donne les montants avant CRDS (208,53 % / 179,76 % / 151,00 % de la BMAF de 478,16 € = 997,11 / 859,54 / 722,02 €) ; les montants versés aux familles, après 0,5 % de CRDS, sont 992,13 / 855,25 / 718,41 € (service-public affiche 992,12 € pour le premier). Non modélisés : cumul des majorations, +10 % pour horaires atypiques, enfant qui a 3 ans entre le 1er janvier et le 31 août (garde le montant « moins de 3 ans » jusqu'en août suivant). Tarif horaire > 10 € : CMG non versé (caf.fr, fiche micro-crèche PAJE).",
+    "credit_impot": "impots.gouv.fr : frais de garde hors domicile 50 % dans la limite de 3 500 €/enfant de moins de 6 ans ; emploi à domicile 50 % dans la limite de 12 000 € + 1 500 €/enfant, plafonné à 15 000 €.",
+    "ressources_cmg": "[INSTR] Instruction interministérielle n° DSS/2B/2026/46 du 20 mars 2026 (revalorisation des prestations familiales au 1er avril 2026), §II.4.2, période du 1er avril 2026 au 31 mars 2027 : plancher de ressources 821 € ; plafond de ressources 8 500 € (ressources mensuelles, revenus N-2). Ce plancher (821 €) est distinct du plancher PSU de la crèche (814,62 €)."
   },
   "ressources": {
     "type": "net_categoriel_N2",
     "plancher": 814.62,
     "plafond": 8500
   },
+  "ressources_cmg": {
+    "type": "net_categoriel_N2",
+    "plancher": 821,
+    "plafond": 8500
+  },
   "taux_effort_collectif": {
     "1": 0.000619,
     "2": 0.000516,
     "3": 0.000413,
-    "4_7": 0.000310,
+    "4_7": 0.00031,
     "8_plus": 0.000206
   },
-  "cout_horaire_ref": { "ama": 4.91, "domicile": 10.50 },
-  "plafond_horaire": { "ama": 8.09, "domicile": 15.18 },
+  "cout_horaire_ref": {
+    "ama": 4.91,
+    "domicile": 10.5
+  },
+  "plafond_horaire": {
+    "ama": 8.09,
+    "domicile": 15.18
+  },
   "cotisations": {
     "prise_en_charge_ama": 1.0,
     "prise_en_charge_domicile": 0.5,
-    "plafond_prise_en_charge_domicile": { "moins3ans": 524, "de3a6ans": 263 },
+    "plafond_prise_en_charge_domicile": {
+      "moins3ans": 524,
+      "de3a6ans": 263
+    },
     "_facteur_note": "Approximation (non réglementaire) : coût total employeur ≈ salaire net × 1,8 pour une garde à domicile. Sert à retrouver le salaire net (base du CMG) et les cotisations à partir du coût total saisi. Même facteur que scripts/build-tarifs-data.mjs.",
     "facteur_cout_total_domicile": 1.8
   },
   "credit_impot": {
-    "frais_garde": { "taux": 0.5, "plafond_par_enfant": 3500 },
-    "emploi_domicile": { "taux": 0.5, "plafond_base": 12000, "majoration_par_enfant": 1500, "plafond_max": 15000 }
+    "frais_garde": {
+      "taux": 0.5,
+      "plafond_par_enfant": 3500
+    },
+    "emploi_domicile": {
+      "taux": 0.5,
+      "plafond_base": 12000,
+      "majoration_par_enfant": 1500,
+      "plafond_max": 15000
+    }
   },
   "micro_creche_structure": {
     "plafond_horaire": 10,
@@ -40,12 +63,36 @@
     "reste_a_charge_min": 0.15,
     "distinction_age": true,
     "reduction_3_6ans": 0.5,
-    "tranches_revenus_annuels_1enfant": { "T1_max": 24333, "T2_max": 54075 },
     "forfait_max_mensuel_1enfant_moins3ans": {
       "T1": 992.13,
       "T2": 855.25,
       "T3": 718.41
     },
-    "majoration_isole": { "plafonds": 0.40, "montants": 0.30 }
+    "_note_3_6ans": "3-6 ans : le MONTANT MAXIMUM est divisé par 2 (reduction_3_6ans), pas l'aide calculée.",
+    "seuils_revenus_annuels": {
+      "couple": {
+        "base": {
+          "1": [24333, 54075],
+          "2": [27786, 61751],
+          "3": [31239, 69427],
+          "4": [34692, 77103]
+        },
+        "par_enfant_supplementaire": [3453, 7676]
+      },
+      "isole": {
+        "base": {
+          "1": [34066, 75705],
+          "2": [38900, 86451],
+          "3": [43734, 97197],
+          "4": [48568, 107943]
+        },
+        "par_enfant_supplementaire": [4834, 10746]
+      }
+    },
+    "montants_majores_30pct_moins3ans": {
+      "T1": 1289.77,
+      "T2": 1111.82,
+      "T3": 933.94
+    }
   }
 }

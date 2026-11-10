@@ -112,6 +112,13 @@ describe("politique d'URL — pas de trailing slash (sauf racine)", () => {
       // duplication pure, et le canonical devient le seul arbitre.
       expect(vercelJson.trailingSlash).toBe(false);
     });
+
+    it("/sitemap.xml redirige en permanent vers /sitemap-index.xml", () => {
+      // Le sitemap réel est /sitemap-index.xml ; de nombreux outils sondent
+      // /sitemap.xml par convention et tomberaient sur la page 404.
+      const rule = vercelJson.redirects.find((r: { source: string }) => r.source === "/sitemap.xml");
+      expect(rule).toMatchObject({ destination: "/sitemap-index.xml", permanent: true });
+    });
   });
 
   describe("4. liens internes (pages, layouts, composants)", () => {

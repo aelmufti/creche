@@ -3,7 +3,7 @@ import type { Bareme } from "./types";
 
 // Source unique de vérité : le fichier bareme-2026.json à la racine, bundlé au
 // build (cf. §13). Aucune valeur chiffrée ne doit être dupliquée ailleurs.
-export const bareme: Bareme = baremeJson as Bareme;
+export const bareme: Bareme = baremeJson as unknown as Bareme;
 
 // Valeurs de pré-remplissage « typiques » pour donner une réponse même sans
 // connaître les prix locaux (cf. §10). Ce ne sont PAS des paramètres de barème

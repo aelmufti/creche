@@ -1,22 +1,53 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { comparaisonParDefaut } from "../../lib/scenario-reference";
+import { bareme, inputsParDefaut } from "../../engine";
+import { fmtEuro, fmtEuro2, fmtHeure } from "../../lib/format";
 
 const site = "https://creche-ou-nounou.fr";
 const title = "Guides : aides, coûts et modes de garde d'enfant (2026)";
 const description =
   "Guides 2026 pour choisir et payer son mode de garde : tarif crèche, CMG, crédit d'impôt, micro-crèche, garde à domicile ou partagée, reste à charge.";
 
-const guides = [
-  { href: "/guides/creche-ou-assistante-maternelle", t: "Crèche ou assistante maternelle ?", d: "Laquelle coûte le moins cher en 2026." },
-  { href: "/guides/tarif-creche-2026", t: "Tarif crèche 2026", d: "Calcul CAF au taux d'effort, barème et exemples par revenu." },
-  { href: "/guides/cmg-2026", t: "CMG 2026", d: "Montant, calcul et conditions (réforme sept. 2025)." },
-  { href: "/guides/reforme-cmg-septembre-2025", t: "Réforme du CMG (sept. 2025)", d: "Ce qui change concrètement." },
-  { href: "/guides/micro-creche-cmg-structure", t: "Micro-crèche : CMG structure", d: "Plafonds et reste à charge." },
-  { href: "/guides/garde-a-domicile-cout-reel", t: "Garde à domicile : coût réel", d: "Le crédit d'impôt emploi à domicile (~12 000 €)." },
-  { href: "/guides/garde-partagee", t: "Garde partagée", d: "Fonctionnement, coût et aides." },
-  { href: "/guides/credit-impot-frais-de-garde", t: "Crédit d'impôt frais de garde", d: "50 %, plafond 3 500 €, restituable." },
-  { href: "/guides/reste-a-charge-nounou", t: "Reste à charge d'une nounou", d: "Décomposition et exemples chiffrés." },
+// Chiffres issus du barème versionné et du moteur (scénario de référence du site : tarifs nationaux Urssaf 2024).
+const { frais_garde, emploi_domicile } = bareme.credit_impot;
+const { plancher, plafond } = bareme.ressources;
+const te1 = bareme.taux_effort_collectif["1"];
+const exemple = comparaisonParDefaut();
+const parMode = (m: string) => exemple.results.find((r) => r.mode === m)!;
+const creche = parMode("creche");
+const ama = parMode("ama");
+const heures = inputsParDefaut.heuresMois;
+const revenu = fmtEuro(inputsParDefaut.revenuMensuelNet);
+const pct = (x: number) => `${Math.round(x * 100)} %`;
+
+const groupes = [
+  {
+    titre: "Comparer les modes de garde",
+    guides: [
+      { href: "/guides/creche-ou-assistante-maternelle", t: "Crèche ou assistante maternelle ?", d: `Pour ${revenu} net par mois et ${heures} h de garde : ${fmtEuro(creche.netReel)}/mois en crèche contre ${fmtEuro(ama.netReel)}/mois chez une assistante maternelle, en coût net réel.` },
+      { href: "/guides/reste-a-charge-nounou", t: "Reste à charge d'une nounou", d: `Décomposition poste par poste : ${fmtEuro(ama.tresorerieMensuelle)}/mois sortent du compte avant crédit d'impôt, ${fmtEuro(ama.netReel)}/mois après.` },
+      { href: "/guides/garde-partagee", t: "Garde partagée", d: "Un intervenant au domicile de deux familles : le coût est divisé et chaque famille perçoit son propre CMG." },
+    ],
+  },
+  {
+    titre: "Comprendre les aides",
+    guides: [
+      { href: "/guides/cmg-2026", t: "CMG 2026", d: `Formule, conditions et coûts horaires de référence au 1ᵉʳ avril 2026 : ${fmtEuro2(bareme.cout_horaire_ref.ama)}/h (assistante maternelle), ${fmtEuro2(bareme.cout_horaire_ref.domicile)}/h (garde à domicile).` },
+      { href: "/guides/reforme-cmg-septembre-2025", t: "Réforme du CMG (sept. 2025)", d: "Ce qui change depuis le 1ᵉʳ septembre 2025 : un CMG proportionnel au reste à charge, sans montant maximum mensuel." },
+      { href: "/guides/credit-impot-frais-de-garde", t: "Crédit d'impôt frais de garde", d: `${pct(frais_garde.taux)} des dépenses, dans la limite de ${fmtEuro(frais_garde.plafond_par_enfant)} par enfant, restituable même sans impôt à payer.` },
+    ],
+  },
+  {
+    titre: "Coût par mode",
+    guides: [
+      { href: "/guides/tarif-creche-2026", t: "Tarif crèche 2026", d: `Ressources × taux d'effort CNAF : de ${fmtHeure(plancher * te1)} à ${fmtHeure(plafond * te1)} pour 1 enfant, avec exemples par revenu.` },
+      { href: "/guides/micro-creche-cmg-structure", t: "Micro-crèche : CMG structure", d: `Jusqu'à ${fmtEuro2(bareme.micro_creche_structure.forfait_max_mensuel_1enfant_moins3ans.T1)}/mois de CMG pour un couple avec 1 enfant de moins de 3 ans, si le tarif ne dépasse pas ${fmtEuro(bareme.micro_creche_structure.plafond_horaire)}/h.` },
+      { href: "/guides/garde-a-domicile-cout-reel", t: "Garde à domicile : coût réel", d: `Le crédit d'impôt emploi à domicile (${pct(emploi_domicile.taux)}, plafond de ${fmtEuro(emploi_domicile.plafond_base)} majoré de ${fmtEuro(emploi_domicile.majoration_par_enfant)} par enfant) change le calcul.` },
+    ],
+  },
 ];
+const guides = groupes.flatMap((g) => g.guides);
 
 const jsonLd = [
   {
@@ -25,6 +56,16 @@ const jsonLd = [
     name: title,
     description,
     url: site + "/guides",
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: guides.length,
+      itemListElement: guides.map((g, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: g.t,
+        url: site + g.href,
+      })),
+    },
   },
   {
     "@context": "https://schema.org",
@@ -42,22 +83,36 @@ const jsonLd = [
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Guides des modes de garde</h1>
       <p class="mt-2 text-muted-foreground">
-        Comprendre les aides et comparer les coûts, sources officielles à l'appui. Pour un verdict
-        chiffré sur votre cas, utilisez le <a class="underline" href="/">comparateur</a>.
+        Neuf guides pour comprendre les aides et comparer les coûts, sources officielles à l'appui.
+        Vous hésitez entre deux modes ? Commencez par « Comparer les modes de garde ». Vous voulez
+        savoir ce que l'on vous verse ? Passez par « Comprendre les aides ». Vous cherchez le prix
+        d'un mode précis ? Ouvrez « Coût par mode ». Pour un verdict chiffré sur votre cas,
+        utilisez le <a class="underline" href="/">comparateur</a>.
       </p>
     </header>
 
-    <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {
-        guides.map((g) => (
-          <li>
-            <a class="card-brutal-interactive flex h-full flex-col gap-1 p-4" href={g.href}>
-              <span class="font-extrabold">{g.t}</span>
-              <span class="text-sm text-muted-foreground">{g.d}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+    {
+      groupes.map((g) => (
+        <section>
+          <h2 class="text-xl font-extrabold">{g.titre}</h2>
+          <ul class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {g.guides.map((x) => (
+              <li>
+                <a class="card-brutal-interactive flex h-full flex-col gap-1 p-4" href={x.href}>
+                  <span class="font-extrabold">{x.t}</span>
+                  <span class="text-sm text-muted-foreground">{x.d}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    <p class="text-sm text-muted-foreground">
+      Un terme vous échappe ? Consultez le <a class="underline" href="/glossaire">glossaire</a>.
+      Pour savoir d'où viennent les chiffres, lisez la
+      <a class="underline" href="/methodologie">méthodologie</a>.
+    </p>
   </div>
 </Layout>

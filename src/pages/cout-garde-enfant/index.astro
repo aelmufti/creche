@@ -3,6 +3,9 @@ import Layout from "../../layouts/Layout.astro";
 import { TARIFS_DEPARTEMENTS, SOURCE_TARIFS } from "../../data/tarifs-locaux";
 import departementsJson from "../../data/departements.json";
 import { slugify } from "../../lib/slug";
+import { fmtHeure } from "../../lib/format";
+import { CLASSEMENT_AMA, MOYENNE_AMA } from "../../lib/departements-stats";
+import { CLASSEMENT_VILLES } from "../../lib/villes-stats";
 
 const site = "https://creche-ou-nounou.fr";
 const departements = departementsJson as Record<string, string>;
@@ -11,6 +14,18 @@ const liste = Object.keys(TARIFS_DEPARTEMENTS)
   .filter((code) => departements[code])
   .map((code) => ({ code, nom: departements[code], slug: slugify(departements[code]) }))
   .sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+
+// Extrêmes : plusieurs départements peuvent partager le même taux (données arrondies
+// au centime) — on les nomme tous plutôt que d'en désigner un arbitrairement.
+const tauxMax = CLASSEMENT_AMA[0].tauxHoraireAma;
+const tauxMin = CLASSEMENT_AMA[CLASSEMENT_AMA.length - 1].tauxHoraireAma;
+const nomsAuTaux = (t: number) => CLASSEMENT_AMA.filter((d) => d.tauxHoraireAma === t).map((d) => d.nom);
+const listeNoms = (noms: string[]) =>
+  noms.length > 3 ? `${noms.slice(0, 3).join(", ")} et ${noms.length - 3} autres` : noms.join(", ");
+const plusChers = nomsAuTaux(tauxMax);
+const moinsChers = nomsAuTaux(tauxMin);
+
+const villes = [...CLASSEMENT_VILLES].sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
 
 const title = "Coût de la garde d'enfant par département (2026)";
 const description =
@@ -46,23 +61,60 @@ const jsonLd = [
       </p>
     </header>
 
-    <nav aria-label="Liste des départements">
-      <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <section class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
+      <strong>En bref.</strong> Le salaire horaire net moyen d'une assistante maternelle est de
+      {fmtHeure(MOYENNE_AMA)} sur les {liste.length} départements couverts. Il atteint
+      {fmtHeure(tauxMax)} {plusChers.length > 1 ? "dans les départements les plus chers" : "dans le département le plus cher"} ({listeNoms(plusChers)}) et descend à
+      {fmtHeure(tauxMin)} {moinsChers.length > 1 ? "dans les moins chers" : "dans le moins cher"} ({listeNoms(moinsChers)}). Le tarif d'une crèche
+      collective, lui, ne varie pas d'un territoire à l'autre. Retrouvez le classement complet et les
+      données ouvertes dans l'<a class="underline" href="/observatoire-cout-garde-2026">observatoire
+      du coût de la garde</a>, ou téléchargez le
+      <a class="underline" href="/data/cout-garde-par-departement-2026.csv">fichier CSV</a>.
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Les grandes villes</h2>
+      <p class="mt-2 text-sm text-muted-foreground">
+        La donnée URSSAF est départementale : deux villes d'un même département partagent la même
+        base tarifaire.
+      </p>
+      <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {
-          liste.map((d) => (
+          villes.map((v) => (
             <li>
               <a
                 class="card-brutal-interactive flex items-center justify-between px-3 py-2 text-sm font-bold"
-                href={`/cout-garde-enfant/${d.slug}`}
+                href={`/cout-garde-enfant/${v.deptSlug}/${v.slug}`}
               >
-                <span>Crèche ou nounou — {d.nom}</span>
-                <span class="text-xs text-muted-foreground">{d.code}</span>
+                <span>Crèche ou nounou à {v.nom}</span>
+                <span class="text-xs text-muted-foreground">{v.dept}</span>
               </a>
             </li>
           ))
         }
       </ul>
-    </nav>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold">Tous les départements</h2>
+      <nav aria-label="Liste des départements" class="mt-3">
+        <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            liste.map((d) => (
+              <li>
+                <a
+                  class="card-brutal-interactive flex items-center justify-between px-3 py-2 text-sm font-bold"
+                  href={`/cout-garde-enfant/${d.slug}`}
+                >
+                  <span>Crèche ou nounou — {d.nom}</span>
+                  <span class="text-xs text-muted-foreground">{d.code}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </section>
 
     <p class="text-xs text-muted-foreground">
       {liste.length} départements couverts. Données indicatives et modifiables ; méthode sur la

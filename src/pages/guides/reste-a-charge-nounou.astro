@@ -1,13 +1,77 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Byline from "../../components/Byline.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr } from "../../lib/format";
+import { fmtEuro, fmtEuro2 } from "../../lib/format";
+import { bareme as b, calcAma, calcCreche } from "../../engine";
+import { inputsReference, TARIFS_REFERENCE } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/reste-a-charge-nounou";
 const title = "Reste à charge d'une assistante maternelle en 2026";
 const description =
-  "Reste à charge d'une assistante maternelle en 2026 après CMG et crédit d'impôt : décomposition du coût, exemples chiffrés, calcul personnalisé.";
+  "Reste à charge d'une assistante maternelle en 2026 après CMG et crédit d'impôt : coût par mois selon revenus et heures, exemple pas à pas, calcul personnalisé.";
+
+// Tous les chiffres viennent du barème versionné et du moteur du comparateur.
+const heures = inputsReference.heuresMois;
+const refAma = b.cout_horaire_ref.ama;
+const plafAma = b.plafond_horaire.ama;
+const fg = b.credit_impot.frais_garde;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const lignesRevenu = revenus.map((r) => {
+  const x = calcAma(b, { ...inputsReference, revenuMensuelNet: r });
+  return {
+    revenu: r,
+    brut: x.coutBrut,
+    cmg: x.details.cmg,
+    tres: x.tresorerieMensuelle,
+    credit: x.creditImpotMensuel,
+    net: x.netReel,
+  };
+});
+const l1500 = lignesRevenu.find((l) => l.revenu === 1500)!;
+const l3000 = lignesRevenu.find((l) => l.revenu === 3000)!;
+const l8500 = lignesRevenu.find((l) => l.revenu === 8500)!;
+
+// Effet du nombre d'heures, à 3 000 € de ressources.
+const nbHeures = [40, 80, 120, 160, 200];
+const lignesHeures = nbHeures.map((h) => {
+  const x = calcAma(b, { ...inputsReference, heuresMois: h });
+  return { heures: h, brut: x.coutBrut, cmg: x.details.cmg, tres: x.tresorerieMensuelle, net: x.netReel };
+});
+
+// Exemple pas à pas à 3 000 €.
+const ex = calcAma(b, inputsReference);
+const exSalaire = heures * TARIFS_REFERENCE.tauxHoraireAma;
+const exAnnuel = ex.tresorerieMensuelle * 12;
+const exBase = Math.min(exAnnuel, fg.plafond_par_enfant);
+const exPlafonne = exAnnuel > fg.plafond_par_enfant;
+const creche3000 = calcCreche(b, inputsReference);
+
+const faq = [
+  {
+    q: "Comment calculer le reste à charge d'une assistante maternelle ?",
+    a: `On part du coût brut (salaire horaire net × heures + indemnités d'entretien et de repas), on retire le CMG (qui couvre une partie du salaire et des indemnités, et 100 % des cotisations), puis le crédit d'impôt de 50 %. Le résultat est le coût net réel. Exemple : ${heures} h à ${fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h plus ${fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités font ${fmtEuro(ex.coutBrut)} bruts ; avec 3 000 € de ressources, le CMG est de ${fmtEuro(ex.details.cmg)}, le reste à charge de ${fmtEuro(ex.tresorerieMensuelle)} et le coût net réel de ${fmtEuro(ex.netReel)} par mois.`,
+  },
+  {
+    q: "Combien coûte une assistante maternelle par mois en 2026 ?",
+    a: `Pour ${heures} h de garde par mois, 1 enfant, un salaire de ${fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h et ${fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités, le coût brut est de ${fmtEuro(ex.coutBrut)}. Après CMG, le reste à charge va de ${fmtEuro(l1500.tres)} par mois avec 1 500 € de ressources à ${fmtEuro(l8500.tres)} avec 8 500 € ; après crédit d'impôt, le coût net réel va de ${fmtEuro(l1500.net)} à ${fmtEuro(l8500.net)} par mois. Le salaire horaire réel varie selon le département.`,
+  },
+  {
+    q: "La nounou coûte-t-elle plus cher que la crèche ?",
+    a: `Depuis la réforme du CMG de septembre 2025, le reste à charge avec une assistante maternelle payée au coût de référence (${fmtEuro2(refAma)}/h au 1er avril 2026, indemnités comprises) est le même qu'en crèche collective. Une assistante maternelle moins chère que ce coût revient moins cher que la crèche ; plus chère, elle revient plus cher. Pour 3 000 € de ressources et ${heures} h, la crèche laisse ${fmtEuro(creche3000.tresorerieMensuelle)} par mois à charge, contre ${fmtEuro(ex.tresorerieMensuelle)} avec l'assistante maternelle de l'exemple.`,
+  },
+  {
+    q: "Les indemnités d'entretien et de repas sont-elles aidées ?",
+    a: `En partie. Elles font partie du coût pris en compte par le CMG, dans la limite du plafond horaire de ${fmtEuro2(plafAma)}/h au 1er avril 2026, mais elles restent à votre charge à hauteur du reste à charge calculé. Pour le crédit d'impôt, les frais de repas ne sont pas déductibles et l'indemnité d'entretien ne l'est que dans une limite forfaitaire : le comparateur peut donc surestimer le crédit de quelques euros.`,
+  },
+  {
+    q: "Le crédit d'impôt s'applique-t-il à une assistante maternelle ?",
+    a: `Oui. La garde par une assistante maternelle relève du crédit d'impôt frais de garde : ${pct(fg.taux)} des dépenses restant à charge, dans la limite de ${fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant et par an, soit au plus ${fmtEuro(fg.taux * fg.plafond_par_enfant)} par enfant. Il est restituable et encaissé l'année suivante.`,
+  },
+];
 
 const jsonLd = [
   {
@@ -25,29 +89,14 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Comment calculer le reste à charge d'une assistante maternelle ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "On part du coût brut (salaire horaire net × heures + indemnités d'entretien et de repas), on retire le CMG (qui couvre une partie du salaire et des indemnités, et 100 % des cotisations), puis le crédit d'impôt de 50 %. Le résultat est le coût net réel.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "La nounou coûte-t-elle plus cher que la crèche ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Depuis la réforme du CMG de septembre 2025, le reste à charge avec une assistante maternelle payée au coût de référence (4,91 €/h au 1er avril 2026, indemnités comprises) est le même qu'en crèche collective. Une assistante maternelle moins chère que ce coût revient moins cher que la crèche ; plus chère, elle revient plus cher. Le comparateur fait le calcul pour votre cas.",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   // HowTo : les étapes correspondent une à une à la liste ordonnée visible plus
-  // bas (§4.2). Google ne rend plus de rich result HowTo depuis 2023 ; l'intérêt
-  // ici est l'extraction par les moteurs génératifs (§6.3), d'où des étapes
-  // rédigées pour être citables telles quelles.
+  // bas (section « La décomposition du coût »).
   {
     "@context": "https://schema.org",
     "@type": "HowTo",
@@ -83,7 +132,7 @@ const jsonLd = [
         "@type": "HowToStep",
         position: 4,
         name: "Retirer le crédit d'impôt de 50 %",
-        text: "Le crédit d'impôt vaut 50 % des sommes engagées, dans la limite de 3 500 € par enfant, et il est encaissé l'année suivante.",
+        text: `Le crédit d'impôt vaut ${pct(fg.taux)} des sommes engagées, dans la limite de ${fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant, et il est encaissé l'année suivante.`,
         url: site + path + "#decomposition",
       },
       {
@@ -114,15 +163,17 @@ const jsonLd = [
     </nav>
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Reste à charge d'une assistante maternelle en 2026</h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-orange p-4 text-sm leading-relaxed">
       <p>
         <strong>En bref.</strong> Le reste à charge réel d'une assistante maternelle (« nounou ») se
         calcule en quatre temps : <strong>coût brut</strong> → moins le <strong>CMG</strong> → moins
-        le <strong>crédit d'impôt (50 %)</strong> → <strong>coût net réel</strong>. Selon vos revenus
-        et vos heures, il peut être très inférieur au coût brut affiché.
+        le <strong>crédit d'impôt (50 %)</strong> → <strong>coût net réel</strong>. Pour {heures} h de
+        garde par mois et 1 enfant, avec 3 000 € de ressources, un coût brut de
+        {" "}<strong>{fmtEuro(ex.coutBrut)}</strong> tombe à <strong>{fmtEuro(ex.tresorerieMensuelle)}/mois</strong>
+        après CMG, puis à <strong>{fmtEuro(ex.netReel)}/mois</strong> après crédit d'impôt.
       </p>
       <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
         → Calculer mon reste à charge
@@ -135,22 +186,157 @@ const jsonLd = [
         <li><strong>Coût brut</strong> = salaire horaire net × heures + indemnités (entretien, repas).</li>
         <li><strong>− CMG</strong> : couvre une partie du salaire et des indemnités, et 100 % des cotisations sociales.</li>
         <li><strong>= Trésorerie mensuelle</strong> : ce qui part du compte chaque mois.</li>
-        <li><strong>− Crédit d'impôt (50 %)</strong>, plafond 3 500 €/enfant, encaissé l'année suivante.</li>
+        <li><strong>− Crédit d'impôt (50 %)</strong>, plafond {fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant, encaissé l'année suivante.</li>
         <li><strong>= Coût net réel</strong>.</li>
       </ol>
       <p class="mt-2 text-muted-foreground">
         Les indemnités d'entretien et de repas font partie du coût pris en compte par le CMG, dans la
-        limite du plafond horaire (8,09 €/h au 1ᵉʳ avril 2026) : elles sont donc en partie aidées.
+        limite du plafond horaire ({fmtEuro2(plafAma)}/h au 1ᵉʳ avril 2026) : elles sont donc en partie
+        aidées. Les termes sont définis dans le <a class="underline" href="/glossaire">glossaire</a>.
       </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Le coût dépend aussi de votre département</h2>
+    <section class="text-sm leading-relaxed" id="exemple">
+      <h2 class="text-xl font-extrabold">Exemple pas à pas : 3 000 € de ressources, {heures} h par mois</h2>
       <p class="mt-2">
-        Le salaire horaire moyen d'une assistante maternelle varie selon les territoires. Consultez le
-        <a class="underline" href="/cout-garde-enfant">coût par département</a> ou lancez directement
-        le comparateur.
+        Hypothèses : couple, 1 enfant, assistante maternelle payée {fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h net,
+        {" "}{fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités d'entretien et de repas par mois.
       </p>
+      <ol class="mt-2 list-decimal space-y-1 pl-5">
+        <li><strong>Coût brut</strong> : {heures} h × {fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)} = {fmtEuro2(exSalaire)}, plus {fmtEuro2(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités = <strong>{fmtEuro2(ex.coutBrut)}</strong>.</li>
+        <li><strong>CMG</strong> : {fmtEuro2(ex.details.cmg)} par mois (formule détaillée dans le guide <a class="underline" href="/guides/cmg-2026">CMG 2026</a>).</li>
+        <li><strong>Trésorerie mensuelle</strong> : {fmtEuro2(ex.coutBrut)} − {fmtEuro2(ex.details.cmg)} = <strong>{fmtEuro2(ex.tresorerieMensuelle)}</strong>.</li>
+        <li>
+          <strong>Crédit d'impôt</strong> : {fmtEuro2(ex.tresorerieMensuelle)} × 12 = {fmtEuro(exAnnuel)} de dépenses par an{exPlafonne ? `, retenues dans la limite de ${fmtEuro(fg.plafond_par_enfant)}` : ""}.
+          {" "}{pct(fg.taux)} de {fmtEuro(exBase)} = {fmtEuro(ex.creditImpotAnnuel)} par an, soit {fmtEuro2(ex.creditImpotMensuel)} par mois.
+        </li>
+        <li><strong>Coût net réel</strong> : {fmtEuro2(ex.tresorerieMensuelle)} − {fmtEuro2(ex.creditImpotMensuel)} = <strong>{fmtEuro2(ex.netReel)}</strong> par mois.</li>
+      </ol>
+      <p class="mt-2">
+        À titre de comparaison, une crèche collective revient à {fmtEuro(creche3000.tresorerieMensuelle)} par
+        mois pour les mêmes ressources et les mêmes heures, soit {fmtEuro(creche3000.netReel)} après crédit
+        d'impôt (voir le <a class="underline" href="/guides/tarif-creche-2026">tarif crèche 2026</a>).
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="par-revenu">
+      <h2 class="text-xl font-extrabold">Combien coûte une nounou selon vos revenus</h2>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Coût mensuel d'une assistante maternelle en 2026 par niveau de ressources : coût brut, CMG, reste à charge, crédit d'impôt et coût net réel</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">Coût brut</th>
+              <th scope="col" class="p-2">CMG</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Crédit d'impôt</th>
+              <th scope="col" class="p-2">Coût net réel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesRevenu.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.brut)}</td>
+                  <td class="p-2">{fmtEuro(l.cmg)}</td>
+                  <td class="p-2">{fmtEuro(l.tres)}</td>
+                  <td class="p-2">{fmtEuro(l.credit)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 1 enfant, couple, {heures} h par mois, salaire de {fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h net et
+        {" "}{fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités par mois. Le crédit d'impôt est ramené au mois ; il est
+        en réalité encaissé l'année suivante. Cotisations sociales prises en charge à 100 % par le CMG.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="par-heures">
+      <h2 class="text-xl font-extrabold">Selon le nombre d'heures de garde</h2>
+      <p class="mt-2">
+        Le CMG est proportionnel au coût : moins d'heures, moins de coût brut et moins de CMG en valeur
+        absolue. Le reste à charge évolue donc à peu près proportionnellement aux heures.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Coût mensuel d'une assistante maternelle selon le nombre d'heures de garde, pour 3 000 € de ressources</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Heures / mois</th>
+              <th scope="col" class="p-2">Coût brut</th>
+              <th scope="col" class="p-2">CMG</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Coût net réel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesHeures.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{l.heures} h</th>
+                  <td class="p-2">{fmtEuro(l.brut)}</td>
+                  <td class="p-2">{fmtEuro(l.cmg)}</td>
+                  <td class="p-2">{fmtEuro(l.tres)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 3 000 € de ressources, 1 enfant, salaire de {fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h net,
+        {" "}{fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités par mois (quel que soit le nombre d'heures, tant qu'il y a de la garde).
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="pieges">
+      <h2 class="text-xl font-extrabold">Pièges et limites à connaître</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>
+          <strong>Le salaire dépend du département.</strong> Le salaire horaire moyen d'une assistante
+          maternelle varie selon les territoires : consultez le
+          {" "}<a class="underline" href="/cout-garde-enfant">coût par département</a> et l'
+          <a class="underline" href="/observatoire-cout-garde-2026">observatoire 2026</a>.
+        </li>
+        <li>
+          <strong>Le plafond horaire.</strong> Au-delà de {fmtEuro2(plafAma)}/h, l'écart reste à votre charge.
+        </li>
+        <li>
+          <strong>Le crédit d'impôt est plafonné.</strong> Seuls {fmtEuro(fg.plafond_par_enfant)} de dépenses par
+          enfant et par an sont pris en compte (voir le
+          {" "}<a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt frais de garde</a>).
+        </li>
+        <li>
+          <strong>Repas et entretien.</strong> Les frais de repas ne sont pas déductibles du crédit d'impôt
+          et l'indemnité d'entretien ne l'est que dans une limite forfaitaire : le comparateur applique le
+          crédit à l'ensemble des frais saisis, ce qui peut le surestimer de quelques euros
+          (<a class="underline" href="/methodologie">limites connues</a>).
+        </li>
+        <li>
+          <strong>Comparer au bon chiffre.</strong> Seul le coût net réel est comparable entre modes de
+          garde. Pour la réforme qui a rapproché nounou et crèche, voir la
+          {" "}<a class="underline" href="/guides/reforme-cmg-septembre-2025">réforme du CMG de septembre 2025</a>.
+        </li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="faq">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
@@ -159,11 +345,16 @@ const jsonLd = [
         <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
         <li><a class="underline" href="/guides/creche-ou-assistante-maternelle">Crèche ou assistante maternelle</a></li>
         <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Crédit d'impôt frais de garde</a></li>
+        <li><a class="underline" href="/guides/reforme-cmg-septembre-2025">La réforme du CMG de septembre 2025</a></li>
+        <li><a class="underline" href="/cout-garde-enfant">Coût de la garde par département</a></li>
       </ul>
     </nav>
 
     <p class="text-xs text-muted-foreground">
-      Sources : Pajemploi (2026). Estimation indicative, pas un avis officiel.
+      Sources : <a class="underline" href="https://www.pajemploi.urssaf.fr/">Urssaf/Pajemploi</a> (2026),
+      <a class="underline" href="https://www.caf.fr/">caf.fr</a>,
+      <a class="underline" href="https://www.impots.gouv.fr/">impots.gouv.fr</a>. Calcul :
+      <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative, pas un avis officiel.
     </p>
   </article>
 </Layout>

@@ -94,7 +94,7 @@ describe("Cas limites (§9.3)", () => {
     for (const r of c.results) expect(r.coutBrut).toBeCloseTo(0, 5);
   });
 
-  it("revenu sous plancher → clampé à 814,62 €", () => {
+  it("crèche : revenu sous plancher PSU → clampé à 814,62 €", () => {
     const r = comparer(
       { revenuMensuelNet: 100, situation: "couple", nbEnfants: 1, agesGardes: [1], heuresMois: 160 },
       bareme,
@@ -110,7 +110,9 @@ describe("Cas limites (§9.3)", () => {
     expect(r.details.ressourcesRetenues).toBeCloseTo(bareme.ressources.plafond, 2);
   });
 
-  it("micro-crèche : enfant ≥ 3 ans → aide divisée par 2", () => {
+  // [SP-STRUCT] : de 3 à 6 ans, le forfait maximum est divisé par 2. Quand le forfait
+  // borne l'aide (200 h × 10 € = 2 000 €), l'aide d'un enfant de 4 ans = aide ÷ 2.
+  it("micro-crèche : enfant ≥ 3 ans → forfait maximum divisé par 2 (aide bornée par le forfait)", () => {
     const young = calcMicroCreche(bareme, {
       revenuMensuelNet: 1500, situation: "couple", nbEnfants: 1, agesGardes: [1], heuresMois: 200, tarifMicroCreche: 10,
     });
@@ -154,10 +156,13 @@ describe("Multi-enfants gardés (§6.7 v2)", () => {
     expect(c.creditImpotAnnuel).toBeLessThanOrEqual(2 * plafond1Enfant + 0.001);
   });
 
-  it("micro-crèche : 1 bébé + 1 enfant de 4 ans → aide = aide_bébé + aide_4ans/2", () => {
-    const bebe = calcMicroCreche(bareme, { ...deux([1]), nbEnfants: 2 });
-    const grand = calcMicroCreche(bareme, { ...deux([4]), nbEnfants: 2 });
+  it("micro-crèche : 1 bébé + 1 enfant de 4 ans → aide = min(85 %, forfait) + min(85 %, forfait ÷ 2)", () => {
+    // 3 000 €/mois = 36 000 €/an, couple, 2 enfants : seuils 27 786 / 61 751 → tranche 2 (855,25 €).
+    const cout = 160 * 10; // 1 600 € par enfant
+    const forfait = 855.25;
+    const attendu = Math.min(0.85 * cout, forfait) + Math.min(0.85 * cout, forfait / 2);
     const mixte = calcMicroCreche(bareme, deux([1, 4]));
-    expect(mixte.aide).toBeCloseTo(bebe.aide + grand.aide, 2);
+    expect(mixte.aide).toBeCloseTo(attendu, 2);
+    expect(mixte.aide).toBeCloseTo(855.25 + 855.25 / 2, 2);
   });
 });

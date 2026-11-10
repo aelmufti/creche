@@ -1,9 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import departementsJson from "../data/departements.json";
+import Byline from "../components/Byline.astro";
+import { comparer, type Inputs } from "../engine";
 import { TARIFS_DEPARTEMENTS, TARIFS_NATIONAL, SOURCE_TARIFS } from "../data/tarifs-locaux";
-import { fmtEuro2, fmtDateFr } from "../lib/format";
-import { slugify } from "../lib/slug";
+import { fmtEuro, fmtEuro2, fmtRang } from "../lib/format";
+import { ORG_ID, PERSON_ID } from "../lib/schema";
+import {
+  CLASSEMENT_AMA,
+  NB_DEPARTEMENTS,
+  MOYENNE_AMA,
+  MEDIANE_AMA,
+  NB_AU_DESSUS_MOYENNE_AMA,
+  DEPT_MIN,
+  DEPT_MAX,
+  rangAma,
+} from "../lib/departements-stats";
 import { DATES } from "../data/content-dates.mjs";
 import { ODBL_URL, SOURCES_DONNEES } from "../data/legal";
 
@@ -12,22 +23,57 @@ const urssaf = SOURCES_DONNEES.find((s) => s.id === "urssaf")!;
 const site = "https://creche-ou-nounou.fr";
 const path = "/observatoire-cout-garde-2026";
 const csvUrl = site + "/data/cout-garde-par-departement-2026.csv";
-const departements = departementsJson as Record<string, string>;
-
-const rows = Object.keys(TARIFS_DEPARTEMENTS)
-  .filter((code) => departements[code])
-  .map((code) => {
-    const t = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[code] };
-    return { code, nom: departements[code], ama: t.tauxHoraireAma, dom: t.coutHoraireDomicile };
-  })
-  .sort((a, b) => b.ama - a.ama);
+// Mêmes slugs que getStaticPaths de /cout-garde-enfant/[departement] (CLASSEMENT_AMA.slug
+// = slugify du nom officiel) : aucun lien du tableau ne peut être cassé.
+const rows = [...CLASSEMENT_AMA]
+  .sort((a, b) => b.tauxHoraireAma - a.tauxHoraireAma || a.nom.localeCompare(b.nom, "fr"))
+  .map((d) => ({
+    code: d.code,
+    nom: d.nom,
+    slug: d.slug,
+    ama: d.tauxHoraireAma,
+    dom: d.coutHoraireDomicile,
+    rang: rangAma(d.code),
+  }));
 
 const plusChers = rows.slice(0, 5);
-const moinsChers = [...rows].slice(-5).reverse();
+const moinsChers = rows.slice(-5).reverse();
+
+const domMin = rows.reduce((m, r) => (r.dom < m.dom ? r : m), rows[0]);
+const domMax = rows.reduce((m, r) => (r.dom > m.dom ? r : m), rows[0]);
+const ratioAma = DEPT_MAX.tauxHoraireAma / DEPT_MIN.tauxHoraireAma;
+const ratioDom = domMax.dom / domMin.dom;
+const fmtRatio = (n: number) =>
+  new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+const fmtPct = (n: number) =>
+  new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n * 100);
+const fmtEcart = (n: number) =>
+  n > 0.004 ? `+${fmtEuro2(n)}` : n < -0.004 ? `−${fmtEuro2(-n)}` : fmtEuro2(0);
+
+// Budget : scénario par défaut de la page département (couple, 3 000 €/mois, 1 enfant, 160 h/mois).
+const EX = { revenu: 3000, heures: 160 };
+const coutAma = (code: string): number => {
+  const t = { ...TARIFS_NATIONAL, ...TARIFS_DEPARTEMENTS[code] };
+  const i: Inputs = {
+    revenuMensuelNet: EX.revenu,
+    situation: "couple",
+    nbEnfants: 1,
+    agesGardes: [1],
+    heuresMois: EX.heures,
+    tauxHoraireAma: t.tauxHoraireAma,
+    coutHoraireDomicile: t.coutHoraireDomicile,
+    tarifMicroCreche: t.tarifMicroCreche,
+  };
+  return comparer(i).classement.find((r) => r.label === "Assistante maternelle")!.netReel;
+};
+const budgetMin = coutAma(DEPT_MIN.code);
+const budgetMax = coutAma(DEPT_MAX.code);
+
+const annee = DATES.observatoire.modified.slice(0, 4);
+const citation = `El Mufti, A. (${annee}). Observatoire du coût de la garde d'enfant par département. creche-ou-nounou.fr. ${site + path}. Données : ${urssaf.producteur}, « ${urssaf.nom} ». Licence ODbL 1.0.`;
 
 const title = "Observatoire du coût de la garde par département (2026)";
-const description =
-  "Salaire d'une assistante maternelle et coût d'une garde à domicile dans les 100 départements : classement 2026 (URSSAF), données ouvertes.";
+const description = `Salaire d'une assistante maternelle et coût d'une garde à domicile dans les ${NB_DEPARTEMENTS} départements : classement 2026 (URSSAF), données ouvertes.`;
 
 const jsonLd = [
   {
@@ -40,7 +86,29 @@ const jsonLd = [
     inLanguage: "fr-FR",
     temporalCoverage: "2024",
     spatialCoverage: "France",
-    creator: { "@type": "Person", name: "Ali El Mufti", url: "https://aelm.dev" },
+    creator: { "@type": "Person", "@id": PERSON_ID, name: "Ali El Mufti", url: "https://aelm.dev" },
+    publisher: { "@type": "Organization", "@id": ORG_ID, name: "creche-ou-nounou.fr", url: site },
+    isAccessibleForFree: true,
+    keywords: [
+      "coût garde d'enfant",
+      "salaire assistante maternelle par département",
+      "coût garde à domicile",
+      "tarif nounou",
+      "crèche ou nounou",
+      "Urssaf 2024",
+    ],
+    variableMeasured: [
+      {
+        "@type": "PropertyValue",
+        name: "Salaire horaire net moyen d'une assistante maternelle",
+        unitText: "EUR par heure",
+      },
+      {
+        "@type": "PropertyValue",
+        name: "Coût horaire total employeur d'une garde à domicile",
+        unitText: "EUR par heure",
+      },
+    ],
     datePublished: DATES.observatoire.published,
     dateModified: DATES.observatoire.modified,
     isBasedOn: SOURCE_TARIFS.source,
@@ -81,19 +149,18 @@ const jsonLd = [
       <h1 class="text-3xl font-extrabold sm:text-4xl">
         Observatoire du coût de la garde d'enfant 2026
       </h1>
-      <p class="mt-2 text-xs text-muted-foreground">
-        Mis à jour le {fmtDateFr(DATES.observatoire.modified)}.
-      </p>
+      <Byline modified={DATES.observatoire.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
       <p>
         <strong>En bref.</strong> À l'échelle nationale, une assistante maternelle est rémunérée
-        <strong>{fmtEuro2(TARIFS_NATIONAL.tauxHoraireAma)}/h net</strong> en moyenne, et une garde à
+        <strong>{fmtEuro2(TARIFS_NATIONAL.tauxHoraireAma)}/h net</strong> en moyenne
+        ({fmtEuro2(MOYENNE_AMA)}/h en moyenne simple des {NB_DEPARTEMENTS} départements), et une garde à
         domicile coûte environ <strong>{fmtEuro2(TARIFS_NATIONAL.coutHoraireDomicile)}/h</strong>
         (coût total employeur). Les écarts entre départements vont de
-        <strong>{fmtEuro2(moinsChers[0].ama)}</strong> à
-        <strong>{fmtEuro2(plusChers[0].ama)}/h</strong> pour l'assistante maternelle. Données
+        <strong>{fmtEuro2(DEPT_MIN.tauxHoraireAma)}/h</strong> à
+        <strong>{fmtEuro2(DEPT_MAX.tauxHoraireAma)}/h</strong> pour l'assistante maternelle. Données
         {SOURCE_TARIFS.source}.
       </p>
       <a
@@ -125,7 +192,7 @@ const jsonLd = [
             plusChers.map((r) => (
               <tr class="border-t border-border/30">
                 <td class="p-2 font-bold">
-                  <a class="underline" href={`/cout-garde-enfant/${slugify(r.nom)}`}>{r.nom}</a>
+                  <a class="underline" href={`/cout-garde-enfant/${r.slug}`}>{r.nom}</a>
                 </td>
                 <td class="p-2 text-right tabular-nums">{fmtEuro2(r.ama)}</td>
                 <td class="p-2 text-right tabular-nums">{fmtEuro2(r.dom)}</td>
@@ -151,7 +218,7 @@ const jsonLd = [
             moinsChers.map((r) => (
               <tr class="border-t border-border/30">
                 <td class="p-2 font-bold">
-                  <a class="underline" href={`/cout-garde-enfant/${slugify(r.nom)}`}>{r.nom}</a>
+                  <a class="underline" href={`/cout-garde-enfant/${r.slug}`}>{r.nom}</a>
                 </td>
                 <td class="p-2 text-right tabular-nums">{fmtEuro2(r.ama)}</td>
                 <td class="p-2 text-right tabular-nums">{fmtEuro2(r.dom)}</td>
@@ -160,6 +227,106 @@ const jsonLd = [
           }
         </tbody>
       </table>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Chiffres clés</h2>
+      <ul class="mt-3 flex list-disc flex-col gap-2 pl-5">
+        <li>
+          D'après les données Urssaf 2024, le salaire horaire net d'une assistante maternelle est de
+          {fmtEuro2(MOYENNE_AMA)}/h en moyenne des {NB_DEPARTEMENTS} départements, la médiane
+          s'établissant à {fmtEuro2(MEDIANE_AMA)}/h.
+        </li>
+        <li>
+          D'après les données Urssaf 2024, ce salaire horaire va de {fmtEuro2(DEPT_MIN.tauxHoraireAma)}/h
+          ({DEPT_MIN.nom}) à {fmtEuro2(DEPT_MAX.tauxHoraireAma)}/h ({DEPT_MAX.nom}) : le
+          département le plus cher est {fmtPct(ratioAma - 1)} % au-dessus du moins cher (rapport de
+          {" "}{fmtRatio(ratioAma)}).
+        </li>
+        <li>
+          D'après les données Urssaf 2024, {NB_AU_DESSUS_MOYENNE_AMA} départements sur {NB_DEPARTEMENTS}
+          rémunèrent leurs assistantes maternelles au-dessus de la moyenne des départements
+          ({fmtEuro2(MOYENNE_AMA)}/h).
+        </li>
+        <li>
+          D'après les données Urssaf 2024, le coût horaire total employeur d'une garde à domicile va de
+          {" "}{fmtEuro2(domMin.dom)}/h ({domMin.nom}) à {fmtEuro2(domMax.dom)}/h ({domMax.nom}), soit
+          un rapport de {fmtRatio(ratioDom)} entre les deux extrêmes.
+        </li>
+      </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Ce que ça change pour le budget</h2>
+      <p class="mt-2">
+        Pour un couple à {fmtEuro(EX.revenu)}/mois, avec 1 enfant gardé {EX.heures} h/mois, le coût
+        net réel d'une assistante maternelle, après CMG et crédit d'impôt, est de
+        <strong>{fmtEuro(budgetMin)}/mois</strong> dans le département le moins cher ({DEPT_MIN.nom},
+        {" "}{fmtEuro2(DEPT_MIN.tauxHoraireAma)}/h) et de <strong>{fmtEuro(budgetMax)}/mois</strong>
+        dans le plus cher ({DEPT_MAX.nom}, {fmtEuro2(DEPT_MAX.tauxHoraireAma)}/h), soit
+        {" "}{fmtEuro(budgetMax - budgetMin)}/mois d'écart pour une même situation familiale. Calcul
+        réalisé avec le moteur du <a class="underline" href="/">comparateur</a> : seul le tarif
+        local change, le barème (CMG, crédit d'impôt) est national.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-extrabold" id="classement">
+        Classement des {NB_DEPARTEMENTS} départements
+      </h2>
+      <p class="mt-1 text-sm leading-relaxed">
+        Du plus cher au moins cher selon le salaire horaire net d'une assistante maternelle (AMA).
+        L'écart se lit par rapport à la moyenne des départements ({fmtEuro2(MOYENNE_AMA)}/h). Les
+        départements au même tarif partagent le même rang.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="p-2 text-left text-xs text-muted-foreground">
+            Salaire horaire net d'une assistante maternelle et coût horaire total employeur d'une
+            garde à domicile par département, Urssaf 2024.
+          </caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Rang</th>
+              <th scope="col" class="p-2">Département</th>
+              <th scope="col" class="p-2 text-right">AMA (€/h net)</th>
+              <th scope="col" class="p-2 text-right">Écart vs moyenne</th>
+              <th scope="col" class="p-2 text-right">Garde à domicile (€/h, coût total)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              rows.map((r) => (
+                <tr class="border-t border-border/30">
+                  <td class="p-2 tabular-nums">{fmtRang(r.rang)}</td>
+                  <th scope="row" class="p-2 text-left font-bold">
+                    <a class="underline" href={`/cout-garde-enfant/${r.slug}`}>
+                      {r.nom}
+                    </a>
+                  </th>
+                  <td class="p-2 text-right tabular-nums">{fmtEuro2(r.ama)}</td>
+                  <td class="p-2 text-right tabular-nums">{fmtEcart(r.ama - MOYENNE_AMA)}</td>
+                  <td class="p-2 text-right tabular-nums">{fmtEuro2(r.dom)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-xl font-extrabold">Citer ces données</h2>
+      <p class="mt-2">
+        Réutilisation libre avec mention de la source, sous licence ODbL 1.0. Citation à copier :
+      </p>
+      <p class="card-brutal mt-2 select-all p-3">{citation}</p>
+      <p class="mt-2">
+        <a class="underline" href="/data/cout-garde-par-departement-2026.csv" download>
+          Télécharger le fichier CSV
+        </a>
+        ({NB_DEPARTEMENTS} lignes, une par département).
+      </p>
     </section>
 
     <section class="text-sm leading-relaxed">

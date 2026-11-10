@@ -1,13 +1,83 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Byline from "../../components/Byline.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr } from "../../lib/format";
+import { fmtEuro, fmtEuro2 } from "../../lib/format";
+import { bareme as b, calcCreche, calcDomicile } from "../../engine";
+import { inputsReference } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/credit-impot-frais-de-garde";
 const title = "Crédit d'impôt frais de garde 2026 : montant et plafond";
 const description =
-  "Crédit d'impôt frais de garde 2026 : 50 % des dépenses, plafond 3 500 € par enfant, versé même si vous n'êtes pas imposable. Exemples et pièges.";
+  "Crédit d'impôt frais de garde 2026 : 50 % des dépenses, plafond 3 500 € par enfant, versé même si vous n'êtes pas imposable. Exemples chiffrés et pièges.";
+
+// Tous les chiffres viennent du barème versionné et du moteur du comparateur.
+const heures = inputsReference.heuresMois;
+const fg = b.credit_impot.frais_garde;
+const ed = b.credit_impot.emploi_domicile;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+const creditMax = fg.taux * fg.plafond_par_enfant;
+
+// Tableau 1 : le plafond en action, indépendamment du mode de garde.
+const depenses = [1000, 2000, fg.plafond_par_enfant, 5000, 8000];
+const lignesDepenses = depenses.map((d) => {
+  const retenu = Math.min(d, fg.plafond_par_enfant);
+  return { depense: d, retenu, credit: fg.taux * retenu, plafonne: d > fg.plafond_par_enfant };
+});
+
+// Tableau 2 : crèche, à différents niveaux de ressources (1 enfant gardé).
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const lignesCreche = revenus.map((r) => {
+  const x = calcCreche(b, { ...inputsReference, revenuMensuelNet: r });
+  return {
+    revenu: r,
+    tres: x.tresorerieMensuelle,
+    annuel: x.tresorerieMensuelle * 12,
+    credit: x.creditImpotAnnuel,
+    net: x.netReel,
+  };
+});
+
+// Exemple pas à pas à 3 000 € (crèche, 1 enfant).
+const ex = calcCreche(b, inputsReference);
+const exAnnuel = ex.tresorerieMensuelle * 12;
+const exBase = Math.min(exAnnuel, fg.plafond_par_enfant);
+const exPlafonne = exAnnuel > fg.plafond_par_enfant;
+
+// Plafond par enfant : deux enfants en crèche.
+const deux = calcCreche(b, { ...inputsReference, nbEnfants: 2, agesGardes: [1, 2] });
+
+// Participation employeur : la part payée par l'employeur n'ouvre pas droit au crédit.
+const partEmployeur = 100;
+const avecPart = calcCreche(b, { ...inputsReference, participationEmployeur: partEmployeur });
+
+// Garde à domicile : crédit emploi à domicile.
+const dom = calcDomicile(b, inputsReference);
+const plafondDom1 = Math.min(ed.plafond_base + ed.majoration_par_enfant * 1, ed.plafond_max);
+
+const faq = [
+  {
+    q: "Quel est le montant du crédit d'impôt frais de garde en 2026 ?",
+    a: `${pct(fg.taux)} des dépenses de garde restant à votre charge (après CMG et participation employeur), dans la limite de ${fmtEuro(fg.plafond_par_enfant)} par enfant et par an, soit un crédit maximum de ${fmtEuro(creditMax)} par enfant. Il concerne la crèche, la micro-crèche et l'assistante maternelle (garde hors domicile). Avec 3 000 € de ressources et ${heures} h de crèche par mois, il est de ${fmtEuro(ex.creditImpotAnnuel)} par an.`,
+  },
+  {
+    q: "Quel est le plafond du crédit d'impôt pour la garde d'enfant ?",
+    a: `Le plafond est de ${fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant et par an pour la garde hors domicile, soit ${fmtEuro(creditMax)} de crédit au maximum. Il s'applique enfant par enfant : avec deux enfants gardés en crèche à 3 000 € de ressources, le crédit atteint ${fmtEuro(deux.creditImpotAnnuel)} par an.`,
+  },
+  {
+    q: "Le crédit d'impôt est-il versé si je ne paie pas d'impôt ?",
+    a: "Oui. C'est un crédit d'impôt restituable : si son montant dépasse votre impôt (ou si vous n'êtes pas imposable), la différence vous est remboursée par l'administration fiscale.",
+  },
+  {
+    q: "La participation de l'employeur réduit-elle le crédit d'impôt ?",
+    a: `Oui. La part payée par l'employeur (CESU préfinancé) n'ouvre pas droit au crédit : seul ce que vous payez vous-même compte. Dans l'exemple à 3 000 € de ressources, une participation employeur de ${fmtEuro(partEmployeur)} par mois ramène le reste à charge de ${fmtEuro(ex.tresorerieMensuelle)} à ${fmtEuro(avecPart.tresorerieMensuelle)} par mois et le crédit d'impôt de ${fmtEuro(ex.creditImpotAnnuel)} à ${fmtEuro(avecPart.creditImpotAnnuel)} par an.`,
+  },
+  {
+    q: "Quelle différence avec le crédit d'impôt emploi à domicile ?",
+    a: `La garde hors domicile (crèche, micro-crèche, assistante maternelle) relève du crédit « frais de garde » (plafond ${fmtEuro(fg.plafond_par_enfant)} par enfant). La garde à domicile relève du crédit « emploi à domicile », au plafond bien plus élevé (environ ${fmtEuro(ed.plafond_base)}, majoré de ${fmtEuro(ed.majoration_par_enfant)} par enfant, jusqu'à ${fmtEuro(ed.plafond_max)}). Ce sont deux dispositifs distincts.`,
+  },
+];
 
 const jsonLd = [
   {
@@ -25,32 +95,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Quel est le montant du crédit d'impôt frais de garde en 2026 ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "50 % des dépenses de garde restant à votre charge (après CMG et participation employeur), dans la limite de 3 500 € par enfant et par an, soit un crédit maximum de 1 750 € par enfant. Il concerne la crèche, la micro-crèche et l'assistante maternelle (garde hors domicile).",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Le crédit d'impôt est-il versé si je ne paie pas d'impôt ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Oui. C'est un crédit d'impôt restituable : si son montant dépasse votre impôt (ou si vous n'êtes pas imposable), la différence vous est remboursée par l'administration fiscale.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Quelle différence avec le crédit d'impôt emploi à domicile ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "La garde hors domicile (crèche, micro-crèche, assistante maternelle) relève du crédit « frais de garde » (plafond 3 500 €/enfant). La garde à domicile relève du crédit « emploi à domicile », au plafond bien plus élevé (~12 000 €). Ce sont deux dispositifs distincts.",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   {
     "@context": "https://schema.org",
@@ -71,53 +120,192 @@ const jsonLd = [
     </nav>
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Crédit d'impôt frais de garde 2026</h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-green p-4 text-sm leading-relaxed">
       <p>
         <strong>En bref.</strong> Le crédit d'impôt pour frais de garde rembourse
-        <strong>50 % des dépenses</strong> restant à votre charge, dans la limite de
-        <strong>3 500 € par enfant</strong> (soit 1 750 € max). Il est
+        <strong>{pct(fg.taux)} des dépenses</strong> restant à votre charge, dans la limite de
+        <strong>{fmtEuro(fg.plafond_par_enfant)} par enfant</strong> (soit {fmtEuro(creditMax)} au maximum). Il est
         <strong>restituable</strong> : vous le touchez même sans être imposable. Il s'applique à la
-        crèche, la micro-crèche et l'assistante maternelle.
+        crèche, la micro-crèche et l'assistante maternelle. Exemple : une crèche à 3 000 € de
+        ressources et {heures} h par mois coûte {fmtEuro(ex.tresorerieMensuelle)}/mois, soit
+        {" "}<strong>{fmtEuro(ex.creditImpotAnnuel)} de crédit d'impôt par an</strong> et
+        {" "}{fmtEuro(ex.netReel)}/mois net.
       </p>
       <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
         → Voir mon coût net après crédit d'impôt
       </a>
     </div>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Ce qu'il faut retenir</h2>
+    <section class="text-sm leading-relaxed" id="regles">
+      <h2 class="text-xl font-extrabold">Les règles à retenir</h2>
       <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li><strong>Taux</strong> : 50 % des dépenses restant à charge.</li>
-        <li><strong>Plafond</strong> : 3 500 €/enfant/an → crédit max 1 750 €/enfant.</li>
+        <li><strong>Taux</strong> : {pct(fg.taux)} des dépenses restant à charge, c'est-à-dire après le <a class="underline" href="/guides/cmg-2026">CMG</a> et la participation éventuelle de l'employeur.</li>
+        <li><strong>Plafond</strong> : {fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant et par an, donc un crédit de {fmtEuro(creditMax)} au maximum par enfant.</li>
+        <li><strong>Enfants concernés</strong> : enfants de moins de 6 ans, gardés hors du domicile (crèche, micro-crèche, assistante maternelle).</li>
         <li><strong>Restituable</strong> : remboursé même aux foyers non imposables.</li>
         <li><strong>Base</strong> : la part payée par l'employeur (CESU préfinancé) n'ouvre pas droit au crédit.</li>
         <li><strong>Timing</strong> : avance de 60 % en janvier, solde l'été suivant.</li>
       </ul>
+      <p class="mt-2">
+        Le <a class="underline" href="/glossaire">glossaire</a> définit les termes (reste à charge, coût net
+        réel) et la <a class="underline" href="/methodologie">méthodologie</a> détaille les hypothèses du calcul.
+      </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Ne pas confondre les deux crédits</h2>
+    <section class="text-sm leading-relaxed" id="plafond">
+      <h2 class="text-xl font-extrabold">Le plafond de {fmtEuro(fg.plafond_par_enfant)} en pratique</h2>
+      <p class="mt-2">
+        Le crédit est de {pct(fg.taux)} des dépenses jusqu'au plafond, puis il ne croît plus. Plus
+        vos dépenses annuelles dépassent {fmtEuro(fg.plafond_par_enfant)}, plus la part non couverte
+        par le crédit est importante.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Crédit d'impôt frais de garde selon les dépenses annuelles restant à charge pour un enfant</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Dépenses annuelles</th>
+              <th scope="col" class="p-2">Dépenses retenues</th>
+              <th scope="col" class="p-2">Crédit d'impôt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesDepenses.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.depense)}</th>
+                  <td class="p-2">{fmtEuro(l.retenu)}{l.plafonne ? " (plafond)" : ""}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.credit)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèse : 1 enfant de moins de 6 ans gardé hors domicile, dépenses restant à charge après
+        CMG et participation employeur.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="exemple">
+      <h2 class="text-xl font-extrabold">Exemple pas à pas : une place en crèche</h2>
+      <p class="mt-2">
+        Hypothèses : 3 000 € de ressources mensuelles, 1 enfant, {heures} h de crèche par mois.
+      </p>
+      <ol class="mt-2 list-decimal space-y-1 pl-5">
+        <li><strong>Reste à charge mensuel</strong> : {fmtEuro2(ex.tresorerieMensuelle)} (tarif crèche, sans CMG).</li>
+        <li><strong>Dépenses annuelles</strong> : {fmtEuro2(ex.tresorerieMensuelle)} × 12 = {fmtEuro(exAnnuel)}.</li>
+        <li><strong>Dépenses retenues</strong> : {fmtEuro(exBase)}{exPlafonne ? `, car le plafond de ${fmtEuro(fg.plafond_par_enfant)} est atteint` : ""}.</li>
+        <li><strong>Crédit d'impôt</strong> : {pct(fg.taux)} × {fmtEuro(exBase)} = <strong>{fmtEuro(ex.creditImpotAnnuel)}</strong> par an, soit {fmtEuro2(ex.creditImpotMensuel)} par mois.</li>
+        <li><strong>Coût net réel</strong> : {fmtEuro2(ex.tresorerieMensuelle)} − {fmtEuro2(ex.creditImpotMensuel)} = <strong>{fmtEuro2(ex.netReel)}</strong> par mois.</li>
+      </ol>
+      <p class="mt-2">
+        Le plafond se calcule <strong>par enfant</strong> : avec deux enfants gardés en crèche pour les
+        mêmes ressources, le crédit atteint {fmtEuro(deux.creditImpotAnnuel)} par an.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="par-revenu">
+      <h2 class="text-xl font-extrabold">Crédit d'impôt selon vos revenus (crèche)</h2>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Crédit d'impôt frais de garde et coût net réel d'une crèche, par niveau de ressources mensuelles</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Dépenses annuelles</th>
+              <th scope="col" class="p-2">Crédit d'impôt / an</th>
+              <th scope="col" class="p-2">Coût net réel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesCreche.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.tres)}/mois</td>
+                  <td class="p-2">{fmtEuro(l.annuel)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.credit)}</td>
+                  <td class="p-2">{fmtEuro(l.net)}/mois</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : crèche collective, 1 enfant, couple, {heures} h par mois (voir le
+        {" "}<a class="underline" href="/guides/tarif-creche-2026">tarif crèche 2026</a>). Pour une assistante maternelle,
+        la base est le reste à charge après CMG : voir le
+        {" "}<a class="underline" href="/guides/reste-a-charge-nounou">reste à charge d'une assistante maternelle</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="deux-credits">
+      <h2 class="text-xl font-extrabold">Ne pas confondre les deux crédits d'impôt</h2>
       <p class="mt-2">
         Garde <strong>hors domicile</strong> (crèche, micro-crèche, assistante maternelle) → crédit
-        <strong>frais de garde</strong> (3 500 €/enfant). Garde <strong>à domicile</strong> → crédit
-        <strong>emploi à domicile</strong> (~12 000 €). C'est cette différence de plafond qui fait
-        souvent basculer le verdict pour les hauts revenus.
+        <strong>frais de garde</strong> ({fmtEuro(fg.plafond_par_enfant)} par enfant). Garde <strong>à domicile</strong>
+        → crédit <strong>emploi à domicile</strong> : {pct(ed.taux)} dans la limite d'environ {fmtEuro(ed.plafond_base)},
+        majorée de {fmtEuro(ed.majoration_par_enfant)} par enfant, jusqu'à {fmtEuro(ed.plafond_max)}. Pour un enfant, le
+        plafond est de {fmtEuro(plafondDom1)}. C'est cette différence de plafond qui fait souvent basculer
+        le verdict pour les hauts revenus.
       </p>
+      <p class="mt-2">
+        Exemple : avec 3 000 € de ressources et {heures} h de garde à domicile, le reste à charge est de
+        {" "}{fmtEuro(dom.tresorerieMensuelle)} par mois et le crédit d'impôt de {fmtEuro(dom.creditImpotAnnuel)} par an
+        (voir la <a class="underline" href="/guides/garde-a-domicile-cout-reel">garde à domicile : coût réel</a>).
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="pieges">
+      <h2 class="text-xl font-extrabold">Les pièges à éviter</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><strong>Calculer sur le coût brut.</strong> La base est ce qui reste à votre charge après CMG et participation de l'employeur, pas le salaire ou la facture avant aides.</li>
+        <li><strong>Compter la part de l'employeur.</strong> Avec {fmtEuro(partEmployeur)} par mois de CESU préfinancé, le crédit de l'exemple passe de {fmtEuro(ex.creditImpotAnnuel)} à {fmtEuro(avecPart.creditImpotAnnuel)} par an.</li>
+        <li><strong>Assistante maternelle : repas et entretien.</strong> Les frais de repas ne sont pas déductibles et l'indemnité d'entretien ne l'est que dans une limite forfaitaire ; le comparateur peut surestimer le crédit de quelques euros.</li>
+        <li><strong>Oublier que le crédit arrive plus tard.</strong> Il est encaissé l'année suivante : il réduit le coût net, pas la trésorerie mensuelle.</li>
+        <li><strong>Garde à domicile.</strong> La majoration du plafond la première année d'emploi n'est pas modélisée par le comparateur.</li>
+      </ul>
+      <p class="mt-2">
+        Pour comparer les modes de garde après crédit d'impôt, lancez le <a class="underline" href="/">comparateur</a>
+        ou consultez le <a class="underline" href="/cout-garde-enfant">coût de la garde par département</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="faq">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
       <strong class="uppercase tracking-brutal">Guides liés</strong>
       <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
+        <li><a class="underline" href="/guides/tarif-creche-2026">Tarif crèche 2026</a></li>
+        <li><a class="underline" href="/guides/reste-a-charge-nounou">Reste à charge d'une assistante maternelle</a></li>
         <li><a class="underline" href="/guides/garde-a-domicile-cout-reel">Garde à domicile : le crédit emploi à domicile</a></li>
-        <li><a class="underline" href="/guides/cmg-2026">CMG 2026</a></li>
+        <li><a class="underline" href="/glossaire">Glossaire : crédit d'impôt, reste à charge</a></li>
       </ul>
     </nav>
 
     <p class="text-xs text-muted-foreground">
-      Sources : impots.gouv.fr, service-public.fr (2026). Estimation indicative, pas un avis officiel.
+      Sources : <a class="underline" href="https://www.impots.gouv.fr/">impots.gouv.fr</a>,
+      <a class="underline" href="https://www.service-public.fr/">service-public.fr</a> (2026). Calcul :
+      <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative, pas un avis officiel :
+      vos montants exacts figurent sur votre déclaration de revenus.
     </p>
   </article>
 </Layout>

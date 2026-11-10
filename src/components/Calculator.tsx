@@ -7,6 +7,7 @@ import {
   tarifsLocaux,
   type ResolutionTarifs,
 } from "../data/tarifs-locaux";
+import { resoudreInputs } from "../lib/scenario-reference";
 import { Field, NumberInput, Segmented, Slider, Toggle } from "./ui";
 import { ResultsPanel } from "./ResultsPanel";
 
@@ -53,15 +54,7 @@ export function Calculator() {
     local.tarifsSources && local.dept ? local.dept.nom : "national indicatif";
 
   // Le moteur reçoit les valeurs résolues (locales pour les champs intacts).
-  const resolved = useMemo<Inputs>(
-    () => ({
-      ...inputs,
-      tauxHoraireAma: tauxAma,
-      coutHoraireDomicile: coutDom,
-      tarifMicroCreche: tarifMicro,
-    }),
-    [inputs, tauxAma, coutDom, tarifMicro],
-  );
+  const resolved = useMemo<Inputs>(() => resoudreInputs(inputs, local), [inputs, local]);
 
   const comparison = useMemo(() => comparer(resolved), [resolved]);
 

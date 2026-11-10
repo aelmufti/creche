@@ -1,14 +1,116 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Byline from "../../components/Byline.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr, fmtEuro, fmtEuro2 } from "../../lib/format";
-import { bareme as b } from "../../engine/bareme";
+import { fmtEuro, fmtEuro2, fmtHeure, fmtRang } from "../../lib/format";
+import { bareme, calcDomicile, comparer } from "../../engine";
+import { inputsReference, TARIFS_REFERENCE } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/garde-a-domicile-cout-reel";
 const title = "Garde à domicile 2026 : coût réel après crédit d'impôt";
 const description =
-  "Coût réel d'une garde à domicile en 2026 : coût employeur, CMG, cotisations et crédit d'impôt emploi à domicile (~12 000 €). Exemples chiffrés.";
+  "Garde à domicile en 2026 : coût employeur, CMG, aide aux cotisations et crédit d'impôt emploi à domicile, chiffrés par niveau de revenu du foyer.";
+
+// Tous les chiffres viennent du barème versionné (bareme-2026.json) et du moteur
+// du comparateur : la page suit chaque mise à jour du barème.
+const heures = inputsReference.heuresMois;
+const coutH = TARIFS_REFERENCE.coutHoraireDomicile;
+const facteur = bareme.cotisations.facteur_cout_total_domicile;
+const fmtFacteur = String(facteur).replace(".", ",");
+const ed = bareme.credit_impot.emploi_domicile;
+const fg = bareme.credit_impot.frais_garde;
+const cotis = bareme.cotisations;
+const refDom = bareme.cout_horaire_ref.domicile;
+const plafondHDom = bareme.plafond_horaire.domicile;
+// Bornes du CMG ([INSTR] : 821 € – 8 500 €), distinctes du plancher PSU de la crèche.
+const { plancher, plafond } = bareme.ressources_cmg;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+const pct0 = (x: number) => `${Math.round(x * 100)} %`;
+
+const plafondCredit = (nbEnfants: number) =>
+  Math.min(ed.plafond_base + ed.majoration_par_enfant * nbEnfants, ed.plafond_max);
+const creditMax = (nbEnfants: number) => ed.taux * plafondCredit(nbEnfants);
+
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const lignes = revenus.map((r) => {
+  const i = { ...inputsReference, revenuMensuelNet: r };
+  const d = calcDomicile(bareme, i);
+  const c = comparer(i);
+  return {
+    revenu: r,
+    cmg: d.details.cmg,
+    cotis: d.details.cmgCotis,
+    reste: d.tresorerieMensuelle,
+    net: d.netReel,
+    rang: c.classement.findIndex((x) => x.mode === "domicile") + 1,
+    gagnant: c.gagnant.label,
+  };
+});
+
+// Deux enfants gardés par la même personne : coût inchangé, plafond du crédit majoré.
+const lignes2 = [2000, 3000, 5000, 8500].map((r) => {
+  const i1 = { ...inputsReference, revenuMensuelNet: r };
+  const i2 = { ...i1, nbEnfants: 2, agesGardes: [1, 2] };
+  const d1 = calcDomicile(bareme, i1);
+  const d2 = calcDomicile(bareme, i2);
+  const c2 = comparer(i2);
+  return {
+    revenu: r,
+    net1: d1.netReel,
+    net2: d2.netReel,
+    rang2: c2.classement.findIndex((x) => x.mode === "domicile") + 1,
+    gagnant2: c2.gagnant.label,
+    netGagnant2: c2.gagnant.netReel,
+  };
+});
+
+// Sensibilité au coût horaire total employeur (revenu de référence : 3 000 €).
+const lignesCout = [15, coutH, 20, 25].map((h) => {
+  const d = calcDomicile(bareme, { ...inputsReference, coutHoraireDomicile: h });
+  return { h, brut: d.coutBrut, aide: d.aide, reste: d.tresorerieMensuelle, net: d.netReel };
+});
+
+// Exemple pas à pas : foyer de référence (3 000 €/mois, 1 enfant de moins de 3 ans).
+const ex = calcDomicile(bareme, inputsReference);
+const revenuRetenu = Math.min(Math.max(inputsReference.revenuMensuelNet, plancher), plafond);
+const teDouble = bareme.taux_effort_collectif["1"] * 2;
+const netHoraire = Math.min(coutH / facteur, plafondHDom);
+const salaireNetMensuel = heures * netHoraire;
+const partRestante = (revenuRetenu * teDouble) / refDom;
+const cotisEstimees = salaireNetMensuel * (facteur - 1);
+const cotisMoitie = cotis.prise_en_charge_domicile * cotisEstimees;
+const plafondCotis = cotis.plafond_prise_en_charge_domicile.moins3ans;
+const depensesAnnuelles = ex.tresorerieMensuelle * 12;
+const depensesRetenues = Math.min(depensesAnnuelles, plafondCredit(1));
+const ex3000 = lignes.find((l) => l.revenu === 3000)!;
+const ex8500 = lignes.find((l) => l.revenu === 8500)!;
+const ex1500 = lignes.find((l) => l.revenu === 1500)!;
+const gagneDomicile = lignes.filter((l) => l.rang === 1);
+const toujoursDernier = lignes.every((l) => l.rang === 5);
+
+const faq = [
+  {
+    q: "Combien coûte une garde à domicile en 2026 ?",
+    a: `Avec ${heures} h de garde par mois et un coût horaire total employeur de ${fmtHeure(coutH)} (moyenne nationale Urssaf 2024), le coût brut est de ${fmtEuro(ex.coutBrut)} par mois. Pour un foyer à 3 000 € de ressources mensuelles avec 1 enfant, les aides ramènent le reste à charge à ${fmtEuro(ex.tresorerieMensuelle)} par mois, et le coût net réel à ${fmtEuro(ex.netReel)} par mois après le crédit d'impôt emploi à domicile.`,
+  },
+  {
+    q: "Quel crédit d'impôt pour une garde à domicile ?",
+    a: `La garde à domicile relève du crédit d'impôt « emploi à domicile » : ${pct0(ed.taux)} des dépenses restant à votre charge, dans la limite de ${fmtEuro(ed.plafond_base)} par an, majorée de ${fmtEuro(ed.majoration_par_enfant)} par enfant et plafonnée à ${fmtEuro(ed.plafond_max)}. Pour 1 enfant, le plafond est de ${fmtEuro(plafondCredit(1))} de dépenses, soit un crédit maximal de ${fmtEuro(creditMax(1))} par an. C'est bien plus que le crédit frais de garde des autres modes (${fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant).`,
+  },
+  {
+    q: "Quelles aides peut-on cumuler avec une garde à domicile ?",
+    a: `Trois aides se cumulent : le CMG, calculé sur le salaire net avec un taux d'effort doublé et un coût de référence de ${fmtEuro2(refDom)} par heure ; la prise en charge de ${pct0(cotis.prise_en_charge_domicile)} des cotisations sociales, dans la limite de ${fmtEuro(cotis.plafond_prise_en_charge_domicile.moins3ans)} par mois pour un enfant de moins de 3 ans (${fmtEuro(cotis.plafond_prise_en_charge_domicile.de3a6ans)} de 3 à 6 ans) ; et le crédit d'impôt emploi à domicile.`,
+  },
+  {
+    q: "La garde à domicile coûte-t-elle plus cher pour deux enfants ?",
+    a: `Pas proportionnellement : un seul intervenant garde tous les enfants au domicile, le coût brut reste donc de ${fmtEuro(ex.coutBrut)} par mois dans nos hypothèses. À 3 000 € de ressources, le coût net réel passe de ${fmtEuro(lignes2.find((l) => l.revenu === 3000)!.net1)} (1 enfant) à ${fmtEuro(lignes2.find((l) => l.revenu === 3000)!.net2)} (2 enfants gardés) par mois, car le taux d'effort baisse avec le nombre d'enfants à charge et le plafond du crédit d'impôt est majoré.`,
+  },
+  {
+    q: "Le coût net affiché est-il ce que je paie chaque mois ?",
+    a: `Non. Le coût net réel est une moyenne mensuelle après crédit d'impôt, or le crédit d'impôt n'est pas déduit de vos paiements au fil de l'eau. Pour un foyer à 3 000 € de ressources mensuelles, ce qui sort réellement du compte est le reste à charge avant crédit d'impôt, soit ${fmtEuro(ex.tresorerieMensuelle)} par mois, pour un coût net de ${fmtEuro(ex.netReel)} une fois le crédit d'impôt obtenu. Il faut donc prévoir cette trésorerie.`,
+  },
+];
 
 const jsonLd = [
   {
@@ -26,24 +128,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Quel crédit d'impôt pour une garde à domicile ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "La garde à domicile relève du crédit d'impôt « emploi à domicile » : 50 % des dépenses dans la limite de ~12 000 € par an (majoré de 1 500 € par enfant, plafond 15 000 €). C'est bien plus élevé que le crédit frais de garde (3 500 €/enfant) des autres modes, ce qui rend la garde à domicile compétitive pour les hauts revenus.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "La garde à domicile coûte-t-elle plus cher pour deux enfants ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Non, pas proportionnellement : un seul intervenant garde tous vos enfants au domicile, le coût n'est donc pas multiplié par le nombre d'enfants. C'est ce qui rend ce mode particulièrement intéressant à partir de deux enfants.",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   {
     "@context": "https://schema.org",
@@ -64,39 +153,297 @@ const jsonLd = [
     </nav>
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">Garde à domicile : le coût réel en 2026</h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-pink p-4 text-sm leading-relaxed">
       <p>
-        <strong>En bref.</strong> La garde à domicile a un coût brut élevé, mais deux atouts la
-        rendent compétitive : le <strong>crédit d'impôt emploi à domicile (~12 000 €/an)</strong>,
-        bien supérieur au crédit frais de garde des autres modes, et le fait qu'<strong>un seul
-        intervenant garde tous vos enfants</strong> (coût non multiplié). Idéale pour les hauts
-        revenus et/ou plusieurs enfants.
+        <strong>En bref.</strong> Une garde à domicile coûte
+        <strong>{fmtEuro(ex.coutBrut)}/mois</strong> à l'employeur pour {heures} h à {fmtHeure(coutH)}.
+        Pour un foyer à 3 000 € de ressources mensuelles avec 1 enfant, le CMG et l'aide aux
+        cotisations ramènent le reste à charge à <strong>{fmtEuro(ex.tresorerieMensuelle)}/mois</strong>,
+        puis le crédit d'impôt emploi à domicile (plafond de {fmtEuro(plafondCredit(1))} de dépenses
+        pour 1 enfant) à <strong>{fmtEuro(ex.netReel)}/mois</strong> de coût net réel.
+        {
+          toujoursDernier
+            ? " Sur ces hypothèses, c'est le mode le plus cher des cinq à tous les niveaux de revenus testés : son intérêt tient à la souplesse, et la garde partagée en divise le coût."
+            : ""
+        }
       </p>
       <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
         → Calculer le coût net pour ma famille
       </a>
     </div>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Le piège à éviter : deux crédits d'impôt différents</h2>
+    <section class="text-sm leading-relaxed" id="fonctionnement">
+      <h2 class="text-xl font-extrabold">Comment fonctionne la garde à domicile</h2>
       <p class="mt-2">
-        Beaucoup de comparateurs appliquent par erreur le crédit d'impôt « frais de garde » (plafond
-        3 500 €/enfant) à la garde à domicile. C'est faux : la garde à domicile relève du crédit
-        d'impôt <strong>emploi à domicile</strong> (~12 000 €, majoré par enfant, plafond 15 000 €).
-        Ce plafond bien plus haut change radicalement le verdict pour les revenus élevés.
+        Un salarié garde votre enfant chez vous : vous êtes son employeur et vous déclarez sa
+        rémunération via <a class="underline" href="https://www.pajemploi.urssaf.fr/" rel="noopener">Pajemploi</a>.
+        Ce que vous payez au total (salaire net et cotisations) est le <strong>coût total
+        employeur</strong>. Les aides se calculent ensuite sur ce coût, dans cet ordre : le CMG, l'aide
+        aux cotisations, puis le crédit d'impôt sur ce qui reste.
+      </p>
+      <p class="mt-2">
+        Pour estimer le salaire net (base du CMG) à partir du coût total, le comparateur divise par
+        {" "}<strong>{fmtFacteur}</strong>. C'est une <strong>approximation moyenne, pas une règle</strong> :
+        votre déclaration Pajemploi donne les montants exacts (voir la
+        {" "}<a class="underline" href="/methodologie">méthodologie</a>). Le CMG et la prise en charge des
+        cotisations sont expliqués dans le <a class="underline" href="/guides/cmg-2026">guide CMG 2026</a>
+        et le <a class="underline" href="/glossaire">glossaire</a>.
       </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Les aides cumulées</h2>
-      <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li><strong>CMG</strong> garde à domicile (taux d'effort doublé, coût de référence {fmtEuro2(b.cout_horaire_ref.domicile)} de salaire net, sans montant maximum mensuel).</li>
-        <li><strong>50 % des cotisations</strong> sociales prises en charge, dans la limite de {fmtEuro(b.cotisations.plafond_prise_en_charge_domicile.moins3ans)} par mois (enfant de moins de 3 ans) ou {fmtEuro(b.cotisations.plafond_prise_en_charge_domicile.de3a6ans)} (3 à 6 ans).</li>
-        <li><strong>Crédit d'impôt emploi à domicile</strong> de 50 %, plafond ~12 000 €/an.</li>
+    <section class="text-sm leading-relaxed" id="credit-impot">
+      <h2 class="text-xl font-extrabold">Le piège : deux crédits d'impôt différents</h2>
+      <p class="mt-2">
+        Beaucoup de comparateurs appliquent à la garde à domicile le crédit d'impôt « frais de
+        garde » ({fmtEuro(fg.plafond_par_enfant)} de dépenses par enfant). C'est une erreur : la garde
+        à domicile relève du crédit d'impôt <strong>emploi à domicile</strong>, à
+        {" "}{pct0(ed.taux)}, avec un plafond de dépenses de <strong>{fmtEuro(ed.plafond_base)}</strong>
+        majoré de {fmtEuro(ed.majoration_par_enfant)} par enfant et limité à
+        {" "}{fmtEuro(ed.plafond_max)}. Pour 1 enfant : {fmtEuro(plafondCredit(1))} de dépenses, donc
+        jusqu'à <strong>{fmtEuro(creditMax(1))} de crédit par an</strong>, contre
+        {" "}{fmtEuro(fg.taux * fg.plafond_par_enfant)} au plus avec le crédit frais de garde. Le crédit
+        est <strong>restituable</strong> : il est versé même si vous n'êtes pas imposable, et la part
+        payée par un employeur n'y ouvre pas droit. Détail dans le guide
+        {" "}<a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt frais de garde</a>.
+      </p>
+    </section>
+
+    <section id="cout-par-revenu">
+      <h2 class="text-xl font-extrabold">Combien coûte une garde à domicile selon vos revenus</h2>
+      <p class="mt-2 text-sm leading-relaxed">
+        Le CMG diminue quand les ressources augmentent, alors que le coût de l'intervenant reste le
+        même. Le tableau détaille, pour chaque niveau de revenus, les aides et le coût net réel. La
+        dernière colonne indique le rang de la garde à domicile parmi les cinq modes du comparateur.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Coût d'une garde à domicile en 2026 par niveau de ressources mensuelles : CMG, aide aux cotisations, reste à charge, coût net réel et rang parmi les modes de garde</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">CMG</th>
+              <th scope="col" class="p-2">Aide cotisations</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Net réel après crédit</th>
+              <th scope="col" class="p-2">Rang (sur 5)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignes.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.cmg)}</td>
+                  <td class="p-2">{fmtEuro(l.cotis)}</td>
+                  <td class="p-2">{fmtEuro(l.reste)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net)}/mois</td>
+                  <td class="p-2">
+                    {fmtRang(l.rang)} <span class="text-muted-foreground">({l.gagnant} en tête)</span>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 1 enfant de moins de 3 ans, couple, {heures} h par mois, coût total employeur de
+        {" "}{fmtHeure(coutH)} (moyenne nationale Urssaf 2024, à remplacer par la vôtre), aucune
+        participation d'employeur. Montants mensuels, crédit d'impôt mensualisé. Le coût brut est de
+        {" "}{fmtEuro(ex.coutBrut)}/mois dans tous les cas.
+      </p>
+      <p class="mt-3 text-sm leading-relaxed">
+        <strong>Lecture.</strong> À {fmtEuro(ex1500.revenu)} de ressources, le net réel est de
+        {" "}{fmtEuro(ex1500.net)}/mois ; à {fmtEuro(ex8500.revenu)}, il est de
+        {" "}{fmtEuro(ex8500.net)}/mois, car il ne reste alors plus que l'aide aux cotisations
+        ({fmtEuro(ex8500.cotis)}/mois) et le crédit d'impôt.
+        {
+          gagneDomicile.length > 0
+            ? `Sur ces hypothèses, la garde à domicile seule est le mode le moins cher pour ${gagneDomicile.map((l) => fmtEuro(l.revenu)).join(", ")} de ressources.`
+            : "Sur ces hypothèses, la garde à domicile seule n'est le mode le moins cher à aucun des niveaux de revenus du tableau : son avantage tient à la souplesse, ou à la garde partagée."
+        }
+        Voir aussi la <a class="underline" href="/guides/garde-partagee">garde partagée</a>, qui divise
+        ce coût entre deux familles.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="exemple">
+      <h2 class="text-xl font-extrabold">Exemple pas à pas : 3 000 € de ressources, 1 enfant</h2>
+      <p class="mt-2">
+        Foyer en couple, 1 enfant de moins de 3 ans, {heures} h de garde par mois, coût total
+        employeur de {fmtHeure(coutH)}.
+      </p>
+      <ol class="mt-3 list-decimal space-y-2 pl-5">
+        <li>
+          <strong>Coût brut</strong> : {heures} h × {fmtHeure(coutH)} = <strong>{fmtEuro(ex.coutBrut)}</strong> par mois.
+        </li>
+        <li>
+          <strong>Salaire net estimé</strong> : {fmtHeure(coutH)} ÷ {fmtFacteur} ≈ {fmtHeure(netHoraire)}, soit
+          {" "}{fmtEuro(salaireNetMensuel)} par mois (approximation, voir plus haut).
+        </li>
+        <li>
+          <strong>CMG</strong> : le taux d'effort est doublé en garde à domicile ({pct(teDouble)}). Ressources
+          de {fmtEuro(revenuRetenu)} × {pct(teDouble)} = {fmtEuro2(revenuRetenu * teDouble)} par heure, soit
+          {" "}{pct0(partRestante)} du coût de référence de {fmtEuro2(refDom)}. Le CMG couvre le reste :
+          {" "}{fmtEuro(salaireNetMensuel)} × (1 − {pct0(partRestante)}) ≈ <strong>{fmtEuro(ex.details.cmg)}</strong>.
+        </li>
+        <li>
+          <strong>Aide aux cotisations</strong> : cotisations estimées à {fmtEuro(cotisEstimees)}, dont
+          {" "}{pct0(cotis.prise_en_charge_domicile)} = {fmtEuro(cotisMoitie)}, limité à {fmtEuro(plafondCotis)}
+          {" "}par mois pour un enfant de moins de 3 ans : <strong>{fmtEuro(ex.details.cmgCotis)}</strong>.
+        </li>
+        <li>
+          <strong>Reste à charge</strong> : {fmtEuro(ex.coutBrut)} − {fmtEuro(ex.details.cmg)} − {fmtEuro(ex.details.cmgCotis)}
+          {" "}= <strong>{fmtEuro(ex.tresorerieMensuelle)}</strong> par mois, soit {fmtEuro(depensesAnnuelles)} par an.
+        </li>
+        <li>
+          <strong>Crédit d'impôt</strong> : {pct0(ed.taux)} des dépenses, retenues jusqu'à
+          {" "}{fmtEuro(plafondCredit(1))} par an ({fmtEuro(depensesRetenues)} retenus ici) =
+          {" "}<strong>{fmtEuro(ex.creditImpotAnnuel)}</strong> par an, soit {fmtEuro(ex.creditImpotMensuel)} par mois.
+        </li>
+        <li>
+          <strong>Coût net réel</strong> : {fmtEuro(ex.tresorerieMensuelle)} − {fmtEuro(ex.creditImpotMensuel)}
+          {" "}= <strong>{fmtEuro(ex.netReel)}</strong> par mois.
+        </li>
+      </ol>
+    </section>
+
+    <section id="cout-horaire">
+      <h2 class="text-xl font-extrabold">L'effet du coût horaire de l'intervenant</h2>
+      <p class="mt-2 text-sm leading-relaxed">
+        Le coût horaire de l'intervenant est la variable que vous contrôlez le moins mais qui pèse le
+        plus. Il varie selon le département (voir l'
+        <a class="underline" href="/observatoire-cout-garde-2026">observatoire du coût de la garde</a> et le
+        <a class="underline" href="/cout-garde-enfant">coût de la garde par département</a>). Simulation
+        à 3 000 € de ressources mensuelles, 1 enfant, {heures} h par mois :
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Effet du coût horaire total employeur sur le coût d'une garde à domicile pour un foyer à 3 000 € de ressources mensuelles</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Coût horaire employeur</th>
+              <th scope="col" class="p-2">Coût brut</th>
+              <th scope="col" class="p-2">Aides (CMG + cotisations)</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Net réel après crédit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesCout.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtHeure(l.h)}</th>
+                  <td class="p-2">{fmtEuro(l.brut)}</td>
+                  <td class="p-2">{fmtEuro(l.aide)}</td>
+                  <td class="p-2">{fmtEuro(l.reste)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net)}/mois</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Le coût retenu pour le CMG est écrêté au plafond horaire de {fmtEuro2(plafondHDom)} de salaire
+        net ; au-delà, l'écart reste à votre charge.
+      </p>
+    </section>
+
+    <section id="deux-enfants">
+      <h2 class="text-xl font-extrabold">Deux enfants : un coût qui n'est pas multiplié</h2>
+      <p class="mt-2 text-sm leading-relaxed">
+        Un seul intervenant garde tous les enfants : le coût brut n'est pas multiplié, alors qu'il l'est
+        avec une crèche ou une assistante maternelle, qui se paient place par place. Le plafond du
+        crédit d'impôt est aussi majoré ({fmtEuro(plafondCredit(2))} de dépenses pour 2 enfants).
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">Coût net réel d'une garde à domicile pour 1 enfant et pour 2 enfants gardés, et mode le moins cher pour 2 enfants</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">1 enfant gardé</th>
+              <th scope="col" class="p-2">2 enfants gardés</th>
+              <th scope="col" class="p-2">Rang pour 2 enfants</th>
+              <th scope="col" class="p-2">Mode le moins cher (2 enfants)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignes2.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.net1)}/mois</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.net2)}/mois</td>
+                  <td class="p-2">{fmtRang(l.rang2)} sur 5</td>
+                  <td class="p-2">
+                    {l.gagnant2} <span class="text-muted-foreground">({fmtEuro(l.netGagnant2)}/mois)</span>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Mêmes hypothèses ; « 2 enfants » : 2 enfants à charge, tous deux gardés (1 et 2 ans), un seul
+        intervenant. Pour les autres modes, chaque enfant gardé est facturé.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="pieges">
+      <h2 class="text-xl font-extrabold">Limites et pièges à connaître</h2>
+      <ul class="mt-2 list-disc space-y-2 pl-5">
+        <li>
+          <strong>Trésorerie contre coût net.</strong> Le coût net est calculé après crédit d'impôt,
+          mais le crédit d'impôt n'est pas déduit de vos paiements mensuels : c'est le reste à
+          charge ({fmtEuro(ex.tresorerieMensuelle)}/mois dans l'exemple) qui sort du compte.
+        </li>
+        <li>
+          <strong>Plafond du crédit d'impôt.</strong> Au-delà de {fmtEuro(plafondCredit(1))} de dépenses
+          annuelles (1 enfant), le crédit n'augmente plus. C'est le cas dans l'exemple à 3 000 € :
+          {" "}{fmtEuro(depensesAnnuelles)} de dépenses, dont {fmtEuro(depensesAnnuelles - depensesRetenues)} non retenus.
+        </li>
+        <li>
+          <strong>Approximation du coût total.</strong> Le facteur de {fmtFacteur} entre salaire net et
+          coût employeur est une moyenne ; la majoration du plafond du crédit d'impôt la première
+          année d'emploi n'est pas modélisée (<a class="underline" href="/methodologie">limites connues</a>).
+        </li>
+        <li>
+          <strong>Activité professionnelle requise</strong> : le comparateur signale cette condition pour
+          la garde à domicile.
+        </li>
       </ul>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="comparaison">
+      <h2 class="text-xl font-extrabold">Garde à domicile ou autre mode : quand choisir quoi ?</h2>
+      <p class="mt-2">
+        Aux revenus modestes, la crèche et l'assistante maternelle sont nettement moins chères (voir le
+        {" "}<a class="underline" href="/guides/tarif-creche-2026">tarif crèche 2026</a> et le comparatif
+        {" "}<a class="underline" href="/guides/creche-ou-assistante-maternelle">crèche ou assistante maternelle</a>).
+        La garde à domicile se justifie surtout par la souplesse d'horaires et la garde au domicile. Pour partager le coût, voir la
+        {" "}<a class="underline" href="/guides/garde-partagee">garde partagée</a> ; pour l'effet de la
+        réforme sur le CMG, le guide
+        {" "}<a class="underline" href="/guides/reforme-cmg-septembre-2025">réforme du CMG de septembre 2025</a>.
+        Pour votre cas exact, <a class="underline" href="/">lancez le comparateur</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="faq">
+      <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
@@ -105,11 +452,18 @@ const jsonLd = [
         <li><a class="underline" href="/guides/garde-partagee">La garde partagée (entre deux familles)</a></li>
         <li><a class="underline" href="/guides/cmg-2026">CMG 2026 : montant et calcul</a></li>
         <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Les deux crédits d'impôt</a></li>
+        <li><a class="underline" href="/guides/reforme-cmg-septembre-2025">Réforme du CMG de septembre 2025</a></li>
+        <li><a class="underline" href="/guides/tarif-creche-2026">Tarif crèche 2026</a></li>
+        <li><a class="underline" href="/observatoire-cout-garde-2026">Observatoire du coût de la garde</a></li>
       </ul>
     </nav>
 
     <p class="text-xs text-muted-foreground">
-      Sources : Pajemploi, impots.gouv.fr (2026). Estimation indicative, pas un avis officiel.
+      Sources : <a class="underline" href="https://www.pajemploi.urssaf.fr/" rel="noopener">Pajemploi (Urssaf)</a>,
+      {" "}<a class="underline" href="https://www.impots.gouv.fr/" rel="noopener">impots.gouv.fr</a>,
+      {" "}<a class="underline" href="https://www.caf.fr/" rel="noopener">caf.fr</a> (barème 2026). Calcul :
+      {" "}<a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative, pas un avis
+      officiel : vérifiez votre situation auprès de la CAF et de l'administration fiscale.
     </p>
   </article>
 </Layout>

@@ -1,13 +1,36 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr } from "../../lib/format";
+import Byline from "../../components/Byline.astro";
+import { fmtEuro, fmtEuro2 } from "../../lib/format";
+import { bareme } from "../../engine";
+import { inputsReference } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/creche-ou-assistante-maternelle";
 const title = "Crèche ou assistante maternelle : le moins cher en 2026";
 const description =
   "Crèche ou assistante maternelle : coût réel, CMG, crédit d'impôt et souplesse comparés au barème 2026. Le bon choix selon vos revenus et vos heures.";
+
+const refAma = fmtEuro2(bareme.cout_horaire_ref.ama);
+const plafondFg = fmtEuro(bareme.credit_impot.frais_garde.plafond_par_enfant);
+
+// Source unique : le JSON-LD FAQPage et la section visible « Questions fréquentes »
+// affichent exactement ces questions et réponses.
+const faq = [
+  {
+    q: "La crèche est-elle moins chère qu'une assistante maternelle ?",
+    a: `Pas forcément. Depuis la réforme du CMG du 1er septembre 2025, une assistante maternelle payée au coût horaire de référence (${refAma} au 1er avril 2026, indemnités d'entretien et de repas comprises) laisse le même reste à charge qu'une crèche collective, quels que soient vos revenus. Si elle coûte moins cher de l'heure, elle revient moins cher que la crèche ; si elle coûte plus cher, la crèche l'emporte. Le crédit d'impôt de 50 % s'applique aux deux.`,
+  },
+  {
+    q: "Quelle aide pour une assistante maternelle en 2026 ?",
+    a: `Le CMG (Complément de libre choix du mode de garde) prend en charge une partie du salaire et des indemnités d'entretien et de repas, et la totalité des cotisations sociales. Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge. S'ajoute un crédit d'impôt de 50 % des frais de garde, dans la limite de ${plafondFg} par enfant.`,
+  },
+  {
+    q: "Y a-t-il une aide pour la crèche ?",
+    a: `En crèche collective conventionnée (PSU), il n'y a pas de CMG : l'aide est déjà intégrée dans le tarif horaire, calculé selon vos revenus et le nombre d'enfants à charge (taux d'effort CNAF). Le reste à charge ouvre droit au crédit d'impôt frais de garde (50 %, plafond ${plafondFg} par enfant).`,
+  },
+];
 
 const jsonLd = [
   {
@@ -29,32 +52,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "La crèche est-elle moins chère qu'une assistante maternelle ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Pas forcément. Depuis la réforme du CMG du 1er septembre 2025, une assistante maternelle payée au coût horaire de référence (4,91 € au 1er avril 2026, indemnités d'entretien et de repas comprises) laisse le même reste à charge qu'une crèche collective, quels que soient vos revenus. Si elle coûte moins cher de l'heure, elle revient moins cher que la crèche ; si elle coûte plus cher, la crèche l'emporte. Le crédit d'impôt de 50 % s'applique aux deux.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Quelle aide pour une assistante maternelle en 2026 ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Le CMG (Complément de libre choix du mode de garde) prend en charge une partie du salaire et des indemnités d'entretien et de repas, et la totalité des cotisations sociales. Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge. S'ajoute un crédit d'impôt de 50 % des frais de garde, dans la limite de 3 500 € par enfant.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Y a-t-il une aide pour la crèche ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "En crèche collective conventionnée (PSU), il n'y a pas de CMG : l'aide est déjà intégrée dans le tarif horaire, calculé selon vos revenus et le nombre d'enfants à charge (taux d'effort CNAF). Le reste à charge ouvre droit au crédit d'impôt frais de garde (50 %, plafond 3 500 €/enfant).",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   // HowTo (§4.2) : reprend mot pour mot les 5 étapes visibles de la section
   // « Comment savoir laquelle est la moins chère pour vous ». Baliser des étapes
@@ -136,7 +138,7 @@ const criteres = [
       <h1 class="text-3xl font-extrabold sm:text-4xl">
         Crèche ou assistante maternelle : laquelle coûte le moins cher en 2026 ?
       </h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
@@ -240,17 +242,14 @@ const criteres = [
 
     <section class="text-sm leading-relaxed">
       <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
-      <h3 class="mt-3 font-bold">La crèche est-elle moins chère qu'une assistante maternelle ?</h3>
-      <p class="mt-1">
-        Pas forcément. Depuis la réforme du CMG du 1er septembre 2025, une assistante maternelle payée au coût horaire de référence (4,91 € au 1er avril 2026, indemnités d'entretien et de repas comprises) laisse le même reste à charge qu'une crèche collective, quels que soient vos revenus. Si elle coûte moins cher de l'heure, elle revient moins cher que la crèche ; si elle coûte plus cher, la crèche l'emporte. Le crédit d'impôt de 50 % s'applique aux deux.
-      </p>
-      <h3 class="mt-3 font-bold">Quelle aide pour une assistante maternelle en 2026 ?</h3>
-      <p class="mt-1">
-        Le CMG prend en charge une partie du salaire et des indemnités, et 100 % des cotisations,
-        auquel s'ajoute le
-        crédit d'impôt frais de garde (50 %, plafond 3 500 €/enfant). Le CMG emploi direct est
-        proportionnel au reste à charge depuis septembre 2025.
-      </p>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <p class="text-xs text-muted-foreground">

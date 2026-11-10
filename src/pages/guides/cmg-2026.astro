@@ -1,14 +1,82 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Byline from "../../components/Byline.astro";
 import { DATES } from "../../data/content-dates.mjs";
-import { fmtDateFr, fmtEuro2 } from "../../lib/format";
-import { bareme as b } from "../../engine/bareme";
+import { fmtEuro, fmtEuro2 } from "../../lib/format";
+import { bareme as b, calcAma, calcDomicile } from "../../engine";
+import { inputsReference, TARIFS_REFERENCE } from "../../lib/scenario-reference";
 
 const site = "https://creche-ou-nounou.fr";
 const path = "/guides/cmg-2026";
 const title = "CMG 2026 : montant, calcul et conditions";
 const description =
-  "CMG 2026 : qui y a droit, calcul depuis la réforme du 1er septembre 2025, montants et plafonds (assistante maternelle, garde à domicile, micro-crèche).";
+  "CMG 2026 : montant selon vos revenus, formule depuis la réforme de 2025, plafonds et exemple chiffré pour une assistante maternelle ou une garde à domicile.";
+
+// Tous les chiffres viennent du barème versionné et du moteur du comparateur.
+const heures = inputsReference.heuresMois;
+const te = b.taux_effort_collectif;
+const pct = (x: number) => `${(x * 100).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} %`;
+const refAma = b.cout_horaire_ref.ama;
+const plafAma = b.plafond_horaire.ama;
+
+const revenus = [1500, 2000, 2500, 3000, 4000, 5000, 6000, 8500];
+const lignesAma = revenus.map((r) => {
+  const x = calcAma(b, { ...inputsReference, revenuMensuelNet: r });
+  return { revenu: r, brut: x.coutBrut, cmg: x.details.cmg, tres: x.tresorerieMensuelle, net: x.netReel };
+});
+const ama2000 = lignesAma.find((l) => l.revenu === 2000)!;
+const ama3000 = lignesAma.find((l) => l.revenu === 3000)!;
+const ama8500 = lignesAma.find((l) => l.revenu === 8500)!;
+
+// Effet du salaire horaire (hors indemnités) à 3 000 € de ressources.
+const taux = [3.5, 4, refAma, 6, plafAma, 9.5];
+const lignesTaux = taux.map((t) => {
+  const x = calcAma(b, { ...inputsReference, tauxHoraireAma: t, fraisAnnexesAma: 0 });
+  return { taux: t, brut: x.coutBrut, cmg: x.details.cmg, tres: x.tresorerieMensuelle };
+});
+
+// Garde à domicile (coût total employeur moyen national Urssaf 2024).
+const lignesDom = [2000, 3000, 5000, 8500].map((r) => {
+  const x = calcDomicile(b, { ...inputsReference, revenuMensuelNet: r });
+  return { revenu: r, brut: x.coutBrut, cmg: x.details.cmg, cotis: x.details.cmgCotis, tres: x.tresorerieMensuelle };
+});
+
+// Exemple publié par l'Urssaf, recalculé pas à pas.
+const exR = 2000;
+const exH = 160;
+const exCout = exH * refAma;
+const exPart = (exR * te["1"]) / refAma;
+const exRes = calcAma(b, {
+  ...inputsReference,
+  revenuMensuelNet: exR,
+  heuresMois: exH,
+  tauxHoraireAma: refAma,
+  fraisAnnexesAma: 0,
+});
+const exCmg = exRes.details.cmg;
+
+const faq = [
+  {
+    q: "Quel est le montant du CMG en 2026 ?",
+    a: `Depuis le 1er septembre 2025, le CMG en emploi direct se calcule ainsi : coût mensuel × (1 − revenu × taux d'effort / coût de référence). Pour une assistante maternelle (${heures} h par mois, 1 enfant, ${fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h et ${fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités), il est d'environ ${fmtEuro(ama2000.cmg)} par mois avec 2 000 € de ressources, ${fmtEuro(ama3000.cmg)} avec 3 000 € et ${fmtEuro(ama8500.cmg)} avec 8 500 €.`,
+  },
+  {
+    q: "Existe-t-il un plafond du CMG en 2026 ?",
+    a: `Non, il n'y a plus de montant maximum mensuel depuis septembre 2025. Seul le coût horaire retenu est limité : ${fmtEuro2(plafAma)}/h pour une assistante maternelle et ${fmtEuro2(b.plafond_horaire.domicile)}/h pour une garde à domicile (barème au 1er avril 2026). Au-delà, l'écart reste à la charge des parents. Les ressources prises en compte sont, elles, bornées entre ${fmtEuro(b.ressources_cmg.plancher)} et ${fmtEuro(b.ressources_cmg.plafond)} par mois.`,
+  },
+  {
+    q: "Comment calculer ou simuler son CMG ?",
+    a: `Multipliez le coût mensuel de la garde par (1 − revenu × taux d'effort / coût de référence). Exemple publié par l'Urssaf : ${fmtEuro(exR)} de ressources, ${exH} h à ${fmtEuro2(refAma)}/h, 1 enfant, soit un coût de ${fmtEuro2(exCout)} et un CMG de ${fmtEuro2(exCmg)}. Le comparateur de ce site applique la même formule à votre situation.`,
+  },
+  {
+    q: "Qui a droit au CMG en 2026 ?",
+    a: "Les parents qui exercent une activité professionnelle et font garder un enfant de moins de 6 ans par une assistante maternelle agréée, une garde à domicile ou une micro-crèche en tarification PAJE. Le CMG n'existe pas pour la crèche collective (PSU), où l'aide est intégrée au tarif.",
+  },
+  {
+    q: "Le CMG est-il cumulable avec le crédit d'impôt ?",
+    a: `Oui. Le reste à charge après CMG ouvre droit à un crédit d'impôt de 50 %, restituable même pour les foyers non imposables (plafond ${fmtEuro(b.credit_impot.frais_garde.plafond_par_enfant)} de dépenses par enfant pour les frais de garde hors domicile). Dans l'exemple à 3 000 € de ressources, le coût passe de ${fmtEuro(ama3000.tres)} à ${fmtEuro(ama3000.net)} par mois après crédit d'impôt.`,
+  },
+];
 
 const jsonLd = [
   {
@@ -29,32 +97,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Qui a droit au CMG en 2026 ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Les parents qui exercent une activité professionnelle et font garder un enfant de moins de 6 ans par une assistante maternelle agréée, une garde à domicile ou une micro-crèche en tarification PAJE. Le CMG n'existe pas pour la crèche collective (PSU), où l'aide est intégrée au tarif.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Comment est calculé le CMG depuis septembre 2025 ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Depuis le 1er septembre 2025, le CMG en emploi direct est proportionnel au reste à charge : CMG = coût mensuel × (1 − revenu × taux d'effort / coût de référence), sans montant maximum mensuel. Il prend aussi en charge les cotisations sociales (100 % pour l'assistante maternelle, 50 % dans une limite mensuelle pour la garde à domicile).",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Le CMG est-il cumulable avec le crédit d'impôt ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Oui. Le reste à charge après CMG ouvre droit à un crédit d'impôt de 50 %, restituable même pour les foyers non imposables (plafond 3 500 € par enfant pour les frais de garde hors domicile).",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
   {
     "@context": "https://schema.org",
@@ -75,7 +122,7 @@ const jsonLd = [
     </nav>
     <header>
       <h1 class="text-3xl font-extrabold sm:text-4xl">CMG 2026 : montant, calcul et conditions</h1>
-      <p class="mt-2 text-xs text-muted-foreground">Mis à jour le {fmtDateFr(DATES.guides.modified)}.</p>
+      <Byline modified={DATES.guides.modified} />
     </header>
 
     <div class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
@@ -83,49 +130,207 @@ const jsonLd = [
         <strong>En bref.</strong> Le CMG (Complément de libre choix du mode de garde) aide à payer une
         assistante maternelle, une garde à domicile ou une micro-crèche pour un enfant de moins de 6
         ans. Depuis le <strong>1ᵉʳ septembre 2025</strong>, en emploi direct, il est
-        <strong>proportionnel au reste à charge</strong> et non plus forfaitaire. Il se cumule avec le
-        crédit d'impôt de 50 %.
+        <strong>proportionnel au reste à charge</strong>, sans montant maximum. Pour une assistante
+        maternelle ({heures} h par mois, 1 enfant), il est d'environ
+        <strong>{fmtEuro(ama2000.cmg)}/mois</strong> avec 2 000 € de ressources et
+        <strong>{fmtEuro(ama3000.cmg)}/mois</strong> avec 3 000 €. Il se cumule avec le crédit
+        d'impôt de 50 %.
       </p>
       <a href="/" class="btn-brutal mt-3 inline-block bg-brutal-yellow px-4 py-2 text-foreground">
         → Estimer mon CMG et mon reste à charge
       </a>
     </div>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">La formule (emploi direct, depuis sept. 2025)</h2>
+    <section class="text-sm leading-relaxed" id="formule">
+      <h2 class="text-xl font-extrabold">La formule du CMG (emploi direct, depuis sept. 2025)</h2>
       <pre class="card-brutal mt-2 overflow-x-auto p-3 text-xs">CMG = coût_mensuel × (1 − revenu × taux_effort / coût_référence)</pre>
       <p class="mt-2">
-        Au 1ᵉʳ avril 2026, le coût de référence est de {fmtEuro2(b.cout_horaire_ref.ama)} de l'heure
-        pour l'assistante maternelle et de {fmtEuro2(b.cout_horaire_ref.domicile)} pour la garde à
-        domicile (avec un taux d'effort doublé). Il n'y a plus de montant maximum : le coût horaire
-        est seulement retenu dans la limite de {fmtEuro2(b.plafond_horaire.ama)} (assistante
-        maternelle) ou {fmtEuro2(b.plafond_horaire.domicile)} (garde à domicile). Exemple publié par
-        la CAF : 2 000 € de ressources, 160 h à 4,91 €/h, 1 enfant → CMG de 587,52 €. Plus vos revenus sont
-        élevés, plus le CMG diminue.
+        Le <strong>revenu</strong> est celui du foyer, borné entre {fmtEuro(b.ressources_cmg.plancher)} et
+        {" "}{fmtEuro(b.ressources_cmg.plafond)} par mois (ressources de l'année N-2). Le <strong>taux d'effort</strong> est celui du barème
+        CNAF, qui baisse avec le nombre d'enfants à charge : {pct(te["1"])} pour 1 enfant,
+        {" "}{pct(te["2"])} pour 2, {pct(te["3"])} pour 3 (voir le
+        {" "}<a class="underline" href="/guides/tarif-creche-2026">barème complet</a>). Le
+        <strong> coût de référence</strong> est de {fmtEuro2(refAma)} de l'heure pour l'assistante
+        maternelle et de {fmtEuro2(b.cout_horaire_ref.domicile)} pour la garde à domicile, avec un
+        taux d'effort doublé dans ce second cas (au 1ᵉʳ avril 2026).
+      </p>
+      <p class="mt-2">
+        Il n'y a plus de montant maximum : le coût horaire est seulement retenu dans la limite de
+        {" "}{fmtEuro2(plafAma)} (assistante maternelle) ou {fmtEuro2(b.plafond_horaire.domicile)} (garde à
+        domicile). Plus vos revenus sont élevés, plus le CMG diminue. Les termes techniques sont
+        définis dans le <a class="underline" href="/glossaire">glossaire</a>, et la source de chaque
+        chiffre dans la <a class="underline" href="/methodologie">méthodologie</a>.
       </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
-      <h2 class="text-xl font-extrabold">Montants selon le mode de garde</h2>
+    <section class="text-sm leading-relaxed" id="exemple">
+      <h2 class="text-xl font-extrabold">Exemple pas à pas : le calcul publié par l'Urssaf</h2>
+      <p class="mt-2">
+        Hypothèses : {fmtEuro(exR)} de ressources mensuelles, {exH} h de garde par mois, une
+        assistante maternelle payée {fmtEuro2(refAma)}/h, 1 enfant à charge.
+      </p>
+      <ol class="mt-2 list-decimal space-y-1 pl-5">
+        <li><strong>Coût mensuel</strong> : {exH} h × {fmtEuro2(refAma)} = {fmtEuro2(exCout)}.</li>
+        <li><strong>Taux d'effort</strong> pour 1 enfant : {pct(te["1"])}.</li>
+        <li>
+          <strong>Part restant à la charge des parents</strong> : {fmtEuro(exR)} × {pct(te["1"])} /
+          {" "}{fmtEuro2(refAma)} = {pct(exPart)} du coût.
+        </li>
+        <li>
+          <strong>CMG</strong> : {fmtEuro2(exCout)} × (1 − {pct(exPart)}) = <strong>{fmtEuro2(exCmg)}</strong> par mois.
+        </li>
+        <li>
+          <strong>Reste à charge</strong> avant crédit d'impôt : {fmtEuro2(exCout)} − {fmtEuro2(exCmg)} =
+          {" "}<strong>{fmtEuro2(exRes.tresorerieMensuelle)}</strong>, soit le même montant que le tarif d'une
+          crèche collective pour ces ressources.
+        </li>
+      </ol>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="montants">
+      <h2 class="text-xl font-extrabold">Montant du CMG selon vos revenus (assistante maternelle)</h2>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">CMG 2026 pour une assistante maternelle, par niveau de ressources mensuelles du foyer</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">Coût brut</th>
+              <th scope="col" class="p-2">CMG</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+              <th scope="col" class="p-2">Après crédit d'impôt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesAma.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.brut)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.cmg)}</td>
+                  <td class="p-2">{fmtEuro(l.tres)}</td>
+                  <td class="p-2">{fmtEuro(l.net)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 1 enfant, couple, {heures} h par mois, salaire de {fmtEuro2(TARIFS_REFERENCE.tauxHoraireAma)}/h
+        et {fmtEuro(TARIFS_REFERENCE.fraisAnnexesAma)} d'indemnités d'entretien et de repas par mois. Les
+        cotisations sociales, prises en charge à 100 %, ne figurent pas dans ce tableau.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="salaire-horaire">
+      <h2 class="text-xl font-extrabold">Ce qui change selon le salaire horaire de l'assistante maternelle</h2>
+      <p class="mt-2">
+        Le CMG se calcule sur le coût réel de la garde, indemnités d'entretien et de repas comprises,
+        retenu dans la limite de {fmtEuro2(plafAma)}/h. Plus l'assistante maternelle est chère, plus
+        le CMG augmente, mais le reste à charge augmente aussi. Au-delà du plafond horaire, le CMG
+        ne progresse plus : tout le surcoût reste à votre charge.
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">CMG selon le salaire horaire de l'assistante maternelle, pour 3 000 € de ressources</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Salaire horaire net</th>
+              <th scope="col" class="p-2">Coût mensuel</th>
+              <th scope="col" class="p-2">CMG</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesTaux.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro2(l.taux)}/h</th>
+                  <td class="p-2">{fmtEuro(l.brut)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.cmg)}</td>
+                  <td class="p-2">{fmtEuro(l.tres)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : 3 000 € de ressources, 1 enfant, {heures} h par mois, sans indemnités d'entretien
+        ni de repas. Le salaire de {fmtEuro2(refAma)}/h est le coût de référence, celui de
+        {" "}{fmtEuro2(plafAma)}/h le plafond horaire.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="modes">
+      <h2 class="text-xl font-extrabold">Le CMG selon le mode de garde</h2>
       <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li><strong>Assistante maternelle</strong> : CMG sur le salaire + 100 % des cotisations prises en charge.</li>
-        <li><strong>Garde à domicile</strong> : CMG (taux d'effort doublé) + 50 % des cotisations.</li>
-        <li><strong>Micro-crèche (PAJE)</strong> : « CMG structure », logique différente — voir le <a class="underline" href="/guides/micro-creche-cmg-structure">guide micro-crèche</a>.</li>
-        <li><strong>Crèche collective (PSU)</strong> : pas de CMG, l'aide est intégrée au tarif.</li>
+        <li><strong>Assistante maternelle</strong> : CMG sur le salaire et les indemnités, plus 100 % des cotisations prises en charge. C'est le cas détaillé dans le guide du <a class="underline" href="/guides/reste-a-charge-nounou">reste à charge d'une assistante maternelle</a>.</li>
+        <li><strong>Garde à domicile</strong> : CMG calculé sur le salaire net avec un taux d'effort doublé, plus 50 % des cotisations dans la limite de {fmtEuro(b.cotisations.plafond_prise_en_charge_domicile.moins3ans)} par mois (enfant de moins de 3 ans) ou {fmtEuro(b.cotisations.plafond_prise_en_charge_domicile.de3a6ans)} (3 à 6 ans). Voir le <a class="underline" href="/guides/garde-a-domicile-cout-reel">coût réel d'une garde à domicile</a>.</li>
+        <li><strong>Micro-crèche (PAJE)</strong> : « CMG structure », à la logique différente (85 % du coût dans la limite d'un forfait, tarif de {fmtEuro(b.micro_creche_structure.plafond_horaire)}/h au plus) : voir le <a class="underline" href="/guides/micro-creche-cmg-structure">guide micro-crèche</a>.</li>
+        <li><strong>Crèche collective (PSU)</strong> : pas de CMG, l'aide est intégrée au tarif (<a class="underline" href="/guides/tarif-creche-2026">tarif crèche 2026</a>).</li>
       </ul>
+      <div class="mt-3 overflow-x-auto">
+        <table class="card-brutal w-full text-sm">
+          <caption class="sr-only">CMG et aide aux cotisations en garde à domicile, par niveau de ressources</caption>
+          <thead>
+            <tr class="border-b-[3px] border-border text-left">
+              <th scope="col" class="p-2">Ressources / mois</th>
+              <th scope="col" class="p-2">Coût brut</th>
+              <th scope="col" class="p-2">CMG</th>
+              <th scope="col" class="p-2">Aide cotisations</th>
+              <th scope="col" class="p-2">Reste à charge</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              lignesDom.map((l) => (
+                <tr class="border-t border-border/30">
+                  <th scope="row" class="p-2 text-left font-bold">{fmtEuro(l.revenu)}</th>
+                  <td class="p-2">{fmtEuro(l.brut)}</td>
+                  <td class="p-2 font-bold">{fmtEuro(l.cmg)}</td>
+                  <td class="p-2">{fmtEuro(l.cotis)}</td>
+                  <td class="p-2">{fmtEuro(l.tres)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        Hypothèses : garde à domicile, 1 enfant de moins de 3 ans, {heures} h par mois, coût total
+        employeur de {fmtEuro2(TARIFS_REFERENCE.coutHoraireDomicile)}/h (le salaire net est estimé à partir de ce coût, voir la
+        <a class="underline" href="/methodologie">méthodologie</a>).
+      </p>
     </section>
 
-    <section class="text-sm leading-relaxed">
+    <section class="text-sm leading-relaxed" id="pieges">
+      <h2 class="text-xl font-extrabold">Les pièges à éviter</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>Les <strong>anciens montants</strong> publiés avant septembre 2025 ne s'appliquent plus en emploi direct : voir la <a class="underline" href="/guides/reforme-cmg-septembre-2025">réforme du CMG</a>.</li>
+        <li>Les <strong>indemnités d'entretien et de repas</strong> font partie du coût pris en compte pour une assistante maternelle : les oublier sous-estime le CMG.</li>
+        <li>Au-delà du <strong>plafond horaire</strong> ({fmtEuro2(plafAma)}/h pour une assistante maternelle), l'écart reste entièrement à votre charge.</li>
+        <li>Un enfant bénéficiaire de l'<strong>AEEH</strong> fait appliquer le taux d'effort de la tranche inférieure du barème.</li>
+        <li>Le CMG <strong>ne remplace pas</strong> le crédit d'impôt : les deux se cumulent, voir le <a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt frais de garde</a>.</li>
+      </ul>
+      <p class="mt-2">
+        Pour situer ces montants dans votre département, consultez le
+        {" "}<a class="underline" href="/cout-garde-enfant">coût de la garde par département</a> et l'
+        <a class="underline" href="/observatoire-cout-garde-2026">observatoire 2026</a>.
+      </p>
+    </section>
+
+    <section class="text-sm leading-relaxed" id="faq">
       <h2 class="text-xl font-extrabold">Questions fréquentes</h2>
-      <h3 class="mt-3 font-bold">Qui a droit au CMG en 2026 ?</h3>
-      <p class="mt-1">
-        Les parents en activité qui font garder un enfant de moins de 6 ans par une assistante
-        maternelle agréée, une garde à domicile ou une micro-crèche en tarification PAJE.
-      </p>
-      <h3 class="mt-3 font-bold">Le CMG est-il cumulable avec le crédit d'impôt ?</h3>
-      <p class="mt-1">
-        Oui : le reste à charge après CMG ouvre droit à 50 % de <a class="underline" href="/guides/credit-impot-frais-de-garde">crédit d'impôt</a>, restituable.
-      </p>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-3 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
     </section>
 
     <nav class="card-brutal p-4 text-sm" aria-label="Guides liés">
@@ -134,11 +339,17 @@ const jsonLd = [
         <li><a class="underline" href="/guides/reforme-cmg-septembre-2025">La réforme du CMG de septembre 2025</a></li>
         <li><a class="underline" href="/guides/reste-a-charge-nounou">Reste à charge d'une assistante maternelle</a></li>
         <li><a class="underline" href="/guides/garde-a-domicile-cout-reel">Coût réel d'une garde à domicile</a></li>
+        <li><a class="underline" href="/guides/credit-impot-frais-de-garde">Crédit d'impôt frais de garde</a></li>
+        <li><a class="underline" href="/glossaire">Glossaire : CMG, PSU, taux d'effort</a></li>
       </ul>
     </nav>
 
     <p class="text-xs text-muted-foreground">
-      Sources : Urssaf/Pajemploi, service-public.fr (2026). Estimation indicative, pas un avis officiel.
+      Sources : <a class="underline" href="https://www.pajemploi.urssaf.fr/">Urssaf/Pajemploi</a>,
+      <a class="underline" href="https://www.caf.fr/">caf.fr</a>,
+      <a class="underline" href="https://www.service-public.fr/particuliers/vosdroits/F345">service-public.fr</a>
+      (2026). Calcul : <a class="underline" href="/methodologie">méthodologie</a>. Estimation indicative,
+      pas un avis officiel : votre montant exact est celui notifié par la CAF.
     </p>
   </article>
 </Layout>

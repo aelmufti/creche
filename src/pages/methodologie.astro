@@ -92,6 +92,11 @@ const jsonLd = [
         {" "}{fmtEuro2(b.plafond_horaire.domicile)} (garde à domicile) ; au-delà, l'écart reste à
         votre charge. Il n'y a <strong>plus de montant maximum mensuel</strong>.
       </p>
+      <p class="mt-2 text-sm">
+        Les ressources retenues pour le CMG sont les ressources mensuelles de l'année N-2, bornées
+        entre {fmtEuro2(b.ressources_cmg.plancher)} et {fmtEuro2(b.ressources_cmg.plafond)} par mois.
+        Ce plancher est distinct de celui de la crèche (voir ci-dessous).
+      </p>
       <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
         <li>
           Assistante maternelle : le coût mensuel inclut le salaire net et les indemnités
@@ -120,8 +125,11 @@ const jsonLd = [
       <p class="mt-1 text-xs text-muted-foreground">
         Sources : caf.fr, « Réforme du CMG : la foire aux questions » ; Urssaf, « Réévaluation du coût
         médian et du plafond horaire du CMG » (1ᵉʳ avril 2026) ; art. 86 LFSS 2023 (loi
-        n° 2022-1616), en vigueur le 1ᵉʳ sept. 2025. Contrôle : l'exemple chiffré publié par la CAF
-        (2 000 €, 160 h, 4,91 €/h → 587,52 €) est un test automatique du moteur.
+        n° 2022-1616), en vigueur le 1ᵉʳ sept. 2025 ; instruction interministérielle
+        n° DSS/2B/2026/46 du 20 mars 2026 (bornes de ressources du CMG, §II.4.2). Contrôle : l'exemple
+        chiffré publié par l'Urssaf (2 000 €, 160 h, 4,91 €/h → 587,52 €) est un test automatique du
+        moteur. Le plafond horaire s'applique au tarif de chaque contrat : en garde partagée, il est
+        appliqué à la part de chaque famille.
       </p>
     </section>
 
@@ -129,8 +137,11 @@ const jsonLd = [
       <h2 class="text-xl font-extrabold">2. Le tarif crèche (PSU)</h2>
       <p class="mt-2 text-sm">
         Pas de CMG : le tarif horaire est la participation familiale au taux d'effort CNAF, appliqué
-        aux ressources (plancher {fmtEuro2(b.ressources.plancher)}, plafond
-        {fmtEuro2(b.ressources.plafond)}). Taux d'effort selon le nombre d'enfants à charge :
+        aux ressources de l'année N-2, avant abattement fiscal de 10 % (plancher
+        {fmtEuro2(b.ressources.plancher)}, plafond {fmtEuro2(b.ressources.plafond)}). Le plancher est
+        obligatoire ; le plafond est la règle générale, mais le gestionnaire peut continuer à appliquer
+        le taux d'effort au-delà ou fixer un plafond plus élevé (inscrit dans son règlement de
+        fonctionnement). Taux d'effort selon le nombre d'enfants à charge :
       </p>
       <table class="card-brutal mt-2 w-full text-sm">
         <thead>
@@ -144,14 +155,27 @@ const jsonLd = [
             lignesTaux.map(([k, v]) => (
               <tr class="border-t border-border/30">
                 <td class="p-2">{k}</td>
-                <td class="p-2 tabular-nums">{(v * 100).toFixed(4)} %</td>
+                <td class="p-2 tabular-nums">{(v * 100).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} %</td>
               </tr>
             ))
           }
         </tbody>
       </table>
       <p class="mt-1 text-xs text-muted-foreground">
-        Source : CNAF, circulaire 2019-005 du 5 juin 2019 ; barème EAJE applicable au 1ᵉʳ janv. 2026.
+        Source : CNAF, circulaire 2019-005 du 5 juin 2019 ; CAF, « Barème des participations familiales
+        2026 pour les EAJE » (15/12/2025).
+      </p>
+      <p class="mt-2 text-sm">
+        <strong>Micro-crèche (CMG structure).</strong> L'aide est de 85 % de la facture, dans la
+        limite d'un forfait mensuel qui dépend de la tranche de revenus (selon la situation et le
+        nombre d'enfants à charge) et de l'âge de l'enfant : de 3 à 6 ans, c'est le forfait qui est
+        divisé par deux. Les forfaits utilisés ({fmtEuro2(b.micro_creche_structure.forfait_max_mensuel_1enfant_moins3ans.T1)},
+        {" "}{fmtEuro2(b.micro_creche_structure.forfait_max_mensuel_1enfant_moins3ans.T2)} et
+        {" "}{fmtEuro2(b.micro_creche_structure.forfait_max_mensuel_1enfant_moins3ans.T3)}) sont les
+        montants versés aux familles, après 0,5 % de CRDS ; l'instruction interministérielle
+        n° DSS/2B/2026/46 les publie avant CRDS (997,11 €, 859,54 € et 722,02 €). Majorés de 30 %
+        pour les familles monoparentales ou qui perçoivent l'AEEH. Sources : service-public.gouv.fr,
+        fiche F345 « CMG : structure » ; instruction interministérielle n° DSS/2B/2026/46 du 20 mars 2026.
       </p>
     </section>
 
@@ -196,9 +220,21 @@ const jsonLd = [
           Votre déclaration Pajemploi donne les montants exacts.
         </li>
         <li>
-          Micro-crèche : les seuils de revenus appliqués sont ceux d'un foyer avec 1 enfant. Avec
-          plusieurs enfants à charge, les seuils officiels sont plus hauts : l'estimation peut
-          placer le foyer une tranche trop haut (aide sous-estimée, jamais surestimée).
+          Micro-crèche : une seule majoration de 30 % est appliquée, même si le foyer cumule
+          plusieurs conditions (parent isolé, AEEH). Le cumul des majorations et la majoration de
+          10 % pour horaires atypiques ne sont pas modélisés (estimation prudente).
+        </li>
+        <li>
+          Micro-crèche : un enfant qui a 3 ans entre le 1ᵉʳ janvier et le 31 août garde le montant
+          « moins de 3 ans » jusqu'en août suivant. Le moteur raisonne en années entières et ne
+          modélise pas ce délai.
+        </li>
+        <li>
+          Un seul revenu de foyer est utilisé pour tous les modes, alors que la crèche (PSU) retient
+          les revenus avant abattement fiscal de 10 % et le CMG le revenu net catégoriel (après
+          abattement). Pour un foyer de salariés, les deux bases diffèrent d'environ 10 % : le tarif
+          de crèche est légèrement sous-estimé si vous saisissez le revenu net catégoriel, et le CMG
+          légèrement sous-estimé si vous saisissez les salaires déclarés.
         </li>
         <li>
           Crédit d'impôt assistante maternelle : les frais de repas ne sont pas déductibles et

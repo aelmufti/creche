@@ -154,3 +154,20 @@ describe("basculesLocales (seuils de revenu où le verdict change)", () => {
     }
   });
 });
+
+describe("avecArticle, médiane et moyenne", () => {
+  it("met l'article défini devant chaque libellé de mode", async () => {
+    const { avecArticle } = await import("../departements-stats");
+    expect(avecArticle("Crèche collective")).toBe("la crèche collective");
+    expect(avecArticle("Micro-crèche")).toBe("la micro-crèche");
+    expect(avecArticle("Assistante maternelle")).toBe("l'assistante maternelle");
+    expect(avecArticle("Garde à domicile")).toBe("la garde à domicile");
+  });
+  it("médiane comprise entre min et max, et nb au-dessus de la moyenne cohérent", async () => {
+    const m = await import("../departements-stats");
+    expect(m.MEDIANE_AMA).toBeGreaterThanOrEqual(m.DEPT_MIN.tauxHoraireAma);
+    expect(m.MEDIANE_AMA).toBeLessThanOrEqual(m.DEPT_MAX.tauxHoraireAma);
+    expect(m.NB_AU_DESSUS_MOYENNE_AMA).toBeGreaterThan(0);
+    expect(m.NB_AU_DESSUS_MOYENNE_AMA).toBeLessThan(m.NB_DEPARTEMENTS);
+  });
+});

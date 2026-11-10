@@ -137,3 +137,20 @@ export function basculesLocales(
   }
   return out;
 }
+
+/** Article défini devant un libellé de mode de garde : « la crèche collective », « l'assistante maternelle ». */
+export function avecArticle(label: string): string {
+  return /^[aeéiouyh]/i.test(label) ? `l'${label.toLowerCase()}` : `la ${label.toLowerCase()}`;
+}
+
+/** Médiane du salaire horaire net AMA sur les départements couverts. */
+export const MEDIANE_AMA = (() => {
+  const v = CLASSEMENT_AMA.map((d) => d.tauxHoraireAma).sort((a, b) => a - b);
+  const m = Math.floor(v.length / 2);
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+})();
+
+/** Nombre de départements dont le salaire horaire AMA dépasse la moyenne nationale. */
+export const NB_AU_DESSUS_MOYENNE_AMA = CLASSEMENT_AMA.filter(
+  (d) => d.tauxHoraireAma > MOYENNE_AMA,
+).length;

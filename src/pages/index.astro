@@ -1,8 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Calculator } from "../components/Calculator";
-import { comparer, inputsParDefaut } from "../engine";
-import { fmtEuro } from "../lib/format";
+import { comparaisonParDefaut } from "../lib/scenario-reference";
+import { bareme, inputsParDefaut } from "../engine";
+import { SOURCE_TARIFS, TARIFS_NATIONAL } from "../data/tarifs-locaux";
+import { fmtEuro, fmtHeure } from "../lib/format";
 import { ORGANIZATION, PERSON, WEBSITE, ORG_ID } from "../lib/schema";
 
 const site = "https://creche-ou-nounou.fr";
@@ -11,12 +13,52 @@ const description =
   "Crèche, assistante maternelle ou garde à domicile : trouvez le mode de garde le moins cher. Verdict chiffré au barème 2026, gratuit, sans inscription.";
 
 // Réponse directe citable (answer-first) : calculée au build par le moteur, au
-// scénario par défaut du comparateur — le chiffre suit donc le barème.
-const exemple = comparer(inputsParDefaut);
+// scénario par défaut du comparateur — via le MÊME chemin que le calculateur
+// (tarifs nationaux indicatifs résolus) : l'encadré, la FAQ et le calculateur
+// affichent ainsi toujours le même chiffre.
+const exemple = comparaisonParDefaut();
 const [premier, second] = exemple.classement;
+const parMode = (m: string) => exemple.results.find((r) => r.mode === m)!;
+const creche = parMode("creche");
+const ama = parMode("ama");
+const domicile = parMode("domicile");
+const revenu = fmtEuro(inputsParDefaut.revenuMensuelNet);
+const heures = inputsParDefaut.heuresMois;
 // Article défini devant le libellé du mode (« la crèche », « l'assistante… »).
 const avecArticle = (label: string) =>
   /^[aeéiou]/i.test(label) ? `l'${label.toLowerCase()}` : `la ${label.toLowerCase()}`;
+const scenario = `Pour un couple gagnant ${revenu} net par mois, avec 1 enfant gardé ${heures} h/mois`;
+const classementTexte = exemple.classement
+  .map((r) => `${r.label.toLowerCase()} ${fmtEuro(r.netReel)}`)
+  .join(", ");
+
+// Source unique des Q/R : JSON-LD FAQPage ET section visible (texte identique).
+const faq = [
+  {
+    q: "Crèche ou nounou : lequel est le moins cher en 2026 ?",
+    a: `${scenario}, le mode de garde le moins cher est ${avecArticle(premier.label)} à ${fmtEuro(premier.netReel)}/mois en coût net réel, devant ${avecArticle(second.label)} (${fmtEuro(second.netReel)}/mois). Classement complet par mois : ${classementTexte}. Le verdict change avec vos revenus, vos heures de garde, le nombre d'enfants et votre département : le comparateur recalcule le coût net réel de chaque mode pour votre situation.`,
+  },
+  {
+    q: "Combien coûte une crèche par mois en 2026 ?",
+    a: `${scenario}, une crèche collective conventionnée coûte ${fmtEuro(creche.tresorerieMensuelle)} par mois (tarif au taux d'effort CNAF), soit ${fmtEuro(creche.netReel)} par mois après le crédit d'impôt de 50 %. Le tarif dépend des ressources du foyer et du nombre d'enfants à charge, pas du lieu : il est identique partout en France.`,
+  },
+  {
+    q: "Combien coûte une assistante maternelle par mois en 2026 ?",
+    a: `${scenario}, une assistante maternelle payée ${fmtHeure(TARIFS_NATIONAL.tauxHoraireAma)} net (tarif national indicatif) coûte ${fmtEuro(ama.tresorerieMensuelle)} par mois après CMG, soit ${fmtEuro(ama.netReel)} par mois après crédit d'impôt. Pour comparer, la garde à domicile, au domicile des parents, revient à ${fmtEuro(domicile.netReel)} par mois net réel dans le même scénario. Le salaire des assistantes maternelles varie selon le département.`,
+  },
+  {
+    q: "Le calcul tient-il compte de la réforme du CMG de septembre 2025 ?",
+    a: `Oui. Depuis le 1ᵉʳ septembre 2025, le Complément de libre choix du mode de garde (CMG) en emploi direct est proportionnel au reste à charge. Le comparateur applique ce mode de calcul avec le coût horaire de référence du 1ᵉʳ avril 2026 (${fmtHeure(bareme.cout_horaire_ref.ama)} pour une assistante maternelle) : payée à ce coût, une assistante maternelle laisse le même reste à charge qu'une crèche collective, avant crédit d'impôt.`,
+  },
+  {
+    q: "Faut-il créer un compte pour obtenir le résultat ?",
+    a: "Non. Le résultat est instantané et gratuit, sans inscription. Tout est calculé dans votre navigateur ; votre scénario est sauvegardé dans l'adresse de la page, que vous pouvez copier pour le partager.",
+  },
+  {
+    q: "D'où viennent les chiffres du comparateur ?",
+    a: `Le barème (version ${bareme.version}, au 1ᵉʳ avril 2026) reprend les données de la CAF, de l'Urssaf et de service-public.fr. Les salaires des assistantes maternelles et des gardes à domicile par département proviennent des données ${SOURCE_TARIFS.source}. Les formules et leurs sources sont détaillées sur la page méthodologie. Il s'agit d'une estimation indicative, pas d'un avis officiel.`,
+  },
+];
 
 const jsonLd = [
   {
@@ -46,32 +88,11 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Crèche ou nounou : qu'est-ce qui coûte le moins cher ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Cela dépend de vos revenus, du nombre d'enfants à charge, des heures de garde et des tarifs locaux. La crèche collective applique un tarif au taux d'effort CNAF ; depuis la réforme de septembre 2025, une assistante maternelle payée au coût de référence (4,91 €/h) laisse le même reste à charge grâce au CMG ; la garde à domicile bénéficie d'un crédit d'impôt plus élevé. Le comparateur calcule le coût net réel de chaque mode pour votre situation.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Le calcul tient-il compte de la réforme du CMG de septembre 2025 ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Oui. Depuis le 1ᵉʳ septembre 2025, le Complément de libre choix du mode de garde (CMG) en emploi direct est proportionnel au reste à charge. Le comparateur applique ce nouveau mode de calcul.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Faut-il créer un compte pour obtenir le résultat ?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Non. Le résultat est instantané et gratuit, sans inscription. Tout est calculé dans votre navigateur ; votre scénario est sauvegardé dans l'adresse de la page.",
-        },
-      },
-    ],
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   },
 ];
 ---
@@ -99,8 +120,7 @@ const jsonLd = [
     </section>
 
     <p class="card-brutal border-l-[8px] border-l-brutal-blue p-4 text-sm leading-relaxed">
-      <strong>En bref.</strong> Pour un couple gagnant 3 000 € net par mois, avec 1 enfant gardé
-      160 h/mois, le mode de garde le moins cher en 2026 est <strong>{avecArticle(premier.label)}</strong>
+      <strong>En bref.</strong> {scenario}, le mode de garde le moins cher en 2026 est <strong>{avecArticle(premier.label)}</strong>
       à <strong>{fmtEuro(premier.netReel)}/mois</strong> en coût net réel, devant
       {" "}{avecArticle(second.label)} ({fmtEuro(second.netReel)}/mois), après CMG et crédit
       d'impôt (barème au 1ᵉʳ avril 2026). Le verdict change avec vos revenus, vos heures et votre
@@ -128,6 +148,18 @@ const jsonLd = [
       </p>
     </section>
 
+    <section class="text-sm leading-relaxed">
+      <h2 class="text-lg font-extrabold uppercase tracking-brutal">Questions fréquentes</h2>
+      {
+        faq.map((f) => (
+          <>
+            <h3 class="mt-4 font-bold">{f.q}</h3>
+            <p class="mt-1">{f.a}</p>
+          </>
+        ))
+      }
+    </section>
+
     <section>
       <h2 class="text-lg font-extrabold uppercase tracking-brutal">Pour aller plus loin</h2>
       <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -137,9 +169,15 @@ const jsonLd = [
             ["/guides/tarif-creche-2026", "Tarif crèche 2026 : calcul CAF"],
             ["/guides/cmg-2026", "CMG 2026 : montant et calcul"],
             ["/guides/reforme-cmg-septembre-2025", "Réforme du CMG (sept. 2025)"],
+            ["/guides/micro-creche-cmg-structure", "Micro-crèche : CMG structure"],
+            ["/guides/garde-a-domicile-cout-reel", "Garde à domicile : coût réel"],
+            ["/guides/garde-partagee", "Garde partagée : fonctionnement et coût"],
             ["/guides/credit-impot-frais-de-garde", "Crédit d'impôt frais de garde"],
+            ["/guides/reste-a-charge-nounou", "Reste à charge d'une nounou"],
             ["/cout-garde-enfant", "Coût de la garde par département"],
             ["/observatoire-cout-garde-2026", "Observatoire du coût 2026 (données)"],
+            ["/glossaire", "Glossaire : CMG, PSU, taux d'effort"],
+            ["/methodologie", "Méthodologie et sources du calcul"],
           ].map(([href, label]) => (
             <li>
               <a class="card-brutal-interactive block px-3 py-2 text-sm font-bold" href={href}>
